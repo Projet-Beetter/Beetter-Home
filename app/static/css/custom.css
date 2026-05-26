@@ -141,3 +141,13 @@ body.dark-mode .form-select:focus {
   border-color: #F5CB5C;
   box-shadow: 0 0 0 .2rem rgba(245,203,92,.2);
 }
+
+body.dark-mode .table thead th {
+  background-color: #333533;
+  color: #E8EDDF;
+  border-color: rgba(255,255,255,0.08);
+}
+
+body.dark-mode .table {
+  border-color: rgba(255,255,255,0.08);
+}
