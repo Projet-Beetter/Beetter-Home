@@ -2,7 +2,7 @@
 #sidebar {
   width: 230px;
   min-height: 100vh;
-  background: #FF0000;
+  background: #333533;
   color: #E8EDDF;
   position: sticky;
   top: 0;
@@ -44,7 +44,7 @@
 
 /* ── Page content ──────────────────────────────────────────── */
 #page-content {
-  background: #f8f9fa;
+  background: #E8EDDF;
 }
 
 /* ── Auth pages ────────────────────────────────────────────── */
