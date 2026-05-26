@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Account Settings — Beetter{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    
+    <!-- Change Email Section -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Email Address</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">Current email: <strong>{{ current_user.email }}</strong></p>
+        <form method="post" novalidate>
+          {{ email_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ email_form.email.label(class="form-label") }}
+            {{ email_form.email(class="form-control" + (" is-invalid" if email_form.email.errors else "")) }}
+            {% for e in email_form.email.errors %}
+              <div class="invalid-feedback">{{ e }}</div>
+            {% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ email_form.password.label(class="form-label") }}
+            {{ email_form.password(class="form-control" + (" is-invalid" if email_form.password.errors else "")) }}
+            {% for e in email_form.password.errors %}
+              <div class="invalid-feedback">{{ e }}</div>
+            {% endfor %}
+          </div>
+          {{ email_form.submit(class="btn btn-primary") }}
+        </form>
+      </div>
+    </div>
+
+    <!-- Change Password Section -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-lock me-2"></i>Password</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {{ password_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ password_form.current_password.label(class="form-label") }}
+            {{ password_form.current_password(class="form-control" + (" is-invalid" if password_form.current_password.errors else "")) }}
+            {% for e in password_form.current_password.errors %}
+              <div class="invalid-feedback">{{ e }}</div>
+            {% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ password_form.new_password.label(class="form-label") }}
+            {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else "")) }}
+            {% for e in password_form.new_password.errors %}
+              <div class="invalid-feedback">{{ e }}</div>
+            {% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ password_form.confirm_password.label(class="form-label") }}
+            {{ password_form.confirm_password(class="form-control" + (" is-invalid" if password_form.confirm_password.errors else "")) }}
+            {% for e in password_form.confirm_password.errors %}
+              <div class="invalid-feedback">{{ e }}</div>
+            {% endfor %}
+          </div>
+          {{ password_form.submit(class="btn btn-primary") }}
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Account Section -->
+    <div class="card card-danger mb-4">
+      <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Danger Zone</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">
+          <strong>Warning:</strong> Deleting your account will permanently remove all your data, including beehives and settings.
+          This action cannot be undone.
+        </p>
+        <form method="post" novalidate>
+          {{ delete_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ delete_form.password.label(class="form-label") }}
+            {{ delete_form.password(class="form-control" + (" is-invalid" if delete_form.password.errors else "")) }}
+            {% for e in delete_form.password.errors %}
+              <div class="invalid-feedback">{{ e }}</div>
+            {% endfor %}
+          </div>
+          <div class="d-grid">
+            {{ delete_form.submit() }}
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
