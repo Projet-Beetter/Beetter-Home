@@ -63,6 +63,14 @@
   flex-shrink: 0;
 }
 
+#sidebar.collapsed .sidebar-top .d-flex {
+  justify-content: center;
+}
+
+#sidebar.collapsed .sidebar-toggle-btn {
+  margin-left: 0 !important;
+}
+
 .sidebar-toggle-btn:hover {
   color: #F5CB5C;
   border-color: rgba(255,193,7,.3);
@@ -139,6 +147,10 @@
 
 #sidebar.collapsed .sidebar-dark-toggle .nav-label {
   display: none;
+}
+
+#sidebar.collapsed .sidebar-dark-toggle {
+  justify-content: center;
 }
 
 /* ── Top bar ───────────────────────────────────────────────── */

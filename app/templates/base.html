@@ -55,10 +55,10 @@
         </li>
         <li class="nav-item">
           <a href="{{ url_for('settings.index') }}"
-             class="nav-link" data-bs-toggle="tooltip" title="Settings"
+             class="nav-link" data-bs-toggle="tooltip" title="Servers"
              {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}>
             <i class="bi bi-gear"></i>
-            <span class="nav-label ms-2">Settings</span>
+            <span class="nav-label ms-2">Servers</span>
           </a>
         </li>
       </ul>
@@ -68,13 +68,6 @@
 
     <!-- Sidebar Bottom -->
     <div class="sidebar-bottom px-2 py-3">
-      <div class="d-flex align-items-center gap-2 mb-3 px-2 py-2">
-        <i class="bi bi-person-circle" style="font-size:1.3rem;line-height:1;flex-shrink:0"></i>
-        <div style="line-height:1.25" class="user-info-expanded">
-          <div class="fw-semibold" style="font-size:.85rem">{{ current_user.username }}</div>
-          <div class="text-muted" style="font-size:.75rem">{{ current_user.role }}</div>
-        </div>
-      </div>
       <a href="{{ url_for('account.index') }}" class="nav-link mb-2" title="Account">
         <i class="bi bi-person-gear"></i>
         <span class="nav-label ms-2">Account</span>
@@ -94,11 +87,18 @@
   <div id="page-content" class="flex-grow-1 d-flex flex-column min-vh-100">
     <!-- Top bar -->
     <header class="topbar d-flex align-items-center px-4 py-2 gap-3 border-bottom">
-      <button class="btn btn-sm btn-outline-secondary d-md-none" id="sidebarToggleMobile">
-        <i class="bi bi-list fs-5"></i>
-      </button>
-      <h6 class="mb-0 fw-semibold">{% block page_title %}{% endblock %}</h6>
-    </header>
+  <button class="btn btn-sm btn-outline-secondary d-md-none" id="sidebarToggleMobile">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+  <h6 class="mb-0 fw-semibold">{% block page_title %}{% endblock %}</h6>
+  <div class="d-flex align-items-center gap-2 ms-auto">
+    <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
+    <div style="line-height:1.25">
+      <div class="fw-semibold" style="font-size:.85rem">{{ current_user.username }}</div>
+      <div style="font-size:.75rem; color:#6c757d;">{{ current_user.role }}</div>
+    </div>
+  </div>
+</header>
 
     <!-- Flash messages -->
     <div class="px-4 pt-3">
