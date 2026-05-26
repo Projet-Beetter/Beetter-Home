@@ -142,6 +142,139 @@ body.dark-mode .form-select:focus {
   box-shadow: 0 0 0 .2rem rgba(245,203,92,.2);
 }
 
+/* Account page palette */
+.account-page {
+  max-width: 900px;
+  margin: 2rem auto 3rem;
+}
+
+.account-panel {
+  background: #E8EDDF;
+  border: 1px solid rgba(36,36,35,.16);
+  border-radius: 1.25rem;
+  overflow: hidden;
+}
+
+.account-panel-header {
+  padding: 2rem 2rem 1.5rem;
+}
+
+.account-panel-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: #F5CB5C;
+  color: #242423;
+  font-size: 1.55rem;
+}
+
+.account-panel-header h3,
+.account-panel-header p,
+.section-header span,
+.section-description {
+  color: #242423;
+}
+
+.account-panel-description {
+  color: #333533;
+}
+
+.account-panel-body {
+  padding: 0 2rem 2rem;
+}
+
+.account-section {
+  background: #CFDBD5;
+  border-radius: 1rem;
+  border: 1px solid rgba(36,36,35,.15);
+  padding: 1.6rem;
+}
+
+.account-section + .account-divider,
+.account-divider {
+  height: 1px;
+  background: rgba(36,36,35,.14);
+  margin: 1.5rem 0;
+}
+
+.account-section-danger {
+  background: #F5CB5C;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #242423;
+}
+
+.section-header i {
+  font-size: 1.2rem;
+}
+
+.section-description {
+  margin-bottom: 1.35rem;
+  color: #333533;
+}
+
+.section-description-danger {
+  color: #242423;
+}
+
+.btn-account-primary,
+.btn-account-danger {
+  min-width: 160px;
+  border-radius: 0.85rem;
+  padding: 0.75rem 1rem;
+}
+
+.btn-account-primary {
+  background: #242423;
+  border-color: #242423;
+  color: #F5CB5C;
+}
+
+.btn-account-primary:hover,
+.btn-account-primary:focus {
+  background: #333533;
+  border-color: #333533;
+}
+
+.btn-account-danger {
+  background: #242423;
+  border-color: #242423;
+  color: #F5CB5C;
+}
+
+.btn-account-danger:hover,
+.btn-account-danger:focus {
+  background: #333533;
+  border-color: #333533;
+}
+
+.account-panel .form-control {
+  background: #ffffff;
+  border-color: rgba(36,36,35,.18);
+  color: #242423;
+}
+
+.account-panel .form-control:focus {
+  border-color: #F5CB5C;
+  box-shadow: 0 0 0 .2rem rgba(245,203,92,.16);
+}
+
+.account-panel .form-label {
+  color: #242423;
+}
+
+.account-panel .text-muted {
+  color: #333533 !important;
+}
+
 body.dark-mode .table thead th {
   background-color: #333533;
   color: #E8EDDF;
