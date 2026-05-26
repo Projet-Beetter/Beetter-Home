@@ -111,3 +111,33 @@ body.dark-mode .table {
 body.dark-mode .text-muted {
   color: #CFDBD5 !important;
 }
+
+#sidebar .text-muted {
+  color: #CFDBD5 !important;
+}
+
+/* ── Dark mode: Bootstrap overrides ────────────────────────── */
+body.dark-mode .table {
+  --bs-table-bg: #333533;
+  --bs-table-color: #E8EDDF;
+  --bs-table-border-color: rgba(255,255,255,0.08);
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: #2b2b2b;
+  color: #E8EDDF;
+  border-color: rgba(255,255,255,0.15);
+}
+
+body.dark-mode .form-control::placeholder {
+  color: #CFDBD5;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  background-color: #2b2b2b;
+  color: #E8EDDF;
+  border-color: #F5CB5C;
+  box-shadow: 0 0 0 .2rem rgba(245,203,92,.2);
+}
