@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — Beetter{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-2">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          {% for field in [form.name, form.url, form.api_key, form.push_interval] %}
+            <div class="mb-3">
+              {{ field.label(class="form-label") }}
+              {{ field(class="form-control" + (" is-invalid" if field.errors else "")) }}
+              {% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+          <div class="d-flex gap-2 mt-4">
+            {{ form.submit(class="btn btn-warning") }}
+            <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

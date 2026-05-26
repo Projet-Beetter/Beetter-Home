@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — Beetter{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-3 mt-1">
+  {% if not hive_data %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm text-center py-5">
+        <div class="card-body">
+          <i class="bi bi-collection fs-1 text-muted"></i>
+          <p class="mt-3 text-muted">No beehives configured yet.</p>
+          <a href="{{ url_for('beehives.new') }}" class="btn btn-warning">
+            <i class="bi bi-plus-lg me-1"></i>Add your first beehive
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% for item in hive_data %}
+    {% set hive = item.hive %}
+    {% set latest = item.latest %}
+    <div class="col-sm-6 col-xl-4">
+      <div class="card border-0 shadow-sm h-100 {% if not hive.enabled %}opacity-50{% endif %}">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h6 class="card-title fw-bold mb-0">{{ hive.name }}</h6>
+              {% if hive.location %}
+                <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ hive.location }}</small>
+              {% endif %}
+            </div>
+            <span class="badge {{ 'bg-success' if hive.enabled else 'bg-secondary' }}">
+              {{ 'Active' if hive.enabled else 'Disabled' }}
+            </span>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="stat-card rounded p-2 text-center">
+                <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
+                <div class="fw-bold fs-5">
+                  {% if latest.temperature %}
+                    {{ latest.temperature.value }}°C
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </div>
+                <small class="text-muted">Temperature</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card rounded p-2 text-center">
+                <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
+                <div class="fw-bold fs-5">
+                  {% if latest.humidity %}
+                    {{ latest.humidity.value }}%
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </div>
+                <small class="text-muted">Humidity</small>
+              </div>
+            </div>
+          </div>
+
+          <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="btn btn-sm btn-outline-warning w-100">
+            <i class="bi bi-bar-chart-line me-1"></i>View charts
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

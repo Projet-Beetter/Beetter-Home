@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — Beetter{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-2">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+
+          <h6 class="fw-semibold mb-3 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em">
+            General
+          </h6>
+          <div class="mb-3">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+            {% for e in form.name.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="mb-4">
+            {{ form.location.label(class="form-label") }}
+            {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else ""),
+               placeholder="e.g. Garden, North field") }}
+            {% for e in form.location.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+
+          <h6 class="fw-semibold mb-3 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em">
+            LoRa / LoRaWAN
+          </h6>
+          <div class="mb-3">
+            {{ form.device_eui.label(class="form-label") }}
+            {{ form.device_eui(class="form-control font-monospace" + (" is-invalid" if form.device_eui.errors else ""),
+               placeholder="e.g. A8404175283AF10B") }}
+            {% for e in form.device_eui.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+            <div class="form-text">Leave blank to configure later.</div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              {{ form.lora_frequency.label(class="form-label") }}
+              {{ form.lora_frequency(class="form-control" + (" is-invalid" if form.lora_frequency.errors else "")) }}
+              {% for e in form.lora_frequency.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+              {{ form.spreading_factor.label(class="form-label") }}
+              {{ form.spreading_factor(class="form-control" + (" is-invalid" if form.spreading_factor.errors else "")) }}
+              {% for e in form.spreading_factor.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+              {{ form.bandwidth.label(class="form-label") }}
+              {{ form.bandwidth(class="form-control" + (" is-invalid" if form.bandwidth.errors else "")) }}
+              {% for e in form.bandwidth.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            {{ form.submit(class="btn btn-warning") }}
+            <a href="{{ url_for('beehives.index') }}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

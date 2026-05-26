@@ -1,0 +1,4 @@
+requests==2.31.0
+# Uncomment the library that matches your LoRa hardware:
+# adafruit-circuitpython-rfm9x   # SX127x via CircuitPython/Blinka (recommended for RPi)
+# pyserial                       # For AT-command modules (RAK811, Dragino, etc.)

@@ -1,0 +1,86 @@
+/* ── Sidebar ───────────────────────────────────────────────── */
+#sidebar {
+  width: 230px;
+  min-height: 100vh;
+  background: #FF0000;
+  color: #E8EDDF;
+  position: sticky;
+  top: 0;
+}
+
+#sidebar .sidebar-brand {
+  color: #F5CB5C;
+}
+
+#sidebar .nav-link {
+  color: #CFDBD5;
+  border-radius: 6px;
+  padding: .45rem .75rem;
+  font-size: .9rem;
+}
+
+#sidebar .nav-link:hover {
+  background: rgba(255, 193, 7, .12);
+  color: #F5CB5C;
+}
+
+#sidebar .nav-link.active {
+  background: rgba(255, 193, 7, .2);
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.sidebar-divider {
+  border-color: rgba(255,255,255,.1);
+  margin: .5rem 0;
+}
+
+/* ── Top bar ───────────────────────────────────────────────── */
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid #e9ecef;
+  min-height: 52px;
+}
+
+/* ── Page content ──────────────────────────────────────────── */
+#page-content {
+  background: #f8f9fa;
+}
+
+/* ── Auth pages ────────────────────────────────────────────── */
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Stat cards (dashboard) ────────────────────────────────── */
+.stat-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.stat-icon {
+  font-size: 1.3rem;
+}
+
+/* ── Responsive: collapse sidebar on small screens ─────────── */
+@media (max-width: 767.98px) {
+  #sidebar {
+    position: fixed;
+    z-index: 1040;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  #page-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* ── Chart.js time axis adapter shim ───────────────────────── */
+/* We load chartjs-adapter-date-fns via CDN — no extra CSS needed */
+
+/* ── Utilities ─────────────────────────────────────────────── */
+.font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+.table th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
