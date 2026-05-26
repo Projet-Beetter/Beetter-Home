@@ -84,34 +84,30 @@
 .font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 
 .table th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
-/* ── Dark mode ────────────────────────────────────────────────────── */
-body.dark-mode #page-content{
-  background : #1e1e1e;
-  color: #e0e0e0;
+
+/* ── Dark mode ─────────────────────────────────────────────── */
+body.dark-mode #page-content {
+  background: #242423;
+  color: #E8EDDF;
 }
 
 body.dark-mode .topbar {
-  background: #2b2b2b;
-  border-bottom-color: #1e1e1e;
-  color: #e0e0e0;
+  background: #333533;
+  border-bottom-color: rgba(255,255,255,0.08);
+  color: #E8EDDF;
 }
 
-body.dark-mode .stat-card {
-  background: #2e2e2e;
-  border-color: #3a3a3a;
-  color: #e0e0e0;
-}
-
+body.dark-mode .stat-card,
 body.dark-mode .card {
-  background: #2e2e2e;
-  border-color: #3a3a3a;
-  color: #e0e0e0;
+  background: #333533;
+  border-color: rgba(255,255,255,0.08);
+  color: #E8EDDF;
 }
 
 body.dark-mode .table {
-  color: #e0e0e0;
+  color: #E8EDDF;
 }
 
 body.dark-mode .text-muted {
-  color: #aaa !important;
+  color: #CFDBD5 !important;
 }
