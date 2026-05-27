@@ -30,6 +30,18 @@ class User(UserMixin, db.Model):
     def is_admin(self):
         return self.role == 'admin'
 
+    @property
+    def is_editor(self):
+        return self.role in ('editor', 'admin')
+
+    @property
+    def can_view_data(self):
+        return True
+
+    @property
+    def can_edit_data(self):
+        return self.role in ('editor', 'admin')
+
 
 class Beehive(db.Model):
     __tablename__ = 'beehives'

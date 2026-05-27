@@ -107,6 +107,63 @@
           {{ delete_form.submit(class="btn btn-account-danger") }}
         </div>
       </form>
+
+      {% if current_user.is_admin %}
+      <div class="account-divider"></div>
+
+      <div class="account-section admin-section">
+        <div class="section-header">
+          <i class="bi bi-shield-lock"></i>
+          <span>Admin control center</span>
+        </div>
+        <p class="section-description">
+          As an admin, you can manage user access levels, review all beehives, and control remote server integrations.
+          Grant editor access to trusted users, keep viewers read-only, and remove non-admin accounts when needed.
+        </p>
+
+        <div class="mb-3">
+          <a href="{{ url_for('beehives.index') }}" class="btn btn-outline-secondary me-2">Manage Beehives</a>
+          <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">Manage Remote Servers</a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle admin-user-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in managed_users if user.id != current_user.id %}
+              <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td class="text-capitalize">{{ user.role }}</td>
+                <td class="text-end">
+                  <form method="post" class="d-inline-flex align-items-center gap-2">
+                    {{ admin_action_form.hidden_tag() }}
+                    {{ admin_action_form.user_id(value=user.id) }}
+                    {{ admin_action_form.action(value='change_role') }}
+                    {{ admin_action_form.role(class='form-select form-select-sm', value=user.role, style='width: 11rem;') }}
+                    {{ admin_action_form.submit(class='btn btn-sm btn-outline-primary') }}
+                  </form>
+                  <form method="post" class="d-inline ms-1">
+                    {{ admin_action_form.hidden_tag() }}
+                    {{ admin_action_form.user_id(value=user.id) }}
+                    {{ admin_action_form.action(value='delete_user') }}
+                    {{ admin_action_form.delete(class='btn btn-sm btn-outline-danger') }}
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>
