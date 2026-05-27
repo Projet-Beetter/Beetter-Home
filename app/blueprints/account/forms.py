@@ -31,9 +31,3 @@ class DeleteAccountForm(FlaskForm):
 class AdminUserActionForm(FlaskForm):
     user_id = HiddenField(validators=[DataRequired()])
     action = HiddenField(validators=[DataRequired()])
-    role = SelectField(
-        'Role',
-        choices=[('viewer', 'Viewer'), ('editor', 'Editor'), ('admin', 'Admin')]
-    )
-    submit = SubmitField('Update role')
-    delete = SubmitField('Remove')

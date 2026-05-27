@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, abort
+from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from ...models import db, User
 from .forms import ChangeEmailForm, ChangePasswordForm, DeleteAccountForm, AdminUserActionForm
@@ -8,10 +8,10 @@ from . import account_bp
 @account_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-    email_form = ChangeEmailForm()
-    password_form = ChangePasswordForm()
-    delete_form = DeleteAccountForm()
-    admin_action_form = AdminUserActionForm()
+    email_form = ChangeEmailForm(prefix='email')
+    password_form = ChangePasswordForm(prefix='password')
+    delete_form = DeleteAccountForm(prefix='delete')
+    admin_action_form = AdminUserActionForm(prefix='admin')
     managed_users = []
 
     if current_user.is_admin:
@@ -51,13 +51,13 @@ def index():
             return redirect(url_for('auth.login'))
 
     # Handle admin user management actions
-    if (admin_action_form.submit.data or admin_action_form.delete.data) and admin_action_form.validate_on_submit() and current_user.is_admin:
+    if admin_action_form.validate_on_submit() and current_user.is_admin:
         target_user = User.query.get(int(admin_action_form.user_id.data or 0))
         if not target_user or target_user.id == current_user.id or target_user.is_admin:
             abort(403)
 
         if admin_action_form.action.data == 'change_role':
-            new_role = admin_action_form.role.data
+            new_role = request.form.get('admin-role')
             if new_role in ('viewer', 'editor', 'admin'):
                 if new_role != target_user.role:
                     target_user.role = new_role
@@ -66,7 +66,7 @@ def index():
                     flash('No role change detected.', 'info')
             else:
                 flash('Invalid role selected.', 'danger')
-        elif admin_action_form.action.data == 'delete_user' and admin_action_form.delete.data:
+        elif admin_action_form.action.data == 'delete_user':
             db.session.delete(target_user)
             flash(f"{target_user.username} has been removed.", 'success')
         else:

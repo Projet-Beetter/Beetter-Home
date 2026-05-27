@@ -144,17 +144,21 @@
                 <td class="text-capitalize">{{ user.role }}</td>
                 <td class="text-end">
                   <form method="post" class="d-inline-flex align-items-center gap-2">
-                    {{ admin_action_form.hidden_tag() }}
-                    {{ admin_action_form.user_id(value=user.id) }}
-                    {{ admin_action_form.action(value='change_role') }}
-                    {{ admin_action_form.role(class='form-select form-select-sm', value=user.role, style='width: 11rem;') }}
-                    {{ admin_action_form.submit(class='btn btn-sm btn-outline-primary') }}
+                    {{ admin_action_form.csrf_token }}
+                    <input type="hidden" name="admin-user_id" value="{{ user.id }}">
+                    <input type="hidden" name="admin-action" value="change_role">
+                    <select name="admin-role" class="form-select form-select-sm" style="width: 11rem;">
+                      <option value="viewer" {% if user.role == 'viewer' %}selected{% endif %}>Viewer</option>
+                      <option value="editor" {% if user.role == 'editor' %}selected{% endif %}>Editor</option>
+                      <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Update role</button>
                   </form>
                   <form method="post" class="d-inline ms-1">
-                    {{ admin_action_form.hidden_tag() }}
-                    {{ admin_action_form.user_id(value=user.id) }}
-                    {{ admin_action_form.action(value='delete_user') }}
-                    {{ admin_action_form.delete(class='btn btn-sm btn-outline-danger') }}
+                    {{ admin_action_form.csrf_token }}
+                    <input type="hidden" name="admin-user_id" value="{{ user.id }}">
+                    <input type="hidden" name="admin-action" value="delete_user">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                   </form>
                 </td>
               </tr>
