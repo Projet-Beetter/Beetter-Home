@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}{{ hive.name }} — Beetter{% endblock %}
 {% block page_title %}{{ hive.name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
 
 {% block content %}
 <!-- Header row -->
@@ -81,6 +84,42 @@
     <p class="mt-3">No data for this range.</p>
   </div>
 {% endif %}
+{% if hive.latitude and hive.longitude %}
+<div class="row g-3 mt-2">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title fw-semibold mb-3"><i class="bi bi-geo-alt text-warning me-2"></i>Location</h6>
+        <div id="hive-map" style="height:260px; border-radius:0.5rem;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6 d-flex flex-column gap-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title fw-semibold mb-3"><i class="bi bi-cloud-sun text-info me-2"></i>Local Weather</h6>
+        <div id="weather-loading" class="text-muted small">Loading...</div>
+        <div id="weather-content" style="display:none;"></div>
+        <div id="weather-error" class="text-muted small" style="display:none;">Weather unavailable.</div>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title fw-semibold mb-3"><i class="bi bi-clock text-secondary me-2"></i>Local Time</h6>
+        <div id="time-loading" class="text-muted small">Loading...</div>
+        <div id="time-content" style="display:none;"></div>
+        <div id="time-error" class="text-muted small" style="display:none;">Time unavailable.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm text-center py-4 text-muted mt-2">
+  <i class="bi bi-geo-alt fs-2"></i>
+  <p class="mt-2 mb-0">No location set — edit the hive to add an address.</p>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
@@ -123,4 +162,50 @@
   makeChart('tempChart', 'Temperature (°C)', '#dc3545', chartData.temperature || {labels:[], data:[]});
   makeChart('humChart',  'Humidity (%)',      '#0d6efd', chartData.humidity  || {labels:[], data:[]});
 </script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const hiveLat = {{ hive.latitude | tojson }};
+const hiveLon = {{ hive.longitude | tojson }};
+
+  if (hiveLat && hiveLon) {
+    const map = L.map('hive-map').setView([hiveLat, hiveLon], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+    L.marker([hiveLat, hiveLon]).addTo(map);
+
+    const WMO = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm with hail',99:'Thunderstorm with hail'};
+
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${hiveLat}&longitude=${hiveLon}&current=temperature_2m,weather_code,wind_speed_10m`)
+      .then(r => r.json())
+      .then(d => {
+        const c = d.current;
+        document.getElementById('weather-loading').style.display = 'none';
+        document.getElementById('weather-content').innerHTML = `
+          <div class="fs-3 fw-bold">${c.temperature_2m}°C</div>
+          <div class="text-muted">${WMO[c.weather_code] ?? 'Unknown'}</div>
+          <div class="small text-muted mt-1"><i class="bi bi-wind me-1"></i>${c.wind_speed_10m} km/h wind</div>`;
+        document.getElementById('weather-content').style.display = 'block';
+      })
+      .catch(() => {
+        document.getElementById('weather-loading').style.display = 'none';
+        document.getElementById('weather-error').style.display = 'block';
+      });
+
+    fetch(`https://timeapi.io/api/time/current/coordinate?latitude=${hiveLat}&longitude=${hiveLon}`)
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('time-loading').style.display = 'none';
+        document.getElementById('time-content').innerHTML = `
+          <div class="fs-3 fw-bold">${d.time}</div>
+          <div class="text-muted small">${d.timeZone}</div>`;
+        document.getElementById('time-content').style.display = 'block';
+      })
+      .catch(() => {
+        document.getElementById('time-loading').style.display = 'none';
+        document.getElementById('time-error').style.display = 'block';
+      });
+  }
+</script>
+
 {% endblock %}
