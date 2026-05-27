@@ -153,6 +153,24 @@
     sidebar?.classList.toggle('d-none');
   });
 </script>
+<script>
+  // Password show/hide toggle for auth pages
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('.btn-toggle-password');
+    if (!btn) return;
+    const targetSelector = btn.getAttribute('data-target');
+    if (!targetSelector) return;
+    const input = document.querySelector(targetSelector);
+    if (!input) return;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.querySelector('i')?.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+      input.type = 'password';
+      btn.querySelector('i')?.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+  });
+</script>
 {% if current_user.is_authenticated %}
 <script>
   const toggle = document.getElementById('darkModeToggle');
