@@ -219,11 +219,6 @@ body.dark-mode .topbar {
   color: #E8EDDF;
 }
 
-body.dark-mode #sidebar {
-  background: #242423;
-  border-right-color: rgba(255,255,255,.08);
-}
-
 body.dark-mode .sidebar-toggle-btn {
   color: #CFDBD5;
   border-color: rgba(255,255,255,.15);
@@ -420,4 +415,42 @@ body.dark-mode .table thead th {
 
 body.dark-mode .table {
   border-color: rgba(255,255,255,0.08);
+}
+
+/* Dark mode — account page */
+body.dark-mode .account-panel {
+  background: #333533;
+  border-color: rgba(255,255,255,.1);
+}
+
+body.dark-mode .account-section {
+  background: #2d2d2b;
+  border-color: rgba(255,255,255,.1);
+}
+
+body.dark-mode .account-panel-header h3,
+body.dark-mode .account-panel-header p,
+body.dark-mode .section-header,
+body.dark-mode .section-header span,
+body.dark-mode .section-description,
+body.dark-mode .account-panel-description {
+  color: #E8EDDF;
+}
+
+body.dark-mode .account-panel .form-control {
+  background: #3d3d3a;
+  border-color: rgba(255,255,255,.15);
+  color: #E8EDDF;
+}
+
+body.dark-mode .account-panel .form-label {
+  color: #E8EDDF;
+}
+
+body.dark-mode .account-panel .text-muted {
+  color: #CFDBD5 !important;
+}
+
+body.dark-mode .account-divider {
+  background: rgba(255,255,255,.12);
 }
