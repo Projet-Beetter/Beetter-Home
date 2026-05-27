@@ -150,6 +150,7 @@
     sidebar?.classList.toggle('d-none');
   });
 </script>
+{% if current_user.is_authenticated %}
 <script>
   const toggle = document.getElementById('darkModeToggle');
   const icon = document.getElementById('darkModeIcon');
@@ -170,6 +171,7 @@
     }
   });
 </script>
+{% endif %}
 {% block scripts %}{% endblock %}
 </body>
 </html>
