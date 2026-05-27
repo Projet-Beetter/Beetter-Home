@@ -6,11 +6,12 @@ from .forms import BeehiveForm
 from . import beehives_bp
 import urllib.request, urllib.parse, json
 
-def geocode(address):
-    if not address:
+def geocode(street, city, postal_code):
+    parts = [p for p in [street, postal_code, city] if p]
+    if not parts:
         return None, None
     try:
-        params = urllib.parse.urlencode({'q': address, 'format': 'json', 'limit': 1})
+        params = urllib.parse.urlencode({'q': ', '.join(parts), 'format': 'json', 'limit': 1})
         url = f'https://nominatim.openstreetmap.org/search?{params}'
         req = urllib.request.Request(url, headers={'User-Agent': 'Beetter/1.0'})
         with urllib.request.urlopen(req, timeout=5) as r:
@@ -20,6 +21,7 @@ def geocode(address):
     except Exception:
         pass
     return None, None
+
 
 
 @beehives_bp.route('/')
@@ -34,18 +36,18 @@ def index():
 def new():
     form = BeehiveForm()
     if form.validate_on_submit():
-        latitude, longitude = geocode(form.location.data)
         hive = Beehive(
             name=form.name.data,
-            location=form.location.data,
+            street=form.street.data,
+            city=form.city.data,
+            postal_code=form.postal_code.data,
             device_eui=form.device_eui.data,
             lora_frequency=form.lora_frequency.data or 868.0,
-            latitude=latitude,
-            longitude=longitude,
             spreading_factor=form.spreading_factor.data or 7,
             bandwidth=form.bandwidth.data or 125,
             user_id=current_user.id,
         )
+        hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
         db.session.add(hive)
         db.session.commit()
         flash(f'Beehive "{hive.name}" added.', 'success')
@@ -60,7 +62,7 @@ def edit(hive_id):
     form = BeehiveForm(obj=hive)
     if form.validate_on_submit():
         form.populate_obj(hive)
-        hive.latitude, hive.longitude = geocode(hive.location)
+        hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
         db.session.commit()
         flash(f'Beehive "{hive.name}" updated.', 'success')
         return redirect(url_for('beehives.index'))

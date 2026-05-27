@@ -35,7 +35,12 @@
           {% for hive in beehives %}
           <tr>
             <td class="fw-semibold">{{ hive.name }}</td>
-            <td class="text-muted">{{ hive.location or '—' }}</td>
+            <td class="text-muted">
+              {% if hive.street or hive.city %}
+               {% if hive.street %}{{ hive.street }}, {% endif %}
+                {{ hive.postal_code or '' }} {{ hive.city or '' }}
+              {% else %}—{% endif %}
+            </td>
             <td><code>{{ hive.device_eui or '—' }}</code></td>
             <td>{{ hive.lora_frequency }}</td>
             <td>SF{{ hive.spreading_factor }} / {{ hive.bandwidth }}kHz</td>

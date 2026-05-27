@@ -18,13 +18,27 @@
             {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
             {% for e in form.name.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
           </div>
-          <div class="mb-4">
-            {{ form.location.label(class="form-label") }}
-            {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else ""),
-               placeholder="e.g. Garden, North field") }}
-            {% for e in form.location.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-          </div>
-
+          <div class="mb-3">
+  {{ form.street.label(class="form-label") }}
+  {{ form.street(class="form-control" + (" is-invalid" if form.street.errors else ""),
+     placeholder="e.g. 12 rue de la Paix") }}
+  {% for e in form.street.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-8 position-relative">
+    {{ form.city.label(class="form-label") }}
+    {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else ""),
+       placeholder="e.g. Lyon", id="city-input", autocomplete="off") }}
+    {% for e in form.city.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+    <ul id="city-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index:1000;display:none;top:100%;"></ul>
+  </div>
+  <div class="col-md-4">
+    {{ form.postal_code.label(class="form-label") }}
+    {{ form.postal_code(class="form-control" + (" is-invalid" if form.postal_code.errors else ""),
+       placeholder="e.g. 69001") }}
+    {% for e in form.postal_code.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+  </div>
+</div>
           <h6 class="fw-semibold mb-3 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em">
             LoRa / LoRaWAN
           </h6>
@@ -62,4 +76,44 @@
     </div>
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const cityInput = document.getElementById('city-input');
+  const suggestions = document.getElementById('city-suggestions');
+  let debounceTimer;
+
+  cityInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const q = cityInput.value.trim();
+    if (q.length < 3) { suggestions.style.display = 'none'; return; }
+    debounceTimer = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&format=json&limit=5`, {
+        headers: { 'Accept-Language': 'en' }
+      })
+        .then(r => r.json())
+        .then(data => {
+          suggestions.innerHTML = '';
+          if (!data.length) { suggestions.style.display = 'none'; return; }
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item list-group-item-action';
+            li.style.cursor = 'pointer';
+            li.textContent = item.display_name;
+            li.addEventListener('click', () => {
+              cityInput.value = item.address?.city || item.address?.town || item.address?.village || q;
+              suggestions.style.display = 'none';
+            });
+            suggestions.appendChild(li);
+          });
+          suggestions.style.display = 'block';
+        })
+        .catch(() => { suggestions.style.display = 'none'; });
+    }, 350);
+  });
+
+  document.addEventListener('click', e => {
+    if (!cityInput.contains(e.target)) suggestions.style.display = 'none';
+  });
+</script>
 {% endblock %}

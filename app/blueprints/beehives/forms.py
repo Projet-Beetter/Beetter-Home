@@ -5,7 +5,9 @@ from wtforms.validators import DataRequired, Length, Optional, NumberRange
 
 class BeehiveForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(1, 100)])
-    location = StringField('Location', validators=[Optional(), Length(max=200)])
+    street = StringField('Street', validators=[Optional(), Length(max=200)])
+    city = StringField('City', validators=[Optional(), Length(max=100)])
+    postal_code = StringField('Postal code', validators=[Optional(), Length(max=20)])
     device_eui = StringField('Device EUI (LoRa)', validators=[Optional(), Length(max=64)])
     lora_frequency = FloatField(
         'LoRa Frequency (MHz)',

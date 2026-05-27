@@ -48,7 +48,9 @@ class Beehive(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    location = db.Column(db.String(200))
+    street = db.Column(db.String(200), nullable=True)
+    city = db.Column(db.String(100), nullable=True)
+    postal_code = db.Column(db.String(20), nullable=True)
     device_eui = db.Column(db.String(64))
     lora_frequency = db.Column(db.Float, default=868.0)
     spreading_factor = db.Column(db.Integer, default=7)
