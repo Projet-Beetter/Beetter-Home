@@ -27,9 +27,14 @@
         </div>
         <div class="mb-3">
           {{ form.password.label(class="form-label") }}
-          {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+          <div class="input-group">
+            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), id='login-password') }}
+            <button type="button" class="btn btn-outline-secondary btn-toggle-password" data-target="#login-password" title="Show/hide password">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
           {% for e in form.password.errors %}
-            <div class="invalid-feedback">{{ e }}</div>
+            <div class="invalid-feedback d-block">{{ e }}</div>
           {% endfor %}
         </div>
         <div class="mb-4 form-check">

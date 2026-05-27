@@ -21,9 +21,18 @@
         {% for field in [form.username, form.email, form.password, form.password2] %}
           <div class="mb-3">
             {{ field.label(class="form-label") }}
-            {{ field(class="form-control" + (" is-invalid" if field.errors else "")) }}
+            {% if field.name in ['password', 'password2'] %}
+              <div class="input-group">
+                {{ field(class="form-control" + (" is-invalid" if field.errors else ""), id=('register-' ~ field.name)) }}
+                <button type="button" class="btn btn-outline-secondary btn-toggle-password" data-target="#{{ 'register-' ~ field.name }}" title="Show/hide password">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            {% else %}
+              {{ field(class="form-control" + (" is-invalid" if field.errors else "")) }}
+            {% endif %}
             {% for e in field.errors %}
-              <div class="invalid-feedback">{{ e }}</div>
+              <div class="invalid-feedback d-block">{{ e }}</div>
             {% endfor %}
           </div>
         {% endfor %}
