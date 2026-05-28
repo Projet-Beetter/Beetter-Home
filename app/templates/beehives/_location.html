@@ -1,0 +1,38 @@
+{% if hive.latitude and hive.longitude %}
+<div class="row g-3 mt-2">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title fw-semibold mb-3"><i class="bi bi-geo-alt text-warning me-2"></i>Location</h6>
+        <div id="hive-map" style="height:260px; border-radius:0.5rem;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6 d-flex flex-column gap-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h6 class="card-title fw-semibold mb-0"><i class="bi bi-cloud-sun text-info me-2"></i>Local Weather</h6>
+          <button id="temp-unit-toggle" class="btn btn-sm btn-outline-secondary" style="display:none;">°F</button>
+        </div>
+        <div id="weather-loading" class="text-muted small">Loading...</div>
+        <div id="weather-content" style="display:none;"></div>
+        <div id="weather-error" class="text-muted small" style="display:none;">Weather unavailable.</div>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title fw-semibold mb-3"><i class="bi bi-clock text-secondary me-2"></i>Local Time</h6>
+        <div id="time-loading" class="text-muted small">Loading...</div>
+        <div id="time-content" style="display:none;"></div>
+        <div id="time-error" class="text-muted small" style="display:none;">Time unavailable.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm text-center py-4 text-muted mt-2">
+  <i class="bi bi-geo-alt fs-2"></i>
+  <p class="mt-2 mb-0">No location set — edit the hive to add an address.</p>
+</div>
+{% endif %}

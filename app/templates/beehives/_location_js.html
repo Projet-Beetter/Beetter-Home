@@ -1,0 +1,63 @@
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const hiveLat = {{ hive.latitude | tojson }};
+const hiveLon = {{ hive.longitude | tojson }};
+
+  if (hiveLat && hiveLon) {
+    const map = L.map('hive-map').setView([hiveLat, hiveLon], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+    L.marker([hiveLat, hiveLon]).addTo(map);
+
+    const WMO = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm with hail',99:'Thunderstorm with hail'};
+
+    let tempC = null;
+let isCelsius = true;
+
+fetch(`https://api.open-meteo.com/v1/forecast?latitude=${hiveLat}&longitude=${hiveLon}&current=temperature_2m,weather_code,wind_speed_10m`)
+  .then(r => r.json())
+  .then(d => {
+    const c = d.current;
+    tempC = c.temperature_2m;
+    document.getElementById('weather-loading').style.display = 'none';
+    document.getElementById('weather-content').innerHTML = `
+      <div class="fs-3 fw-bold" id="temp-display">${tempC}°C</div>
+      <div class="text-muted">${WMO[c.weather_code] ?? 'Unknown'}</div>
+      <div class="small text-muted mt-1"><i class="bi bi-wind me-1"></i>${c.wind_speed_10m} km/h wind</div>`;
+    document.getElementById('weather-content').style.display = 'block';
+    const toggle = document.getElementById('temp-unit-toggle');
+    toggle.style.display = 'inline-block';
+    toggle.addEventListener('click', () => {
+      isCelsius = !isCelsius;
+      const display = document.getElementById('temp-display');
+      if (isCelsius) {
+        display.textContent = `${tempC}°C`;
+        toggle.textContent = '°F';
+      } else {
+        display.textContent = `${(tempC * 9/5 + 32).toFixed(1)}°F`;
+        toggle.textContent = '°C';
+      }
+    });
+  })
+  .catch(() => {
+    document.getElementById('weather-loading').style.display = 'none';
+    document.getElementById('weather-error').style.display = 'block';
+  });
+
+
+    fetch(`https://timeapi.io/api/time/current/coordinate?latitude=${hiveLat}&longitude=${hiveLon}`)
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('time-loading').style.display = 'none';
+        document.getElementById('time-content').innerHTML = `
+          <div class="fs-3 fw-bold">${d.time}</div>
+          <div class="text-muted small">${d.timeZone}</div>`;
+        document.getElementById('time-content').style.display = 'block';
+      })
+      .catch(() => {
+        document.getElementById('time-loading').style.display = 'none';
+        document.getElementById('time-error').style.display = 'block';
+      });
+  }
+</script>

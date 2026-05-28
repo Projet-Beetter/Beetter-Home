@@ -1,0 +1,39 @@
+<script>
+  const chartData = {{ chart_data | tojson }};
+
+  function makeChart(id, label, color, dataset) {
+    const ctx = document.getElementById(id);
+    if (!ctx || !dataset.labels.length) return;
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dataset.labels,
+        datasets: [{
+          label: label,
+          data: dataset.data,
+          borderColor: color,
+          backgroundColor: color + '22',
+          fill: true,
+          tension: 0.3,
+          pointRadius: dataset.labels.length > 200 ? 0 : 2,
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            type: 'time',
+            time: { tooltipFormat: 'dd MMM HH:mm' },
+            ticks: { maxTicksLimit: 8 }
+          },
+          y: { beginAtZero: false }
+        }
+      }
+    });
+  }
+
+  makeChart('tempChart', 'Temperature (°C)', '#dc3545', chartData.temperature || {labels:[], data:[]});
+  makeChart('humChart',  'Humidity (%)',      '#0d6efd', chartData.humidity  || {labels:[], data:[]});
+</script>

@@ -1,0 +1,19 @@
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4 mt-1">
+  <span class="badge {{ 'bg-success' if hive.enabled else 'bg-secondary' }} fs-6">
+    {{ 'Active' if hive.enabled else 'Disabled' }}
+  </span>
+{% if hive.street or hive.city %}
+  <span class="text-muted">
+    <i class="bi bi-geo-alt me-1"></i>
+    {% if hive.street %}{{ hive.street }}, {% endif %}
+    {{ hive.postal_code or '' }} {{ hive.city or '' }}
+  </span>
+{% endif %}
+
+  {% if hive.device_eui %}
+    <span class="text-muted font-monospace small"><i class="bi bi-broadcast me-1"></i>{{ hive.device_eui }}</span>
+  {% endif %}
+  <a href="{{ url_for('beehives.edit', hive_id=hive.id) }}" class="btn btn-sm btn-outline-warning ms-auto">
+    <i class="bi bi-pencil me-1"></i>Edit
+  </a>
+</div>
