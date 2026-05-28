@@ -11,9 +11,14 @@
   <span class="badge {{ 'bg-success' if hive.enabled else 'bg-secondary' }} fs-6">
     {{ 'Active' if hive.enabled else 'Disabled' }}
   </span>
-  {% if hive.location %}
-    <span class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ hive.location }}</span>
-  {% endif %}
+{% if hive.street or hive.city %}
+  <span class="text-muted">
+    <i class="bi bi-geo-alt me-1"></i>
+    {% if hive.street %}{{ hive.street }}, {% endif %}
+    {{ hive.postal_code or '' }} {{ hive.city or '' }}
+  </span>
+{% endif %}
+
   {% if hive.device_eui %}
     <span class="text-muted font-monospace small"><i class="bi bi-broadcast me-1"></i>{{ hive.device_eui }}</span>
   {% endif %}
@@ -97,7 +102,10 @@
   <div class="col-12 col-lg-6 d-flex flex-column gap-3">
     <div class="card border-0 shadow-sm">
       <div class="card-body">
-        <h6 class="card-title fw-semibold mb-3"><i class="bi bi-cloud-sun text-info me-2"></i>Local Weather</h6>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h6 class="card-title fw-semibold mb-0"><i class="bi bi-cloud-sun text-info me-2"></i>Local Weather</h6>
+          <button id="temp-unit-toggle" class="btn btn-sm btn-outline-secondary" style="display:none;">°F</button>
+        </div>
         <div id="weather-loading" class="text-muted small">Loading...</div>
         <div id="weather-content" style="display:none;"></div>
         <div id="weather-error" class="text-muted small" style="display:none;">Weather unavailable.</div>
@@ -176,21 +184,39 @@ const hiveLon = {{ hive.longitude | tojson }};
 
     const WMO = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm with hail',99:'Thunderstorm with hail'};
 
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${hiveLat}&longitude=${hiveLon}&current=temperature_2m,weather_code,wind_speed_10m`)
-      .then(r => r.json())
-      .then(d => {
-        const c = d.current;
-        document.getElementById('weather-loading').style.display = 'none';
-        document.getElementById('weather-content').innerHTML = `
-          <div class="fs-3 fw-bold">${c.temperature_2m}°C</div>
-          <div class="text-muted">${WMO[c.weather_code] ?? 'Unknown'}</div>
-          <div class="small text-muted mt-1"><i class="bi bi-wind me-1"></i>${c.wind_speed_10m} km/h wind</div>`;
-        document.getElementById('weather-content').style.display = 'block';
-      })
-      .catch(() => {
-        document.getElementById('weather-loading').style.display = 'none';
-        document.getElementById('weather-error').style.display = 'block';
-      });
+    let tempC = null;
+let isCelsius = true;
+
+fetch(`https://api.open-meteo.com/v1/forecast?latitude=${hiveLat}&longitude=${hiveLon}&current=temperature_2m,weather_code,wind_speed_10m`)
+  .then(r => r.json())
+  .then(d => {
+    const c = d.current;
+    tempC = c.temperature_2m;
+    document.getElementById('weather-loading').style.display = 'none';
+    document.getElementById('weather-content').innerHTML = `
+      <div class="fs-3 fw-bold" id="temp-display">${tempC}°C</div>
+      <div class="text-muted">${WMO[c.weather_code] ?? 'Unknown'}</div>
+      <div class="small text-muted mt-1"><i class="bi bi-wind me-1"></i>${c.wind_speed_10m} km/h wind</div>`;
+    document.getElementById('weather-content').style.display = 'block';
+    const toggle = document.getElementById('temp-unit-toggle');
+    toggle.style.display = 'inline-block';
+    toggle.addEventListener('click', () => {
+      isCelsius = !isCelsius;
+      const display = document.getElementById('temp-display');
+      if (isCelsius) {
+        display.textContent = `${tempC}°C`;
+        toggle.textContent = '°F';
+      } else {
+        display.textContent = `${(tempC * 9/5 + 32).toFixed(1)}°F`;
+        toggle.textContent = '°C';
+      }
+    });
+  })
+  .catch(() => {
+    document.getElementById('weather-loading').style.display = 'none';
+    document.getElementById('weather-error').style.display = 'block';
+  });
+
 
     fetch(`https://timeapi.io/api/time/current/coordinate?latitude=${hiveLat}&longitude=${hiveLon}`)
       .then(r => r.json())
