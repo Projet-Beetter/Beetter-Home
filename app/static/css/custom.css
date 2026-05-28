@@ -10,6 +10,8 @@
   height: 100vh;
   border-right: 2px solid rgba(255,255,255,.08);
   transition: width 0.3s ease;
+  overflow-x: hidden;
+  will-change: width;
 }
 
 body.sidebar-loading #sidebar,
@@ -34,12 +36,13 @@ body.sidebar-collapsed-on-load .user-info-expanded {
 }
 
 body.sidebar-collapsed-on-load .nav-label {
+  max-width: 0;
   opacity: 0;
-  display: none;
 }
 
 body.sidebar-collapsed-on-load .sidebar-dark-toggle .nav-label {
-  display: none;
+  max-width: 0;
+  opacity: 0;
 }
 
 body.sidebar-collapsed-on-load .sidebar-dark-toggle {
@@ -69,11 +72,24 @@ body.sidebar-collapsed-on-load .sidebar-toggle-btn {
 .sidebar-top {
   flex-shrink: 0;
   border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: 0.75rem 0.5rem;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .sidebar-bottom {
   flex-shrink: 0;
   border-top: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+}
+
+#sidebar.collapsed .sidebar-bottom {
+  align-items: center;
 }
 
 .sidebar-brand {
@@ -138,10 +154,18 @@ body.sidebar-collapsed-on-load .sidebar-toggle-btn {
 
 #sidebar.collapsed .nav-link {
   justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
+  align-items: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
 }
 
+#sidebar.collapsed .nav-link i {
+  min-width: unset;
+  margin: 0;
+  line-height: 1;
+}
 .user-info-expanded {
   transition: opacity 0.3s ease;
   flex-grow: 1;
@@ -158,7 +182,8 @@ body.sidebar-collapsed-on-load .sidebar-toggle-btn {
   font-size: .9rem;
   display: flex;
   align-items: center;
-  transition: all 0.2s ease;
+  transition: padding 0.3s ease, opacity 0.3s ease, background 0.2s ease, color 0.2s ease;
+  min-width: 0;
 }
 
 #sidebar .nav-link:hover {
@@ -173,45 +198,93 @@ body.sidebar-collapsed-on-load .sidebar-toggle-btn {
 }
 
 #sidebar .nav-label {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, max-width 0.3s ease;
+  max-width: none;
+  overflow: hidden;
 }
 
 #sidebar.collapsed .nav-label {
+  max-width: 0;
   opacity: 0;
-  display: none;
 }
 
-#sidebar .nav-link i {
+#sidebar .nav-link i,
+.sidebar-dark-toggle i {
   min-width: 1.3rem;
   text-align: center;
   flex-shrink: 0;
 }
 
+#sidebar.collapsed .nav-link i,
+#sidebar.collapsed .sidebar-dark-toggle i {
+  min-width: unset;
+  width: 100%;
+  text-align: center;
+}
+
 .sidebar-dark-toggle {
   color: #CFDBD5 !important;
-  border: 1px solid rgba(255,255,255,.15);
   border-radius: 6px;
-  padding: 0.55rem 0.65rem;
-  font-size: 0.9rem;
+  padding: .55rem .75rem;
+  font-size: .9rem;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   background: transparent;
-  transition: all 0.2s ease;
+  border: none;
+  transition: padding 0.3s ease, opacity 0.3s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  width: auto;
+  text-align: left;
+  min-width: 0;
 }
 
 .sidebar-dark-toggle:hover {
   background: rgba(255, 193, 7, .12);
   color: #F5CB5C !important;
-  border-color: rgba(255,193,7,.3);
+}
+
+.sidebar-dark-toggle:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 #sidebar.collapsed .sidebar-dark-toggle .nav-label {
-  display: none;
+  max-width: 0;
+  opacity: 0;
+}
+
+#sidebar.collapsed .sidebar-dark-toggle,
+#sidebar.collapsed .nav-link {
+  justify-content: center;
+  width: 36px;
+  padding: 0;
+  height: 36px;
 }
 
 #sidebar.collapsed .sidebar-dark-toggle {
+  border-radius: 6px;
+}
+
+.sidebar-nav {
+  overflow-x: hidden !important;
+}
+
+.sidebar-bottom .nav-link {
+  transition: padding 0.3s ease, opacity 0.3s ease, background 0.2s ease, color 0.2s ease;
+  min-width: 0;
+}
+
+#sidebar.collapsed .sidebar-bottom {
+  align-items: center;
+}
+
+#sidebar.collapsed .sidebar-bottom .nav-link,
+#sidebar.collapsed .sidebar-bottom .sidebar-dark-toggle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
   justify-content: center;
+  margin: 0 auto;
 }
 
 /* ── Top bar ───────────────────────────────────────────────── */
@@ -249,6 +322,7 @@ body.sidebar-collapsed-on-load .sidebar-toggle-btn {
     z-index: 1040;
     height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   #sidebar.collapsed {
