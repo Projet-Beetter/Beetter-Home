@@ -10,7 +10,13 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
   {% block head %}{% endblock %}
 </head>
-<body>
+<body class="sidebar-loading">
+<script>
+  const initialSidebarState = localStorage.getItem('sidebarCollapsed');
+  if (initialSidebarState !== null && initialSidebarState !== 'false') {
+    document.body.classList.add('sidebar-collapsed-on-load');
+  }
+</script>
 
 {% if current_user.is_authenticated %}
 <div class="d-flex" id="wrapper">
@@ -141,6 +147,7 @@
   if (sidebarCollapsedState !== 'false') {
     sidebar?.classList.add('collapsed');
   }
+  document.body.classList.remove('sidebar-loading', 'sidebar-collapsed-on-load');
   
   sidebarToggleTop?.addEventListener('click', () => {
     sidebar?.classList.toggle('collapsed');
