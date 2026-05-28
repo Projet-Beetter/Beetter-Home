@@ -136,6 +136,12 @@ body.sidebar-collapsed-on-load .sidebar-toggle-btn {
   background: rgba(255,193,7,.08);
 }
 
+#sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .user-info-expanded {
   transition: opacity 0.3s ease;
   flex-grow: 1;
