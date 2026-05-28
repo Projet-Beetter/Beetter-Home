@@ -32,7 +32,7 @@ import requests
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 log = logging.getLogger(__name__)
 
-BEETTER_URL=http://192.168.1.149:5000 
+BEETTER_URL=http://192.168.1.149:5000 python receiver.py
 
 BEETTER_URL = os.environ.get('BEETTER_URL', 'http://localhost:5000')
 API_ENDPOINT = f'{BEETTER_URL}/api/data'
