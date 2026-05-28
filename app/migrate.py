@@ -1,5 +1,5 @@
-from app import create_app
-from app.models import db
+from models import db
+from init import create_app
 
 app = create_app()
 
@@ -16,4 +16,3 @@ with app.app_context():
             conn.execute(db.text(sql))
         conn.commit()
     print("Migration OK")
-    
