@@ -11,6 +11,11 @@ user_favorites = db.Table('user_favorites',
     db.Column('hive_id', db.Integer, db.ForeignKey('beehives.id'), primary_key=True)
 )
 
+user_alert_reads = db.Table('user_alert_reads',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('alert_id', db.Integer, db.ForeignKey('alerts.id'), primary_key=True)
+)
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -68,6 +73,17 @@ class Beehive(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
+class Alert(db.Model):
+    __tablename__ = 'alerts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    hive_id = db.Column(db.Integer, db.ForeignKey('beehives.id'), nullable=False)
+    old_status = db.Column(db.String(20), nullable=False)
+    new_status = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    hive = db.relationship('Beehive', backref='alerts')
+    read_by = db.relationship('User', secondary=user_alert_reads, lazy='subquery')
 
 class RemoteServerConfig(db.Model):
     __tablename__ = 'remote_server_configs'

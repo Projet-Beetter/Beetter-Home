@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
-from ...models import db, Beehive
+from ...models import db, Beehive, Alert
 from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS
 from ..utils.decorators import editor_required
 from ..utils.status import STATUS_CONFIG
@@ -124,7 +124,10 @@ def set_status(hive_id):
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     new_status = request.form.get('status')
     if new_status in ('healthy', 'warning', 'critical', 'offline', 'no_data'):
-        hive.status = new_status
-        db.session.commit()
-        flash(f'Status updated to {new_status}.', 'success')
+        if new_status != hive.status:
+            db.session.add(Alert(hive_id=hive.id, old_status=hive.status, new_status=new_status))
+            hive.status = new_status
+            db.session.commit()
+            flash(f'Status updated to {new_status}.', 'success')
     return redirect(request.referrer or url_for('beehives.index'))
+

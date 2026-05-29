@@ -1,6 +1,7 @@
 import os
+from datetime import datetime
 from flask import Flask
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 from .models import db, bcrypt, User
 from .scheduler import init_scheduler
@@ -42,6 +43,7 @@ def create_app():
     from .blueprints.settings import settings_bp
     from .blueprints.account import account_bp
     from .blueprints.api import api_bp
+    from .blueprints.alerts import alerts_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -49,7 +51,25 @@ def create_app():
     app.register_blueprint(settings_bp)
     app.register_blueprint(account_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(alerts_bp)
     csrf.exempt(api_bp)
+
+    from .models import Alert, user_alert_reads
+
+    @app.context_processor
+    def inject_alerts_count():
+        if current_user.is_authenticated:
+            today = datetime.utcnow().date()
+            read_ids = db.session.query(user_alert_reads.c.alert_id).filter(
+                user_alert_reads.c.user_id == current_user.id
+            ).subquery()
+            count = Alert.query.filter(
+                Alert.created_at >= today,
+                ~Alert.id.in_(read_ids)
+            ).count()
+            return {'alerts_count': count}
+        return {'alerts_count': 0}
+
 
     with app.app_context():
         db.create_all()

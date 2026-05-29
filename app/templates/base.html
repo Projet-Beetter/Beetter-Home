@@ -69,6 +69,17 @@
             <span class="nav-label ms-2">Servers</span>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="{{ url_for('alerts.index') }}"
+             class="nav-link d-flex align-items-center" data-bs-toggle="tooltip" title="Alerts"
+             {% if request.endpoint and request.endpoint.startswith('alerts') %}active{% endif %}>
+            <i class="bi bi-bell"></i>
+            <span class="nav-label ms-2">Alerts</span>
+            {% if alerts_count > 0 %}
+              <span class="badge bg-danger ms-auto">{{ alerts_count }}</span>
+            {% endif %}
+          </a>
+        </li>
       </ul>
     </div>
 
