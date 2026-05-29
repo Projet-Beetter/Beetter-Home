@@ -13,8 +13,14 @@
   {% if hive.device_eui %}
     <span class="text-muted font-monospace small"><i class="bi bi-broadcast me-1"></i>{{ hive.device_eui }}</span>
   {% endif %}
+  <form method="post" action="{{ url_for('beehives.toggle_favorite', hive_id=hive.id) }}" class="d-inline ms-auto">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-sm btn-outline-warning" title="Toggle favourite">
+      <i class="bi {{ 'bi-star-fill' if hive in current_user.favorite_hives else 'bi-star' }}"></i>
+    </button>
+  </form>
   {% if current_user.can_edit_data %}
-  <a href="{{ url_for('beehives.edit', hive_id=hive.id) }}" class="btn btn-sm btn-outline-warning ms-auto">
+  <a href="{{ url_for('beehives.edit', hive_id=hive.id) }}" class="btn btn-sm btn-outline-warning">
     <i class="bi bi-pencil me-1"></i>Edit
   </a>
   {% endif %}

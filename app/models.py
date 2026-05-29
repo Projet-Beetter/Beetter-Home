@@ -6,6 +6,11 @@ from datetime import datetime
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
+user_favorites = db.Table('user_favorites',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('hive_id', db.Integer, db.ForeignKey('beehives.id'), primary_key=True)
+)
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -18,6 +23,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     beehives = db.relationship('Beehive', backref='owner', lazy=True, cascade='all, delete-orphan')
+    favorite_hives =db.relationship('Beehive', secondary=user_favorites, lazy='subquery')
     remote_configs = db.relationship('RemoteServerConfig', backref='owner', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
