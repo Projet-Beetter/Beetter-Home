@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for
 from flask_login import login_required, current_user
 from ...models import Beehive
 from ..utils.influxdb import query_latest_values
+from ..utils.status import STATUS_CONFIG
 from . import dashboard_bp
 
 
@@ -27,6 +28,6 @@ def index():
             other_data.append(entry)
 
     return render_template('dashboard/index.html',
-                           favorite_data=favorite_data,
-                           other_data=other_data)
-
+                       favorite_data=favorite_data,
+                       other_data=other_data,
+                       status_config=STATUS_CONFIG)

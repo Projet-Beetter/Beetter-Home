@@ -49,9 +49,10 @@
             <td>{{ hive.lora_frequency }}</td>
             <td>SF{{ hive.spreading_factor }} / {{ hive.bandwidth }}kHz</td>
             <td>
-              <span class="badge {{ 'bg-success' if hive.enabled else 'bg-secondary' }}">
-                {{ 'Active' if hive.enabled else 'Disabled' }}
-              </span>
+            {% set s = status_config[hive.status] %}
+            <span class="badge {{ s.badge }}">
+             <i class="bi {{ s.icon }} me-1"></i>{{ s.label }}
+            </span>
             </td>
             <td class="text-end">
               <form method="post" action="{{ url_for('beehives.toggle_favorite', hive_id=hive.id) }}" class="d-inline">
@@ -83,6 +84,17 @@
                   <i class="bi bi-trash"></i>
                 </button>
               </form>
+              {% if current_user.is_admin %}
+              <form method="post" action="{{ url_for('beehives.set_status', hive_id=hive.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select name="status" class="form-select form-select-sm d-inline w-auto"
+                        onchange="this.form.submit()" title="Set status">
+                  {% for key, val in status_config.items() %}
+                  <option value="{{ key }}" {{ 'selected' if hive.status == key }}>{{ val.label }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+              {% endif %}
               {% endif %}
             </td>
           </tr>

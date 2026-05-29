@@ -11,6 +11,7 @@ with engine.connect() as conn:
         "ALTER TABLE beehives ADD COLUMN IF NOT EXISTS postal_code VARCHAR(20)",
         "ALTER TABLE beehives ADD COLUMN IF NOT EXISTS latitude FLOAT",
         "ALTER TABLE beehives ADD COLUMN IF NOT EXISTS longitude FLOAT",
+        "ALTER TABLE beehives ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'no_data'",
         """CREATE TABLE IF NOT EXISTS user_favorites (
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         hive_id INTEGER REFERENCES beehives(id) ON DELETE CASCADE,

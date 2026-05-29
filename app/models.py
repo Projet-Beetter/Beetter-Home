@@ -62,6 +62,7 @@ class Beehive(db.Model):
     spreading_factor = db.Column(db.Integer, default=7)
     bandwidth = db.Column(db.Integer, default=125)
     enabled = db.Column(db.Boolean, default=True, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='no_data')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)

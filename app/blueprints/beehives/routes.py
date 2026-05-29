@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from ...models import db, Beehive
 from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS
 from ..utils.decorators import editor_required
+from ..utils.status import STATUS_CONFIG
 from .forms import BeehiveForm
 from . import beehives_bp
 from ..utils.geocode import geocode
@@ -11,7 +12,7 @@ from ..utils.geocode import geocode
 @login_required
 def index():
     beehives = Beehive.query.order_by(Beehive.created_at).all()
-    return render_template('beehives/index.html', beehives=beehives)
+    return render_template('beehives/index.html', beehives=beehives, status_config=STATUS_CONFIG)
 
 
 @beehives_bp.route('/new', methods=['GET', 'POST'])
@@ -94,14 +95,14 @@ def detail(hive_id):
             latest = query_latest_values(str(hive.id))
         except Exception:
             flash('Could not reach InfluxDB. Check your connection.', 'warning')
-
     return render_template(
-        'beehives/detail.html',
-        hive=hive,
-        chart_data=chart_data,
-        latest=latest,
-        range_str=range_str,
-        range_options=sorted(RANGE_OPTIONS),
+    'beehives/detail.html',
+    hive=hive,
+    chart_data=chart_data,
+    latest=latest,
+    range_str=range_str,
+    range_options=sorted(RANGE_OPTIONS),
+    status_config=STATUS_CONFIG,
     )
 
 @beehives_bp.route('/<int:hive_id>/favorite', methods=['POST'])
@@ -113,4 +114,17 @@ def toggle_favorite(hive_id):
     else:
         current_user.favorite_hives.append(hive)
     db.session.commit()
+    return redirect(request.referrer or url_for('beehives.index'))
+
+@beehives_bp.route('/<int:hive_id>/status', methods=['POST'])
+@login_required
+def set_status(hive_id):
+    if not current_user.is_admin:
+        abort(403)
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
+    new_status = request.form.get('status')
+    if new_status in ('healthy', 'warning', 'critical', 'offline', 'no_data'):
+        hive.status = new_status
+        db.session.commit()
+        flash(f'Status updated to {new_status}.', 'success')
     return redirect(request.referrer or url_for('beehives.index'))

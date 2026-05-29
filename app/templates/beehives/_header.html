@@ -1,7 +1,8 @@
 <div class="d-flex flex-wrap align-items-center gap-2 mb-4 mt-1">
-  <span class="badge {{ 'bg-success' if hive.enabled else 'bg-secondary' }} fs-6">
-    {{ 'Active' if hive.enabled else 'Disabled' }}
-  </span>
+ {% set s = status_config[hive.status] %}
+<span class="badge {{ s.badge }} fs-6">
+  <i class="bi {{ s.icon }} me-1"></i>{{ s.label }}
+</span>
 {% if hive.street or hive.city %}
   <span class="text-muted">
     <i class="bi bi-geo-alt me-1"></i>
@@ -23,5 +24,16 @@
   <a href="{{ url_for('beehives.edit', hive_id=hive.id) }}" class="btn btn-sm btn-outline-warning">
     <i class="bi bi-pencil me-1"></i>Edit
   </a>
+  {% endif %}
+  {% if current_user.is_admin %}
+  <form method="post" action="{{ url_for('beehives.set_status', hive_id=hive.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <select name="status" class="form-select form-select-sm d-inline w-auto"
+            onchange="this.form.submit()" title="Set status">
+      {% for key, val in status_config.items() %}
+      <option value="{{ key }}" {{ 'selected' if hive.status == key }}>{{ val.label }}</option>
+      {% endfor %}
+    </select>
+  </form>
   {% endif %}
 </div>
