@@ -32,8 +32,6 @@ import requests
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 log = logging.getLogger(__name__)
 
-BEETTER_URL=http://192.168.1.149:5000 python receiver.py
-
 BEETTER_URL = os.environ.get('BEETTER_URL', 'http://localhost:5000')
 API_ENDPOINT = f'{BEETTER_URL}/api/data'
 
@@ -109,7 +107,7 @@ def push_to_api(payload: dict) -> bool:
     try:
         resp = requests.post(API_ENDPOINT, json=payload, timeout=10)
         if resp.ok:
-            log.info('Data pushed: beehive=%s temp=%s hum=%s',
+            log.info('Data pushed: beehive=%s Tint=%s Hint=%s Text=%s Hext=%s',
                      payload.get('beehive_id'),
                      payload.get('temperature_int'),
                      payload.get('humidity_int'),
