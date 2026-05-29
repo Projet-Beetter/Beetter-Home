@@ -161,6 +161,7 @@ body.sidebar-loading #sidebar.collapsed {
 #sidebar.collapsed .nav-label {
   max-width: 0;
   opacity: 0;
+  margin: 0;
 }
 
 #sidebar .nav-link i,
@@ -173,8 +174,6 @@ body.sidebar-loading #sidebar.collapsed {
 #sidebar.collapsed .nav-link i,
 #sidebar.collapsed .sidebar-dark-toggle i {
   min-width: unset;
-  width: 100%;
-  text-align: center;
 }
 
 .sidebar-dark-toggle {

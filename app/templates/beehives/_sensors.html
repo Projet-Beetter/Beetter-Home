@@ -3,11 +3,11 @@
     <div class="card border-0 shadow-sm text-center py-3">
       <div class="text-danger fs-4"><i class="bi bi-thermometer-half"></i></div>
       <div class="fs-2 fw-bold">
-        {% if latest.temperature %}{{ latest.temperature.value }}°C{% else %}<span class="text-muted">—</span>{% endif %}
+        {% if latest.temperature_int %}{{ latest.temperature_int.value }}°C{% else %}<span class="text-muted">—</span>{% endif %}
       </div>
-      <small class="text-muted">Temperature</small>
-      {% if latest.temperature %}
-        <small class="text-muted d-block" style="font-size:.7rem">{{ latest.temperature.time }}</small>
+      <small class="text-muted">Interior Temperature</small>
+      {% if latest.temperature_int %}
+        <small class="text-muted d-block" style="font-size:.7rem">{{ latest.temperature_int.time }}</small>
       {% endif %}
     </div>
   </div>
@@ -15,11 +15,35 @@
     <div class="card border-0 shadow-sm text-center py-3">
       <div class="text-primary fs-4"><i class="bi bi-droplet-half"></i></div>
       <div class="fs-2 fw-bold">
-        {% if latest.humidity %}{{ latest.humidity.value }}%{% else %}<span class="text-muted">—</span>{% endif %}
+        {% if latest.humidity_int %}{{ latest.humidity_int.value }}%{% else %}<span class="text-muted">—</span>{% endif %}
       </div>
-      <small class="text-muted">Humidity</small>
-      {% if latest.humidity %}
-        <small class="text-muted d-block" style="font-size:.7rem">{{ latest.humidity.time }}</small>
+      <small class="text-muted">Interior Humidity</small>
+      {% if latest.humidity_int %}
+        <small class="text-muted d-block" style="font-size:.7rem">{{ latest.humidity_int.time }}</small>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm text-center py-3">
+      <div class="text-danger fs-4"><i class="bi bi-thermometer-half"></i></div>
+      <div class="fs-2 fw-bold">
+        {% if latest.temperature_ext %}{{ latest.temperature_ext.value }}°C{% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      <small class="text-muted">Exterior Temperature</small>
+      {% if latest.temperature_ext %}
+        <small class="text-muted d-block" style="font-size:.7rem">{{ latest.temperature_ext.time }}</small>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm text-center py-3">
+      <div class="text-primary fs-4"><i class="bi bi-droplet-half"></i></div>
+      <div class="fs-2 fw-bold">
+        {% if latest.humidity_ext %}{{ latest.humidity_ext.value }}%{% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      <small class="text-muted">Exterior Humidity</small>
+      {% if latest.humidity_ext %}
+        <small class="text-muted d-block" style="font-size:.7rem">{{ latest.humidity_ext.time }}</small>
       {% endif %}
     </div>
   </div>
