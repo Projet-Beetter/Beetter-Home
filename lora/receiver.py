@@ -112,8 +112,8 @@ def push_to_api(payload: dict) -> bool:
             log.info('Data pushed: beehive=%s temp=%s hum=%s',
                      payload.get('beehive_id'),
                      payload.get('temperature_int'),
-                     payload.get('humidity_int'))
-                     payload.get('temperature_ext'))
+                     payload.get('humidity_int'),
+                     payload.get('temperature_ext'),
                      payload.get('humidity_ext'))
             return True
         log.error('API returned %s: %s', resp.status_code, resp.text)
