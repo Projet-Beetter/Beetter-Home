@@ -9,19 +9,35 @@
 <!-- Charts -->
 {% if chart_data %}
   <div class="row g-3">
-    <div class="col-12">
+    <div class="col-12 col-lg-6">
       <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-thermometer-half text-danger me-2"></i>Temperature (°C)</h6>
-          <canvas id="tempChart" height="100"></canvas>
+          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-thermometer-half text-danger me-2"></i>Interior Temperature (°C)</h6>
+          <canvas id="tempIntChart" height="100"></canvas>
         </div>
       </div>
     </div>
-    <div class="col-12">
+    <div class="col-12 col-lg-6">
       <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-droplet-half text-primary me-2"></i>Humidity (%)</h6>
-          <canvas id="humChart" height="100"></canvas>
+          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-thermometer-half text-danger me-2"></i>Exterior Temperature (°C)</h6>
+          <canvas id="tempExtChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-droplet-half text-primary me-2"></i>Interior Humidity (%)</h6>
+          <canvas id="humIntChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-droplet-half text-primary me-2"></i>Exterior Humidity (%)</h6>
+          <canvas id="humExtChart" height="100"></canvas>
         </div>
       </div>
     </div>

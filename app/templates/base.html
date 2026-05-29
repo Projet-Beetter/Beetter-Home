@@ -11,18 +11,18 @@
   {% block head %}{% endblock %}
 </head>
 <body class="sidebar-loading">
-<script>
-  const initialSidebarState = localStorage.getItem('sidebarCollapsed');
-  if (initialSidebarState !== null && initialSidebarState !== 'false') {
-    document.body.classList.add('sidebar-collapsed-on-load');
-  }
-</script>
+
 
 {% if current_user.is_authenticated %}
 <div class="d-flex" id="wrapper">
 
   <!-- Sidebar -->
   <nav id="sidebar" class="d-flex flex-column flex-shrink-0">
+    <script>
+      if (localStorage.getItem('sidebarCollapsed') !== 'false') {
+        document.getElementById('sidebar').classList.add('collapsed');
+      }
+    </script>
     <!-- Sidebar Top: Logo + Toggle -->
     <div class="sidebar-top px-2 py-3">
       <div class="d-flex align-items-center justify-content-center" style="height: 48px;">
@@ -142,11 +142,7 @@
   // Sidebar toggle (desktop - collapse/expand)
   const sidebarToggleTop = document.getElementById('sidebarToggleTop');
   const sidebar = document.getElementById('sidebar');
-  const sidebarCollapsedState = localStorage.getItem('sidebarCollapsed');
-  
-  if (sidebarCollapsedState !== 'false') {
-    sidebar?.classList.add('collapsed');
-  }
+
   document.body.classList.remove('sidebar-loading', 'sidebar-collapsed-on-load');
   
   sidebarToggleTop?.addEventListener('click', () => {
