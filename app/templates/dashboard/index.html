@@ -22,84 +22,6 @@
     </div>
   {% else %}
 
-<<<<<<< HEAD
-  {% for item in hive_data %}
-    {% set hive = item.hive %}
-    {% set latest = item.latest %}
-    <div class="col-sm-6 col-xl-4">
-      <div class="card border-0 shadow-sm h-100 {% if not hive.enabled %}opacity-50{% endif %}">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h6 class="card-title fw-bold mb-0">{{ hive.name }}</h6>
-              {% if hive.city or hive.latitude %}
-                <small class="text-muted">
-                  <i class="bi bi-geo-alt me-1"></i>
-                  {% if hive.city %}{{ hive.city }}{% endif %}
-                  {% if hive.latitude and hive.longitude %}
-                    <span class="font-monospace">({{ "%.4f"|format(hive.latitude) }}, {{ "%.4f"|format(hive.longitude) }})</span>
-                  {% endif %}
-                </small>
-              {% endif %}
-
-            </div>
-            <span class="badge {{ 'bg-success' if hive.enabled else 'bg-secondary' }}">
-              {{ 'Active' if hive.enabled else 'Disabled' }}
-            </span>
-          </div>
-
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <div class="stat-card rounded p-2 text-center">
-                <div class="stat-icon text-danger"><i class="bi bi-thermometer-high"></i></div>
-                <div class="fw-bold fs-5">
-                  {% if latest.temperature_int %}
-                    {{ latest.temperature_int.value }}°C
-                  {% else %}
-                    <span class="text-muted">—</span>
-                  {% endif %}
-                </div>
-                <small class="text-muted">Temp (Int)</small>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="stat-card rounded p-2 text-center">
-                <div class="stat-icon text-primary"><i class="bi bi-droplet-fill"></i></div>
-                <div class="fw-bold fs-5">
-                  {% if latest.humidity_int %}
-                    {{ latest.humidity_int.value }}%
-                  {% else %}
-                    <span class="text-muted">—</span>
-                  {% endif %}
-                </div>
-                <small class="text-muted">Hum (Int)</small>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="stat-card rounded p-2 text-center">
-                <div class="stat-icon text-warning"><i class="bi bi-thermometer"></i></div>
-                <div class="fw-bold fs-5">
-                  {% if latest.temperature_ext %}
-                    {{ latest.temperature_ext.value }}°C
-                  {% else %}
-                    <span class="text-muted">—</span>
-                  {% endif %}
-                </div>
-                <small class="text-muted">Temp (Ext)</small>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="stat-card rounded p-2 text-center">
-                <div class="stat-icon text-info"><i class="bi bi-droplet"></i></div>
-                <div class="fw-bold fs-5">
-                  {% if latest.humidity_ext %}
-                    {{ latest.humidity_ext.value }}%
-                  {% else %}
-                    <span class="text-muted">—</span>
-                  {% endif %}
-                </div>
-                <small class="text-muted">Hum (Ext)</small>
-=======
     {% if favorite_data %}
       <div class="col-12">
         <h6 class="text-muted fw-semibold text-uppercase mb-0" style="font-size:.75rem;letter-spacing:.05em">
@@ -130,10 +52,9 @@
                     {{ 'Active' if hive.enabled else 'Disabled' }}
                   </span>
                 </div>
->>>>>>> 021f83a4e3ed33f1506265e8ca26d0cd7386097c
               </div>
               <div class="row g-2 mb-3">
-                <div class="col-6 col-sm-3">
+                <div class="col-6">
                   <div class="stat-card rounded p-2 text-center">
                     <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
                     <div class="fw-bold fs-5">
@@ -143,7 +64,7 @@
                     <small class="text-muted text-nowrap">Int. Temp</small>
                   </div>
                 </div>
-                <div class="col-6 col-sm-3">
+                <div class="col-6">
                   <div class="stat-card rounded p-2 text-center">
                     <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
                     <div class="fw-bold fs-5">
@@ -153,7 +74,7 @@
                     <small class="text-muted text-nowrap">Int. Humidity</small>
                   </div>
                 </div>
-                <div class="col-6 col-sm-3">
+                <div class="col-6">
                   <div class="stat-card rounded p-2 text-center">
                     <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
                     <div class="fw-bold fs-5">
@@ -163,7 +84,7 @@
                     <small class="text-muted text-nowrap">Ext. Temp</small>
                   </div>
                 </div>
-                <div class="col-6 col-sm-3">
+                <div class="col-6">
                   <div class="stat-card rounded p-2 text-center">
                     <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
                     <div class="fw-bold fs-5">
@@ -217,7 +138,7 @@
               </div>
             </div>
             <div class="row g-2 mb-3">
-              <div class="col-6 col-sm-3">
+              <div class="col-6">
                 <div class="stat-card rounded p-2 text-center">
                   <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
                   <div class="fw-bold fs-5">
@@ -227,7 +148,7 @@
                   <small class="text-muted text-nowrap">Int. Temp</small>
                 </div>
               </div>
-              <div class="col-6 col-sm-3">
+              <div class="col-6">
                 <div class="stat-card rounded p-2 text-center">
                   <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
                   <div class="fw-bold fs-5">
@@ -237,7 +158,7 @@
                   <small class="text-muted text-nowrap">Int. Humidity</small>
                 </div>
               </div>
-              <div class="col-6 col-sm-3">
+              <div class="col-6">
                 <div class="stat-card rounded p-2 text-center">
                   <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
                   <div class="fw-bold fs-5">
@@ -247,7 +168,7 @@
                   <small class="text-muted text-nowrap">Ext. Temp</small>
                 </div>
               </div>
-              <div class="col-6 col-sm-3">
+              <div class="col-6">
                 <div class="stat-card rounded p-2 text-center">
                   <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
                   <div class="fw-bold fs-5">
