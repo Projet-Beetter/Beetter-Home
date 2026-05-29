@@ -31,8 +31,10 @@ def ingest():
     try:
         write_sensor_data(
             beehive_id=beehive_id,
-            temperature=data.get('temperature'),
-            humidity=data.get('humidity'),
+            temperature_int=data.get('temperature_int'),
+            humidity_int=data.get('humidity_int'),
+            temperature_ext=data.get('temperature_ext'),
+            humidity_ext=data.get('humidity_ext'),
             timestamp=ts,
         )
     except Exception as e:
