@@ -77,7 +77,7 @@ def receive_packet(radio):
     """
     # Simulated packet for development:
     time.sleep(10)
-    sample = json.dumps({"id": 1, "t": 32.4, "h": 64.7}).encode()
+    sample = json.dumps({"id": 1, "t_int": 32.4, "h_int": 64.7,"t_ext": 32.4, "h_ext": 64.7}).encode()
     log.debug('STUB: returning simulated packet')
     return sample
 
@@ -97,8 +97,10 @@ def parse_packet(raw: bytes) -> dict | None:
 
     return {
         'beehive_id': int(beehive_id),
-        'temperature': data.get('t'),
-        'humidity':    data.get('h'),
+        'temperature_int': data.get('t_int'),
+        'humidity_int':    data.get('h_int'),
+        'temperature_ext': data.get('t_ext'),
+        'humidity_ext':    data.get('h_ext'),
     }
 
 
@@ -109,8 +111,10 @@ def push_to_api(payload: dict) -> bool:
         if resp.ok:
             log.info('Data pushed: beehive=%s temp=%s hum=%s',
                      payload.get('beehive_id'),
-                     payload.get('temperature'),
-                     payload.get('humidity'))
+                     payload.get('temperature_int'),
+                     payload.get('humidity_int'))
+                     payload.get('temperature_ext'))
+                     payload.get('humidity_ext'))
             return True
         log.error('API returned %s: %s', resp.status_code, resp.text)
         return False
