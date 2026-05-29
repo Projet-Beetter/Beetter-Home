@@ -8,7 +8,7 @@ from . import dashboard_bp
 @dashboard_bp.route('/')
 @login_required
 def index():
-    beehives = Beehive.query.filter_by(user_id=current_user.id).all()
+    beehives = Beehive.query.all()
     hive_data = []
     for hive in beehives:
         latest = {}

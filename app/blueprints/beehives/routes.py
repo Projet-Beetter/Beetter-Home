@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from ...models import db, Beehive
 from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS
+from ..utils.decorators import editor_required
 from .forms import BeehiveForm
 from . import beehives_bp
 import urllib.request, urllib.parse, json
@@ -27,12 +28,13 @@ def geocode(street, city, postal_code):
 @beehives_bp.route('/')
 @login_required
 def index():
-    beehives = Beehive.query.filter_by(user_id=current_user.id).order_by(Beehive.created_at).all()
+    beehives = Beehive.query.order_by(Beehive.created_at).all()
     return render_template('beehives/index.html', beehives=beehives)
 
 
 @beehives_bp.route('/new', methods=['GET', 'POST'])
 @login_required
+@editor_required
 def new():
     form = BeehiveForm()
     if form.validate_on_submit():
@@ -57,8 +59,9 @@ def new():
 
 @beehives_bp.route('/<int:hive_id>/edit', methods=['GET', 'POST'])
 @login_required
+@editor_required
 def edit(hive_id):
-    hive = Beehive.query.filter_by(id=hive_id, user_id=current_user.id).first_or_404()
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     form = BeehiveForm(obj=hive)
     if form.validate_on_submit():
         form.populate_obj(hive)
@@ -71,8 +74,9 @@ def edit(hive_id):
 
 @beehives_bp.route('/<int:hive_id>/delete', methods=['POST'])
 @login_required
+@editor_required
 def delete(hive_id):
-    hive = Beehive.query.filter_by(id=hive_id, user_id=current_user.id).first_or_404()
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     name = hive.name
     db.session.delete(hive)
     db.session.commit()
@@ -82,8 +86,9 @@ def delete(hive_id):
 
 @beehives_bp.route('/<int:hive_id>/toggle', methods=['POST'])
 @login_required
+@editor_required
 def toggle(hive_id):
-    hive = Beehive.query.filter_by(id=hive_id, user_id=current_user.id).first_or_404()
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     hive.enabled = not hive.enabled
     db.session.commit()
     state = 'enabled' if hive.enabled else 'disabled'
@@ -94,7 +99,7 @@ def toggle(hive_id):
 @beehives_bp.route('/<int:hive_id>')
 @login_required
 def detail(hive_id):
-    hive = Beehive.query.filter_by(id=hive_id, user_id=current_user.id).first_or_404()
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     range_str = request.args.get('range', '24h')
     if range_str not in RANGE_OPTIONS:
         range_str = '24h'

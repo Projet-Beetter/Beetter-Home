@@ -1,13 +1,15 @@
 {% extends 'base.html' %}
 {% block title %}Beehives — Beetter{% endblock %}
 {% block page_title %}Beehives{% endblock %}
-
 {% block content %}
+
+{% if current_user.can_edit_data %}
 <div class="d-flex justify-content-end mb-3 mt-1">
   <a href="{{ url_for('beehives.new') }}" class="btn btn-warning">
     <i class="bi bi-plus-lg me-1"></i>Add beehive
   </a>
 </div>
+{% endif %}
 
 {% if not beehives %}
   <div class="card border-0 shadow-sm text-center py-5">
@@ -23,6 +25,7 @@
         <thead class="table-light">
           <tr>
             <th>Name</th>
+            <th>Owner</th>
             <th>Location</th>
             <th>Device EUI</th>
             <th>Freq (MHz)</th>
@@ -35,6 +38,7 @@
           {% for hive in beehives %}
           <tr>
             <td class="fw-semibold">{{ hive.name }}</td>
+            <td class="text-muted">{{hive.owner.username}}</td>
             <td class="text-muted">
               {% if hive.street or hive.city %}
                {% if hive.street %}{{ hive.street }}, {% endif %}
@@ -54,6 +58,7 @@
                  class="btn btn-sm btn-outline-secondary" title="View charts">
                 <i class="bi bi-bar-chart-line"></i>
               </a>
+              {% if current_user.can_edit_data%}
               <a href="{{ url_for('beehives.edit', hive_id=hive.id) }}"
                  class="btn btn-sm btn-outline-warning" title="Edit">
                 <i class="bi bi-pencil"></i>
@@ -72,6 +77,7 @@
                   <i class="bi bi-trash"></i>
                 </button>
               </form>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
