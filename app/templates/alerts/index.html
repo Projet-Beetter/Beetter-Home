@@ -24,6 +24,7 @@
           <tr>
             <th>Hive</th>
             <th>Location</th>
+            <th>Source</th>
             <th>Previous status</th>
             <th>New status</th>
             <th>Time</th>
@@ -37,15 +38,20 @@
             <td class="fw-semibold">{{ alert.hive.name }}</td>
             <td class="text-muted">{{ alert.hive.city or '—' }}</td>
             <td>
-              <span class="badge {{ old.badge }}">
-                <i class="bi {{ old.icon }} me-1"></i>{{ old.label }}
-              </span>
-            </td>
-            <td>
-              <span class="badge {{ new.badge }}">
-                <i class="bi {{ new.icon }} me-1"></i>{{ new.label }}
-              </span>
-            </td>
+            {% set src = alert_sources.get(alert.source, {'label': alert.source, 'icon': 'bi-question-circle'}) %}
+            <i class="bi {{ src.icon }} me-1"></i>{{ src.label }}
+          </td>
+          <td>
+          <span class="badge {{ old.badge }}">
+             <i class="bi {{ old.icon }} me-1"></i>{{ old.label }}
+          </span>
+        </td>
+    <td>
+  <span class="badge {{ new.badge }}">
+    <i class="bi {{ new.icon }} me-1"></i>{{ new.label }}
+  </span>
+</td>
+
             <td class="text-muted small">{{ alert.created_at.strftime('%d %b %Y %H:%M:%S') }}</td>
           </tr>
           {% endfor %}

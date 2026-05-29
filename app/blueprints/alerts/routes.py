@@ -3,6 +3,7 @@ from flask import render_template
 from flask_login import login_required, current_user
 from ...models import db, Alert
 from ..utils.status import STATUS_CONFIG
+from ..utils.alert_sources import ALERT_SOURCES
 from . import alerts_bp
 
 ALERTS_DAYS = 1
@@ -18,4 +19,5 @@ def index():
         if current_user not in alert.read_by:
             alert.read_by.append(current_user)
     db.session.commit()
-    return render_template('alerts/index.html', alerts=alerts, status_config=STATUS_CONFIG)
+    return render_template('alerts/index.html', alerts=alerts, status_config=STATUS_CONFIG, alert_sources=ALERT_SOURCES)
+

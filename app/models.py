@@ -80,6 +80,7 @@ class Alert(db.Model):
     hive_id = db.Column(db.Integer, db.ForeignKey('beehives.id'), nullable=False)
     old_status = db.Column(db.String(20), nullable=False)
     new_status = db.Column(db.String(20), nullable=False)
+    source = db.Column(db.String(50), nullable=False, default='manual')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     hive = db.relationship('Beehive', backref='alerts')
