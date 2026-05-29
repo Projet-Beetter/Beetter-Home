@@ -3,8 +3,17 @@
 {% block page_title %}Alerts{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-end mb-3 mt-1">
-  <a href="{{ url_for('alerts.index') }}" class="btn btn-outline-secondary">
+<div class="d-flex justify-content-end gap-2 mb-3 mt-1">
+  {% if current_user.is_admin %}
+  <form method="post" action="{{ url_for('alerts.clear_alerts') }}" class="d-inline"
+        onsubmit="return confirm('Clear all alerts for today?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-danger btn-sm">
+      <i class="bi bi-trash me-1"></i>Clear all
+    </button>
+  </form>
+  {% endif %}
+  <a href="{{ url_for('alerts.index') }}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-clockwise me-1"></i>Refresh
   </a>
 </div>
@@ -28,6 +37,7 @@
             <th>Previous status</th>
             <th>New status</th>
             <th>Time</th>
+            {% if current_user.is_admin %}<th></th>{% endif %}
           </tr>
         </thead>
         <tbody>
@@ -53,6 +63,16 @@
 </td>
 
             <td class="text-muted small">{{ alert.created_at.strftime('%d %b %Y %H:%M:%S') }}</td>
+            {% if current_user.is_admin %}
+            <td>
+              <form method="post" action="{{ url_for('alerts.delete_alert', alert_id=alert.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+            {% endif %}
           </tr>
           {% endfor %}
         </tbody>
