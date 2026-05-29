@@ -34,6 +34,8 @@
     });
   }
 
-  makeChart('tempChart', 'Temperature (°C)', '#dc3545', chartData.temperature || {labels:[], data:[]});
-  makeChart('humChart',  'Humidity (%)',      '#0d6efd', chartData.humidity  || {labels:[], data:[]});
+  makeChart('tempIntChart', 'Interior Temperature (°C)', '#dc3545', chartData.temperature_int || {labels:[], data:[]});
+  makeChart('tempExtChart', 'Exterior Temperature (°C)', '#e46060', chartData.temperature_ext || {labels:[], data:[]});
+  makeChart('humIntChart',  'Interior Humidity (%)',      '#0d6efd', chartData.humidity_int  || {labels:[], data:[]});
+  makeChart('humExtChart',  'Exterior Humidity (%)',      '#4b8dff', chartData.humidity_ext  || {labels:[], data:[]});
 </script>

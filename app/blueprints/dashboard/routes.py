@@ -8,8 +8,11 @@ from . import dashboard_bp
 @dashboard_bp.route('/')
 @login_required
 def index():
-    beehives = Beehive.query.all()
-    hive_data = []
+    beehives = Beehive.query.order_by(Beehive.created_at).all()
+    fav_ids = {h.id for h in current_user.favorite_hives}
+
+    favorite_data = []
+    other_data = []
     for hive in beehives:
         latest = {}
         if hive.enabled:
@@ -17,5 +20,13 @@ def index():
                 latest = query_latest_values(str(hive.id))
             except Exception:
                 pass
-        hive_data.append({'hive': hive, 'latest': latest})
-    return render_template('dashboard/index.html', hive_data=hive_data)
+        entry = {'hive': hive, 'latest': latest}
+        if hive.id in fav_ids:
+            favorite_data.append(entry)
+        else:
+            other_data.append(entry)
+
+    return render_template('dashboard/index.html',
+                           favorite_data=favorite_data,
+                           other_data=other_data)
+
