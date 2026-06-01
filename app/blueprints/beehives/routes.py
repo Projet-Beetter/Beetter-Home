@@ -101,7 +101,7 @@ def detail(hive_id):
     chart_data=chart_data,
     latest=latest,
     range_str=range_str,
-    range_options=sorted(RANGE_OPTIONS),
+    range_options=RANGE_OPTIONS,
     status_config=STATUS_CONFIG,
     )
 

@@ -3,7 +3,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from flask import current_app
 from datetime import datetime, timezone
 
-RANGE_OPTIONS = {'1h', '6h', '24h', '7d', '30d'}
+RANGE_OPTIONS = ['1h', '6h', '24h', '7d', '30d']
 
 _WINDOW_MAP = {
     '1h': '1m',

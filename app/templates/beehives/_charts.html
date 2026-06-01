@@ -1,83 +1,195 @@
-<!-- Range selector -->
-<div class="d-flex gap-2 mb-3">
-  {% for r in ['1h', '6h', '24h', '7d', '30d'] %}
-    <a href="{{ url_for('beehives.detail', hive_id=hive.id, range=r) }}"
-       class="btn btn-sm {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}">{{ r }}</a>
-  {% endfor %}
-</div>
-
 <!-- Charts -->
 {% if chart_data %}
-  <div class="row g-3">
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-thermometer-half text-danger me-2"></i>Interior Temperature (°C)</h6>
-          <canvas id="tempIntChart" height="100"></canvas>
+  <div class="section-container section-temperature mb-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div>
+          <h5 class="mb-1"><i class="bi bi-thermometer-half text-danger me-2"></i>Temperature Charts</h5>
+          <small class="text-muted">Current range applies per chart.</small>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Interior Temperature (°C)</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="tempIntChart" data-sensor-key="temperature_int" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="tempIntChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Exterior Temperature (°C)</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="tempExtChart" data-sensor-key="temperature_ext" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="tempExtChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-thermometer-half text-danger me-2"></i>Exterior Temperature (°C)</h6>
-          <canvas id="tempExtChart" height="100"></canvas>
+  </div>
+
+  <div class="section-container section-humidity mb-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div>
+          <h5 class="mb-1"><i class="bi bi-droplet-half text-primary me-2"></i>Humidity Charts</h5>
+          <small class="text-muted">Interior and exterior humidity charts.</small>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Interior Humidity (%)</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="humIntChart" data-sensor-key="humidity_int" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="humIntChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Exterior Humidity (%)</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="humExtChart" data-sensor-key="humidity_ext" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="humExtChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-droplet-half text-primary me-2"></i>Interior Humidity (%)</h6>
-          <canvas id="humIntChart" height="100"></canvas>
+  </div>
+
+  <div class="section-container section-sound mb-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div>
+          <h5 class="mb-1"><i class="bi bi-music-note-beamed text-secondary me-2"></i>Sound & Frequency Charts</h5>
+          <small class="text-muted">Peak frequency and amplitude.</small>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Interior Sound — Peak Frequency (Hz)</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="soundFreqIntChart" data-sensor-key="sound_freq_int" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="soundFreqIntChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Exterior Sound — Peak Frequency (Hz)</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="soundFreqExtChart" data-sensor-key="sound_freq_ext" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="soundFreqExtChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Interior Sound — Amplitude</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="soundAmpIntChart" data-sensor-key="sound_amp_int" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="soundAmpIntChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Exterior Sound — Amplitude</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="soundAmpExtChart" data-sensor-key="sound_amp_ext" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="soundAmpExtChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-droplet-half text-primary me-2"></i>Exterior Humidity (%)</h6>
-          <canvas id="humExtChart" height="100"></canvas>
+  </div>
+
+  <div class="section-container section-luminosity mb-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div>
+          <h5 class="mb-1"><i class="bi bi-brightness-high text-warning me-2"></i>Luminosity Charts</h5>
+          <small class="text-muted">Exterior light levels.</small>
         </div>
       </div>
-    </div>
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-music-note-beamed text-secondary me-2"></i>Interior Sound — Peak Frequency (Hz)</h6>
-          <canvas id="soundFreqIntChart" height="100"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-music-note-beamed text-secondary me-2"></i>Exterior Sound — Peak Frequency (Hz)</h6>
-          <canvas id="soundFreqExtChart" height="100"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-volume-up text-secondary me-2"></i>Interior Sound — Amplitude</h6>
-          <canvas id="soundAmpIntChart" height="100"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-volume-up text-secondary me-2"></i>Exterior Sound — Amplitude</h6>
-          <canvas id="soundAmpExtChart" height="100"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title fw-semibold mb-3"><i class="bi bi-brightness-high text-warning me-2"></i>Exterior Light (lx)</h6>
-          <canvas id="lightExtChart" height="100"></canvas>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title fw-semibold mb-0">Exterior Light (lx)</h6>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
+                    {% for r in range_options %}
+                      <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="lightExtChart" data-sensor-key="light_ext" data-range="{{ r }}">{{ r }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+                <canvas id="lightExtChart" height="100"></canvas>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

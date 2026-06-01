@@ -1,46 +1,139 @@
 <script>
   const chartData = {{ chart_data | tojson }};
+  const chartApiUrl = "{{ url_for('api.chart_data', hive_id=hive.id) }}";
+  const charts = {};
 
-  function makeChart(id, label, color, dataset) {
+  function convertToPoints(dataset) {
+    if (!dataset || !dataset.labels) return [];
+    return dataset.labels.map((t, i) => ({ x: t, y: dataset.data[i] }));
+  }
+
+  function makeMultiSeriesChart(id, title, seriesConfigs) {
     const ctx = document.getElementById(id);
-    if (!ctx || !dataset.labels.length) return;
-    new Chart(ctx, {
+    if (!ctx) return;
+    const datasets = seriesConfigs.map((sc, idx) => {
+      const pts = convertToPoints(chartData[sc.sensorKey] || { labels: [], data: [] });
+      const color = sc.color || ['#dc3545','#e46060','#0d6efd','#4b8dff','#6a1b9a'][idx % 5];
+      return {
+        label: sc.label || sc.sensorKey,
+        data: pts,
+        borderColor: color,
+        backgroundColor: color + '22',
+        fill: true,
+        tension: 0.3,
+        pointRadius: pts.length > 200 ? 0 : 2,
+        borderWidth: 2,
+        hidden: sc.visible === false,
+        sensorKey: sc.sensorKey,
+      };
+    });
+
+    const chart = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels: dataset.labels,
-        datasets: [{
-          label: label,
-          data: dataset.data,
-          borderColor: color,
-          backgroundColor: color + '22',
-          fill: true,
-          tension: 0.3,
-          pointRadius: dataset.labels.length > 200 ? 0 : 2,
-          borderWidth: 2,
-        }]
-      },
+      data: { datasets },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: true } },
         scales: {
-          x: {
-            type: 'time',
-            time: { tooltipFormat: 'dd MMM HH:mm' },
-            ticks: { maxTicksLimit: 8 }
-          },
+          x: { type: 'time', time: { tooltipFormat: 'dd MMM HH:mm' }, ticks: { maxTicksLimit: 8 } },
           y: { beginAtZero: false }
         }
       }
     });
+    charts[id] = chart;
   }
 
-  makeChart('tempIntChart', 'Interior Temperature (°C)', '#dc3545', chartData.temperature_int || {labels:[], data:[]});
-  makeChart('tempExtChart', 'Exterior Temperature (°C)', '#e46060', chartData.temperature_ext || {labels:[], data:[]});
-  makeChart('humIntChart',  'Interior Humidity (%)',      '#0d6efd', chartData.humidity_int  || {labels:[], data:[]});
-  makeChart('humExtChart',  'Exterior Humidity (%)',      '#4b8dff', chartData.humidity_ext  || {labels:[], data:[]});
-  makeChart('soundFreqIntChart', 'Interior Sound — Peak Frequency (Hz)', '#6a1b9a', chartData.sound_freq_int || {labels:[], data:[]});
-  makeChart('soundAmpIntChart',  'Interior Sound — Amplitude',           '#00897b', chartData.sound_amp_int  || {labels:[], data:[]});
-  makeChart('soundFreqExtChart', 'Exterior Sound — Peak Frequency (Hz)', '#ab47bc', chartData.sound_freq_ext || {labels:[], data:[]});
-  makeChart('soundAmpExtChart',  'Exterior Sound — Amplitude',           '#26a69a', chartData.sound_amp_ext  || {labels:[], data:[]});
-  makeChart('lightExtChart',     'Exterior Light (lx)',                  '#f9a825', chartData.light_ext      || {labels:[], data:[]});
+  function updateMultiChart(chartId, dataObj) {
+    const chart = charts[chartId];
+    if (!chart) return;
+    chart.data.datasets.forEach(ds => {
+      const key = ds.sensorKey;
+      ds.data = convertToPoints(dataObj[key] || { labels: [], data: [] });
+    });
+    chart.update();
+  }
+
+  async function loadChartRange(chartId, sensorKeys, range) {
+    try {
+      const response = await fetch(`${chartApiUrl}?range=${encodeURIComponent(range)}`);
+      if (!response.ok) { console.error('Unable to load chart data:', response.statusText); return; }
+      const data = await response.json();
+      const keys = Array.isArray(sensorKeys) ? sensorKeys : (sensorKeys || '').split(',');
+      const subset = {};
+      keys.forEach(k => { subset[k] = data[k] || { labels: [], data: [] }; });
+      updateMultiChart(chartId, data);
+    } catch (error) { console.error('Chart loading error:', error); }
+  }
+
+  function setRangeButtonState(chartId, activeRange) {
+    document.querySelectorAll(`.range-selector[data-chart-id="${chartId}"]`).forEach(button => {
+      button.classList.toggle('btn-warning', button.dataset.range === activeRange);
+      button.classList.toggle('btn-outline-secondary', button.dataset.range !== activeRange);
+    });
+  }
+
+  function initializeRangeSelectors() {
+    document.querySelectorAll('.range-selector').forEach(button => {
+      button.addEventListener('click', () => {
+        const chartId = button.dataset.chartId;
+        const sensorKeys = button.dataset.sensorKeys;
+        const range = button.dataset.range;
+        setRangeButtonState(chartId, range);
+        loadChartRange(chartId, sensorKeys, range);
+      });
+    });
+  }
+
+  function initializeSeriesToggles() {
+    document.querySelectorAll('.series-toggle').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const chartId = cb.dataset.chartId;
+        const sensorKey = cb.dataset.sensorKey;
+        const chart = charts[chartId];
+        if (!chart) return;
+        const dsIndex = chart.data.datasets.findIndex(d => d.sensorKey === sensorKey);
+        if (dsIndex === -1) return;
+        chart.data.datasets[dsIndex].hidden = !cb.checked;
+        chart.update();
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Create multi-series charts by reading the checkboxes present in the DOM
+    const defaultColorSets = {
+      temperatureChart: ['#dc3545','#e46060'],
+      humidityChart: ['#0d6efd','#4b8dff'],
+      soundFreqChart: ['#6a1b9a','#ab47bc'],
+      soundAmpChart: ['#00897b','#26a69a'],
+      lightExtChart: ['#f9a825']
+    };
+
+    document.querySelectorAll('canvas').forEach(canvas => {
+      const id = canvas.id;
+      const seriesInputs = Array.from(document.querySelectorAll(`.series-toggle[data-chart-id="${id}"]`));
+      if (!seriesInputs.length) return;
+      const seriesConfigs = seriesInputs.map((cb, idx) => ({
+        sensorKey: cb.dataset.sensorKey,
+        label: document.querySelector(`label[for="${cb.id}"]`).innerText,
+        visible: cb.checked,
+        color: (defaultColorSets[id] || ['#0d6efd'])[idx % 5]
+      }));
+      makeMultiSeriesChart(id, '', seriesConfigs);
+    });
+
+    initializeRangeSelectors();
+    initializeSeriesToggles();
+
+    // Ensure charts render correctly when accordion sections become visible
+    document.querySelectorAll('.accordion-collapse').forEach(c => {
+      c.addEventListener('shown.bs.collapse', (e) => {
+        e.target.querySelectorAll('canvas').forEach(canvas => {
+          const id = canvas.id;
+          const ch = charts[id];
+          if (ch) { ch.resize(); ch.update(); }
+        });
+      });
+    });
+  });
 </script>
