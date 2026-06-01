@@ -152,13 +152,13 @@
                       <option value="editor" {% if user.role == 'editor' %}selected{% endif %}>Editor</option>
                       <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
                     </select>
-                    <button type="submit" class="btn btn-sm btn-outline-primary">Update role</button>
+                    <button type="submit" class="btn btn-sm btn-account-admin">Update role</button>
                   </form>
                   <form method="post" class="d-inline ms-1">
                     {{ admin_action_form.csrf_token }}
                     <input type="hidden" name="admin-user_id" value="{{ user.id }}">
                     <input type="hidden" name="admin-action" value="delete_user">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                    <button type="submit" class="btn btn-sm btn-account-admin-danger">Remove</button>
                   </form>
                 </td>
               </tr>

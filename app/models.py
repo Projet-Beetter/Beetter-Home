@@ -21,14 +21,14 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(16), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='viewer')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     beehives = db.relationship('Beehive', backref='owner', lazy=True, cascade='all, delete-orphan')
-    favorite_hives =db.relationship('Beehive', secondary=user_favorites, lazy='subquery')
+    favorite_hives = db.relationship('Beehive', secondary=user_favorites, lazy='subquery', cascade='all, delete', single_parent=True)
     remote_configs = db.relationship('RemoteServerConfig', backref='owner', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
