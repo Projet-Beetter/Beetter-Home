@@ -14,8 +14,16 @@ Common choices:
   - pyserial + RAK811 / Dragino   (AT-command LoRaWAN module over UART)
   - pySX127x                      (low-level SX127x driver)
 
-Expected packet format (JSON, up to 255 bytes):
-  {"id": <beehive_id>, "t": <temperature_float>, "h": <humidity_float>}
+Expected packet format (JSON, up to 255 bytes). Keys are short to save airtime:
+  {
+    "id": <beehive_id>,
+    "t_int": <float>, "h_int": <float>,        # interior temp/humidity sensor
+    "t_ext": <float>, "h_ext": <float>,        # exterior temp/humidity sensor
+    "sf_int": <float>, "sa_int": <float>,      # interior mic: peak frequency (Hz) + amplitude
+    "sf_ext": <float>, "sa_ext": <float>,      # exterior mic: peak frequency (Hz) + amplitude
+    "l_ext": <float>                           # exterior photoresistor: light level
+  }
+  All sensor fields are optional; only the ones present are forwarded.
 
 Usage:
   python receiver.py
@@ -75,7 +83,14 @@ def receive_packet(radio):
     """
     # Simulated packet for development:
     time.sleep(10)
-    sample = json.dumps({"id": 1, "t_int": 32.4, "h_int": 64.7,"t_ext": 32.4, "h_ext": 64.7}).encode()
+    sample = json.dumps({
+        "id": 1,
+        "t_int": 34.7, "h_int": 64.7,
+        "t_ext": 18.3, "h_ext": 55.0,
+        "sf_int": 245.0, "sa_int": 0.42,
+        "sf_ext": 120.0, "sa_ext": 0.11,
+        "l_ext": 760.0,
+    }).encode()
     log.debug('STUB: returning simulated packet')
     return sample
 
@@ -99,6 +114,14 @@ def parse_packet(raw: bytes) -> dict | None:
         'humidity_int':    data.get('h_int'),
         'temperature_ext': data.get('t_ext'),
         'humidity_ext':    data.get('h_ext'),
+        # Interior microphone: peak frequency (Hz) + amplitude of that peak
+        'sound_freq_int':  data.get('sf_int'),
+        'sound_amp_int':   data.get('sa_int'),
+        # Exterior microphone: peak frequency (Hz) + amplitude of that peak
+        'sound_freq_ext':  data.get('sf_ext'),
+        'sound_amp_ext':   data.get('sa_ext'),
+        # Exterior photoresistor: light level
+        'light_ext':       data.get('l_ext'),
     }
 
 
@@ -107,12 +130,10 @@ def push_to_api(payload: dict) -> bool:
     try:
         resp = requests.post(API_ENDPOINT, json=payload, timeout=10)
         if resp.ok:
-            log.info('Data pushed: beehive=%s Tint=%s Hint=%s Text=%s Hext=%s',
-                     payload.get('beehive_id'),
-                     payload.get('temperature_int'),
-                     payload.get('humidity_int'),
-                     payload.get('temperature_ext'),
-                     payload.get('humidity_ext'))
+            measured = [k for k, v in payload.items()
+                        if k != 'beehive_id' and v is not None]
+            log.info('Data pushed: beehive=%s fields=%s',
+                     payload.get('beehive_id'), ','.join(measured))
             return True
         log.error('API returned %s: %s', resp.status_code, resp.text)
         return False

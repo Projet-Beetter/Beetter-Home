@@ -38,4 +38,9 @@
   makeChart('tempExtChart', 'Exterior Temperature (°C)', '#e46060', chartData.temperature_ext || {labels:[], data:[]});
   makeChart('humIntChart',  'Interior Humidity (%)',      '#0d6efd', chartData.humidity_int  || {labels:[], data:[]});
   makeChart('humExtChart',  'Exterior Humidity (%)',      '#4b8dff', chartData.humidity_ext  || {labels:[], data:[]});
+  makeChart('soundFreqIntChart', 'Interior Sound — Peak Frequency (Hz)', '#6a1b9a', chartData.sound_freq_int || {labels:[], data:[]});
+  makeChart('soundAmpIntChart',  'Interior Sound — Amplitude',           '#00897b', chartData.sound_amp_int  || {labels:[], data:[]});
+  makeChart('soundFreqExtChart', 'Exterior Sound — Peak Frequency (Hz)', '#ab47bc', chartData.sound_freq_ext || {labels:[], data:[]});
+  makeChart('soundAmpExtChart',  'Exterior Sound — Amplitude',           '#26a69a', chartData.sound_amp_ext  || {labels:[], data:[]});
+  makeChart('lightExtChart',     'Exterior Light (lx)',                  '#f9a825', chartData.light_ext      || {labels:[], data:[]});
 </script>

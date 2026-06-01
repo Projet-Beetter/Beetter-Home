@@ -35,6 +35,11 @@ def ingest():
             humidity_int=data.get('humidity_int'),
             temperature_ext=data.get('temperature_ext'),
             humidity_ext=data.get('humidity_ext'),
+            sound_freq_int=data.get('sound_freq_int'),
+            sound_amp_int=data.get('sound_amp_int'),
+            sound_freq_ext=data.get('sound_freq_ext'),
+            sound_amp_ext=data.get('sound_amp_ext'),
+            light_ext=data.get('light_ext'),
             timestamp=ts,
         )
     except Exception as e:

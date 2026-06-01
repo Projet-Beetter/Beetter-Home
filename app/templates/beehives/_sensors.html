@@ -47,4 +47,49 @@
       {% endif %}
     </div>
   </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm text-center py-3">
+      <div class="text-secondary fs-4"><i class="bi bi-music-note-beamed"></i></div>
+      <div class="fs-2 fw-bold">
+        {% if latest.sound_freq_int %}{{ latest.sound_freq_int.value }} Hz{% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      <small class="text-muted">Interior Sound — Peak Freq.</small>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm text-center py-3">
+      <div class="text-secondary fs-4"><i class="bi bi-volume-up"></i></div>
+      <div class="fs-2 fw-bold">
+        {% if latest.sound_amp_int %}{{ latest.sound_amp_int.value }}{% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      <small class="text-muted">Interior Sound — Amplitude</small>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm text-center py-3">
+      <div class="text-secondary fs-4"><i class="bi bi-music-note-beamed"></i></div>
+      <div class="fs-2 fw-bold">
+        {% if latest.sound_freq_ext %}{{ latest.sound_freq_ext.value }} Hz{% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      <small class="text-muted">Exterior Sound — Peak Freq.</small>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm text-center py-3">
+      <div class="text-secondary fs-4"><i class="bi bi-volume-up"></i></div>
+      <div class="fs-2 fw-bold">
+        {% if latest.sound_amp_ext %}{{ latest.sound_amp_ext.value }}{% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      <small class="text-muted">Exterior Sound — Amplitude</small>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm text-center py-3">
+      <div class="text-warning fs-4"><i class="bi bi-brightness-high"></i></div>
+      <div class="fs-2 fw-bold">
+        {% if latest.light_ext %}{{ latest.light_ext.value }} lx{% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      <small class="text-muted">Exterior Light</small>
+    </div>
+  </div>
 </div>

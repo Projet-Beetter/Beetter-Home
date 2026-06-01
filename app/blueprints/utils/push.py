@@ -27,7 +27,7 @@ def push_to_remote(config_id):
         payload['beehives'].append({
             'id': hive.id,
             'name': hive.name,
-            'location': hive.location,
+            'location': ', '.join(filter(None, [hive.street, hive.city, hive.postal_code])),
             'data': data,
         })
 
