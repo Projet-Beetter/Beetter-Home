@@ -42,8 +42,8 @@
         </thead>
         <tbody>
           {% for alert in alerts %}
-          {% set old = status_config[alert.old_status] %}
-          {% set new = status_config[alert.new_status] %}
+          {% set old = status_config.get(alert.old_status, status_config['no_data']) %}
+          {% set new = status_config.get(alert.new_status, status_config['no_data']) %}
           <tr>
             <td class="fw-semibold">{{ alert.hive.name }}</td>
             <td class="text-muted">{{ alert.hive.city or '—' }}</td>

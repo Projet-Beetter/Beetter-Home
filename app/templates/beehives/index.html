@@ -49,7 +49,7 @@
             <td>{{ hive.lora_frequency }}</td>
             <td>SF{{ hive.spreading_factor }} / {{ hive.bandwidth }}kHz</td>
             <td>
-            {% set s = status_config[hive.status] %}
+            {% set s = status_config.get(hive.status, status_config['no_data']) %}
             <span class="badge {{ s.badge }}">
              <i class="bi {{ s.icon }} me-1"></i>{{ s.label }}
             </span>

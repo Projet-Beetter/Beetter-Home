@@ -123,7 +123,7 @@ def set_status(hive_id):
         abort(403)
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     new_status = request.form.get('status')
-    if new_status in ('healthy', 'warning', 'critical', 'offline', 'no_data'):
+    if new_status in ('calm', 'stressed', 'agitated', 'critical', 'silent', 'no_data'):
         if new_status != hive.status:
             db.session.add(Alert(hive_id=hive.id, old_status=hive.status, new_status=new_status, source='manual'))
             hive.status = new_status

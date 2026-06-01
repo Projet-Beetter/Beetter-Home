@@ -1,8 +1,9 @@
 STATUS_CONFIG = {
-    'healthy':  {'label': 'Healthy',  'badge': 'bg-success',   'icon': 'bi-check-circle-fill'},
-    'warning':  {'label': 'Warning',  'badge': 'bg-warning',   'icon': 'bi-exclamation-triangle-fill'},
+    'calm':  {'label': 'Calm',  'badge': 'bg-success',   'icon': 'bi-check-circle-fill'},
+    'stressed':  {'label': 'Stressed',  'badge': 'bg-warning',   'icon': 'bi-exclamation-triangle-fill'},
+    'agitated':  {'label': 'Agitated',  'badge': 'bg-orange',    'icon': 'bi-x-circle-fill'},
     'critical': {'label': 'Critical', 'badge': 'bg-danger',    'icon': 'bi-x-circle-fill'},
-    'offline':  {'label': 'Offline',  'badge': 'bg-secondary', 'icon': 'bi-slash-circle'},
+    'silent':  {'label': 'Silent',  'badge': 'bg-secondary', 'icon': 'bi-moon-stars-fill'},
     'no_data':  {'label': 'No data',  'badge': 'bg-dark',      'icon': 'bi-question-circle'},
 }
 

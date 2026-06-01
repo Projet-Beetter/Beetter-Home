@@ -30,6 +30,7 @@ with engine.connect() as conn:
         alert_id INTEGER REFERENCES alerts(id) ON DELETE CASCADE,
         PRIMARY KEY (user_id, alert_id)
         )""",
+        "UPDATE beehives SET status = 'no_data' WHERE status NOT IN ('calm', 'stressed', 'agitated', 'critical', 'silent', 'no_data')",
     ]
     for sql in migrations:
         conn.execute(text(sql))

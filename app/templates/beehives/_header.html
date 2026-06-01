@@ -1,5 +1,5 @@
 <div class="d-flex flex-wrap align-items-center gap-2 mb-4 mt-1">
- {% set s = status_config[hive.status] %}
+ {% set s = status_config.get(hive.status, status_config['no_data']) %}
 <span class="badge {{ s.badge }} fs-6">
   <i class="bi {{ s.icon }} me-1"></i>{{ s.label }}
 </span>
