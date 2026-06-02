@@ -45,7 +45,11 @@
           {% set old = status_config.get(alert.old_status, status_config['no_data']) %}
           {% set new = status_config.get(alert.new_status, status_config['no_data']) %}
           <tr>
-            <td class="fw-semibold">{{ alert.hive.name }}</td>
+            <td>
+  <a href="{{ url_for('beehives.detail', hive_id=alert.hive.id) }}" class="text-white  text-decoration-none fw-semibold">
+    {{ alert.hive.name }}
+  </a>
+</td>
             <td class="text-muted">{{ alert.hive.city or '—' }}</td>
             <td>
             {% set src = alert_sources.get(alert.source, {'label': alert.source, 'icon': 'bi-question-circle'}) %}
