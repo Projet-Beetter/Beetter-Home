@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
-from ...models import db, Beehive, Alert
+from ...models import db, Beehive, Alert, UserHiveIndicator
 from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS
 from ..utils.decorators import editor_required
 from ..utils.status import STATUS_CONFIG
@@ -103,6 +103,7 @@ def detail(hive_id):
     range_str=range_str,
     range_options=RANGE_OPTIONS,
     status_config=STATUS_CONFIG,
+    selected_indicators = UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first().indicators.split(',') if UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first() else ['temperature_int','humidity_int'],
     )
 
 @beehives_bp.route('/<int:hive_id>/favorite', methods=['POST'])
@@ -115,6 +116,43 @@ def toggle_favorite(hive_id):
         current_user.favorite_hives.append(hive)
     db.session.commit()
     return redirect(request.referrer or url_for('beehives.index'))
+
+
+@beehives_bp.route('/<int:hive_id>/indicators/toggle', methods=['POST'])
+@login_required
+def toggle_indicator(hive_id):
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
+    sensor = request.form.get('sensor_key')
+    section_key = request.form.get('section_key')
+    if not sensor:
+        return redirect(request.referrer or url_for('beehives.detail', hive_id=hive.id))
+
+    # retrieve or create user-hive selection
+    uhi = UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first()
+    if not uhi:
+        uhi = UserHiveIndicator(user_id=current_user.id, hive_id=hive.id, indicators='temperature_int,humidity_int')
+        db.session.add(uhi)
+
+    current = [s for s in uhi.indicators.split(',') if s]
+    if sensor in current:
+        # remove, enforce minimum 1
+        if len(current) > 1:
+            current.remove(sensor)
+        else:
+            flash('You must keep at least one indicator.', 'warning')
+            return redirect(request.referrer or url_for('beehives.detail', hive_id=hive.id))
+    else:
+        # add, enforce maximum 6
+        if len(current) >= 6:
+            flash('You can select up to 6 indicators.', 'warning')
+            return redirect(request.referrer or url_for('beehives.detail', hive_id=hive.id))
+        current.append(sensor)
+
+    uhi.indicators = ','.join(current)
+    db.session.commit()
+    if section_key:
+        return redirect(url_for('beehives.detail', hive_id=hive.id, open=section_key))
+    return redirect(request.referrer or url_for('beehives.detail', hive_id=hive.id))
 
 @beehives_bp.route('/<int:hive_id>/status', methods=['POST'])
 @login_required

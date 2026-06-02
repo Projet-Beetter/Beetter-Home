@@ -2,10 +2,10 @@
   <div class="accordion" id="beehiveMeasurementsAccordion">
     {% for section in [
       {'key':'temperature','title':'Temperature','icon':'thermometer-half','color':'text-danger','indicators':[{
-          'title':'Interior Temperature','value': latest.temperature_int.value if latest.temperature_int else None,'suffix':'°C','time': latest.temperature_int.time if latest.temperature_int else None,
+          'key':'temperature_int','title':'Interior Temperature','value': latest.temperature_int.value if latest.temperature_int else None,'suffix':'°C','time': latest.temperature_int.time if latest.temperature_int else None,
           'icon':'thermometer-half','label':'Interior Temperature'
         },{
-          'title':'Exterior Temperature','value': latest.temperature_ext.value if latest.temperature_ext else None,'suffix':'°C','time': latest.temperature_ext.time if latest.temperature_ext else None,
+          'key':'temperature_ext','title':'Exterior Temperature','value': latest.temperature_ext.value if latest.temperature_ext else None,'suffix':'°C','time': latest.temperature_ext.time if latest.temperature_ext else None,
           'icon':'thermometer-half','label':'Exterior Temperature'
         }],
         'charts':[{
@@ -13,10 +13,10 @@
         }]
       },
       {'key':'humidity','title':'Humidity','icon':'droplet-half','color':'text-primary','indicators':[{
-          'title':'Interior Humidity','value': latest.humidity_int.value if latest.humidity_int else None,'suffix':'%','time': latest.humidity_int.time if latest.humidity_int else None,
+          'key':'humidity_int','title':'Interior Humidity','value': latest.humidity_int.value if latest.humidity_int else None,'suffix':'%','time': latest.humidity_int.time if latest.humidity_int else None,
           'icon':'droplet-half','label':'Interior Humidity'
         },{
-          'title':'Exterior Humidity','value': latest.humidity_ext.value if latest.humidity_ext else None,'suffix':'%','time': latest.humidity_ext.time if latest.humidity_ext else None,
+          'key':'humidity_ext','title':'Exterior Humidity','value': latest.humidity_ext.value if latest.humidity_ext else None,'suffix':'%','time': latest.humidity_ext.time if latest.humidity_ext else None,
           'icon':'droplet-half','label':'Exterior Humidity'
         }],
         'charts':[{
@@ -24,16 +24,16 @@
         }]
       },
       {'key':'sound','title':'Sound & Frequency','icon':'music-note-beamed','color':'text-secondary','indicators':[{
-          'title':'Interior Peak Frequency','value': latest.sound_freq_int.value if latest.sound_freq_int else None,'suffix':'Hz','time': latest.sound_freq_int.time if latest.sound_freq_int else None,
+          'key':'sound_freq_int','title':'Interior Peak Frequency','value': latest.sound_freq_int.value if latest.sound_freq_int else None,'suffix':'Hz','time': latest.sound_freq_int.time if latest.sound_freq_int else None,
           'icon':'music-note-beamed','label':'Interior Sound — Peak Frequency'
         },{
-          'title':'Interior Amplitude','value': latest.sound_amp_int.value if latest.sound_amp_int else None,'suffix':'','time': None,
+          'key':'sound_amp_int','title':'Interior Amplitude','value': latest.sound_amp_int.value if latest.sound_amp_int else None,'suffix':'','time': None,
           'icon':'volume-up','label':'Interior Sound — Amplitude'
         },{
-          'title':'Exterior Peak Frequency','value': latest.sound_freq_ext.value if latest.sound_freq_ext else None,'suffix':'Hz','time': latest.sound_freq_ext.time if latest.sound_freq_ext else None,
+          'key':'sound_freq_ext','title':'Exterior Peak Frequency','value': latest.sound_freq_ext.value if latest.sound_freq_ext else None,'suffix':'Hz','time': latest.sound_freq_ext.time if latest.sound_freq_ext else None,
           'icon':'music-note-beamed','label':'Exterior Sound — Peak Frequency'
         },{
-          'title':'Exterior Amplitude','value': latest.sound_amp_ext.value if latest.sound_amp_ext else None,'suffix':'','time': None,
+          'key':'sound_amp_ext','title':'Exterior Amplitude','value': latest.sound_amp_ext.value if latest.sound_amp_ext else None,'suffix':'','time': None,
           'icon':'volume-up','label':'Exterior Sound — Amplitude'
         }],
         'charts':[{
@@ -43,7 +43,7 @@
         }]
       },
       {'key':'luminosity','title':'Luminosity','icon':'brightness-high','color':'text-warning','indicators':[{
-          'title':'Exterior Light','value': latest.light_ext.value if latest.light_ext else None,'suffix':'lx','time': latest.light_ext.time if latest.light_ext else None,
+          'key':'light_ext','title':'Exterior Light','value': latest.light_ext.value if latest.light_ext else None,'suffix':'lx','time': latest.light_ext.time if latest.light_ext else None,
           'icon':'brightness-high','label':'Exterior Light'
         }],
         'charts':[{
@@ -63,12 +63,23 @@
             </div>
           </button>
         </h2>
-        <div id="collapse-{{ section.key }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ section.key }}">
+        <div id="collapse-{{ section.key }}" class="accordion-collapse collapse {% if request.args.get('open') == section.key %}show{% endif %}" aria-labelledby="heading-{{ section.key }}">
           <div class="accordion-body">
             <div class="row g-3 mb-4">
               {% for indicator in section.indicators %}
                 <div class="col-sm-6 col-md-3">
-                  <div class="card border-0 shadow-sm text-center py-3">
+                  <div class="card border-0 shadow-sm text-center py-3 position-relative">
+                    <div style="position:absolute;left:.5rem;top:.5rem;z-index:3">
+                      <form method="post" action="{{ url_for('beehives.toggle_indicator', hive_id=hive.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="sensor_key" value="{{ indicator.key }}">
+                        <input type="hidden" name="section_key" value="{{ section.key }}">
+                        {% set selected = indicator.key in selected_indicators %}
+                        <button type="submit" class="btn btn-sm btn-outline-secondary p-0" title="{{ 'Remove from dashboard' if selected else 'Add to dashboard' }}">
+                          <i class="bi {{ 'bi-dash-lg' if selected else 'bi-plus-lg' }}"></i>
+                        </button>
+                      </form>
+                    </div>
                     <div class="{{ section.color }} fs-4"><i class="bi bi-{{ indicator.icon }}"></i></div>
                     <div class="fs-2 fw-bold">
                       {% if indicator.value is not none %}{{ indicator.value }}{{ indicator.suffix }}{% else %}<span class="text-muted">—</span>{% endif %}

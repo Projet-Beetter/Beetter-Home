@@ -55,47 +55,18 @@
                   </span>
                 </div>
               </div>
-              <div class="row g-2 mb-3">
-                <div class="col-6">
-                  <div class="stat-card rounded p-2 text-center">
-                    <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
-                    <div class="fw-bold fs-5">
-                      {% if latest.temperature_int %}{{ latest.temperature_int.value }}°C
-                      {% else %}<span class="text-muted">—</span>{% endif %}
+              <div class="indicators-grid mb-3" style="--count: {{ item.indicators|length }};">
+                {% for ind in item.indicators %}
+                  <div class="ind-col">
+                    <div class="stat-card rounded p-2 text-center h-100">
+                      <div class="stat-icon {{ ind.color }}"><i class="bi bi-{{ ind.icon }}"></i></div>
+                      <div class="fw-bold fs-5">
+                        {% if ind.value is not none %}{{ ind.value }}{{ ind.suffix }}{% else %}<span class="text-muted">—</span>{% endif %}
+                      </div>
+                      <small class="text-muted text-nowrap">{{ ind.label }}</small>
                     </div>
-                    <small class="text-muted text-nowrap">Int. Temp</small>
                   </div>
-                </div>
-                <div class="col-6">
-                  <div class="stat-card rounded p-2 text-center">
-                    <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
-                    <div class="fw-bold fs-5">
-                      {% if latest.humidity_int %}{{ latest.humidity_int.value }}%
-                      {% else %}<span class="text-muted">—</span>{% endif %}
-                    </div>
-                    <small class="text-muted text-nowrap">Int. Humidity</small>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="stat-card rounded p-2 text-center">
-                    <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
-                    <div class="fw-bold fs-5">
-                      {% if latest.temperature_ext %}{{ latest.temperature_ext.value }}°C
-                      {% else %}<span class="text-muted">—</span>{% endif %}
-                    </div>
-                    <small class="text-muted text-nowrap">Ext. Temp</small>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="stat-card rounded p-2 text-center">
-                    <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
-                    <div class="fw-bold fs-5">
-                      {% if latest.humidity_ext %}{{ latest.humidity_ext.value }}%
-                      {% else %}<span class="text-muted">—</span>{% endif %}
-                    </div>
-                    <small class="text-muted text-nowrap">Ext. Humidity</small>
-                  </div>
-                </div>
+                {% endfor %}
               </div>
               {# View charts button removed — card click navigates to details #}
             </div>
@@ -140,46 +111,17 @@
               </div>
             </div>
             <div class="row g-2 mb-3">
-              <div class="col-6">
-                <div class="stat-card rounded p-2 text-center">
-                  <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
-                  <div class="fw-bold fs-5">
-                    {% if latest.temperature_int %}{{ latest.temperature_int.value }}°C
-                    {% else %}<span class="text-muted">—</span>{% endif %}
+              {% for ind in item.indicators %}
+                <div class="col-6 col-md-4">
+                  <div class="stat-card rounded p-2 text-center">
+                    <div class="stat-icon"><i class="bi bi-{{ ind.icon }}"></i></div>
+                    <div class="fw-bold fs-5">
+                      {% if ind.value is not none %}{{ ind.value }}{{ ind.suffix }}{% else %}<span class="text-muted">—</span>{% endif %}
+                    </div>
+                    <small class="text-muted text-nowrap">{{ ind.label }}</small>
                   </div>
-                  <small class="text-muted text-nowrap">Int. Temp</small>
                 </div>
-              </div>
-              <div class="col-6">
-                <div class="stat-card rounded p-2 text-center">
-                  <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
-                  <div class="fw-bold fs-5">
-                    {% if latest.humidity_int %}{{ latest.humidity_int.value }}%
-                    {% else %}<span class="text-muted">—</span>{% endif %}
-                  </div>
-                  <small class="text-muted text-nowrap">Int. Humidity</small>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="stat-card rounded p-2 text-center">
-                  <div class="stat-icon text-danger"><i class="bi bi-thermometer-half"></i></div>
-                  <div class="fw-bold fs-5">
-                    {% if latest.temperature_ext %}{{ latest.temperature_ext.value }}°C
-                    {% else %}<span class="text-muted">—</span>{% endif %}
-                  </div>
-                  <small class="text-muted text-nowrap">Ext. Temp</small>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="stat-card rounded p-2 text-center">
-                  <div class="stat-icon text-primary"><i class="bi bi-droplet-half"></i></div>
-                  <div class="fw-bold fs-5">
-                    {% if latest.humidity_ext %}{{ latest.humidity_ext.value }}%
-                    {% else %}<span class="text-muted">—</span>{% endif %}
-                  </div>
-                  <small class="text-muted text-nowrap">Ext. Humidity</small>
-                </div>
-              </div>
+              {% endfor %}
             </div>
             {# View charts button removed — card click navigates to details #}
           </div>

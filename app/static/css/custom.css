@@ -293,6 +293,24 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   background-color: rgba(0,0,0,0.03);
 }
 
+/* Indicators equal-width grid inside dashboard cards */
+.indicators-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.indicators-grid .ind-col {
+  flex: 0 0 calc(100% / var(--count));
+  max-width: calc(100% / var(--count));
+}
+/* Ensure cards inside stretch to full height and center content */
+.indicators-grid .stat-card.h-100 { display: flex; flex-direction: column; justify-content: center; }
+
+/* Responsive: stack to two columns on small screens */
+@media (max-width: 575.98px) {
+  .indicators-grid .ind-col { flex: 0 0 50%; max-width: 50%; }
+}
+
 /* ── Responsive: collapse sidebar on small screens ─────────── */
 @media (max-width: 767.98px) {
   #sidebar {

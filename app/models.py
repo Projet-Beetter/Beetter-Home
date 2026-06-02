@@ -100,3 +100,14 @@ class RemoteServerConfig(db.Model):
     last_push_message = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+
+class UserHiveIndicator(db.Model):
+    __tablename__ = 'user_hive_indicators'
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    hive_id = db.Column(db.Integer, db.ForeignKey('beehives.id'), primary_key=True)
+    indicators = db.Column(db.String(255), nullable=False, default='temperature_int,humidity_int')
+
+    user = db.relationship('User', backref=db.backref('hive_indicators', lazy='dynamic'))
+    hive = db.relationship('Beehive', backref=db.backref('user_indicators', lazy='dynamic'))
