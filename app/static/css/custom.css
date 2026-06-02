@@ -321,6 +321,11 @@ body.dark-mode .text-muted {
   color: #CFDBD5 !important;
 }
 
+.bg-orange {
+  background-color: #fd7e14 !important;
+  color: #fff !important;
+}
+
 /* ── Dark mode: Bootstrap overrides ────────────────────────── */
 body.dark-mode .table {
   --bs-table-bg: #333533;
