@@ -11,10 +11,8 @@ from . import dashboard_bp
 @login_required
 def index():
     beehives = Beehive.query.order_by(Beehive.created_at).all()
-    fav_ids = {h.id for h in current_user.favorite_hives}
 
-    favorite_data = []
-    other_data = []
+    hive_data = []
     for hive in beehives:
         latest = {}
         if hive.enabled:
@@ -22,14 +20,12 @@ def index():
                 latest = query_latest_values(str(hive.id))
             except Exception:
                 pass
-        # determine which indicators this user wants for this hive
         uhi = UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first()
         if uhi and uhi.indicators:
             indicators = [s for s in uhi.indicators.split(',') if s]
         else:
             indicators = ['temperature_int', 'humidity_int']
 
-        # build indicator dicts with label/icon/suffix and latest value
         mapping = {
             'temperature_int': {'icon':'thermometer-half','suffix':'°C','label':'Int. Temp','color':'text-danger'},
             'temperature_ext': {'icon':'thermometer-half','suffix':'°C','label':'Ext. Temp','color':'text-danger'},
@@ -54,13 +50,14 @@ def index():
                 'value': latest.get(key).value if latest.get(key) else None
             })
 
-        entry = {'hive': hive, 'latest': latest, 'indicators': indicators_data}
-        if hive.id in fav_ids:
-            favorite_data.append(entry)
-        else:
-            other_data.append(entry)
+        INDICATOR_ORDER = [
+            'temperature_int', 'humidity_int', 'sound_freq_int',
+            'temperature_ext', 'humidity_ext', 'sound_freq_ext',
+            'sound_amp_int', 'sound_amp_ext', 'light_ext',
+        ]
+        indicators_data.sort(key=lambda x: INDICATOR_ORDER.index(x['key']) if x['key'] in INDICATOR_ORDER else 99)
+        hive_data.append({'hive': hive, 'latest': latest, 'indicators': indicators_data})
 
     return render_template('dashboard/index.html',
-                       favorite_data=favorite_data,
-                       other_data=other_data,
+                       hive_data=hive_data,
                        status_config=STATUS_CONFIG)

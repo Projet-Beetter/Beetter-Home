@@ -293,23 +293,23 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   background-color: rgba(0,0,0,0.03);
 }
 
-/* Indicators equal-width grid inside dashboard cards */
-.indicators-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-}
-.indicators-grid .ind-col {
-  flex: 0 0 calc(100% / var(--count));
-  max-width: calc(100% / var(--count));
-}
-/* Ensure cards inside stretch to full height and center content */
-.indicators-grid .stat-card.h-100 { display: flex; flex-direction: column; justify-content: center; }
+/* ── Dashboard indicator grid ──────────────────────────────── */
+.indicators-grid { display: grid; gap: 0.5rem; }
 
-/* Responsive: stack to two columns on small screens */
-@media (max-width: 575.98px) {
-  .indicators-grid .ind-col { flex: 0 0 50%; max-width: 50%; }
-}
+.indicators-grid[data-count="1"] { grid-template-columns: 1fr; }
+.indicators-grid[data-count="2"] { grid-template-columns: repeat(2, 1fr); }
+.indicators-grid[data-count="3"] { grid-template-columns: repeat(3, 1fr); }
+.indicators-grid[data-count="4"] { grid-template-columns: repeat(2, 1fr); }
+.indicators-grid[data-count="5"] { grid-template-columns: repeat(6, 1fr); }
+.indicators-grid[data-count="5"] .ind-col:nth-child(1) { grid-column: 1 / span 2; }
+.indicators-grid[data-count="5"] .ind-col:nth-child(2) { grid-column: 3 / span 2; }
+.indicators-grid[data-count="5"] .ind-col:nth-child(3) { grid-column: 5 / span 2; }
+.indicators-grid[data-count="5"] .ind-col:nth-child(4) { grid-column: 2 / span 2; }
+.indicators-grid[data-count="5"] .ind-col:nth-child(5) { grid-column: 4 / span 2; }
+.indicators-grid[data-count="6"] { grid-template-columns: repeat(3, 1fr); }
+
+.ind-col { min-width: 0; }
+.indicators-grid .stat-card.h-100 { display: flex; flex-direction: column; justify-content: center; }
 
 /* ── Responsive: collapse sidebar on small screens ─────────── */
 @media (max-width: 767.98px) {

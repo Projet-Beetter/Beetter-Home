@@ -106,17 +106,6 @@ def detail(hive_id):
     selected_indicators = UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first().indicators.split(',') if UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first() else ['temperature_int','humidity_int'],
     )
 
-@beehives_bp.route('/<int:hive_id>/favorite', methods=['POST'])
-@login_required
-def toggle_favorite(hive_id):
-    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
-    if hive in current_user.favorite_hives:
-        current_user.favorite_hives.remove(hive)
-    else:
-        current_user.favorite_hives.append(hive)
-    db.session.commit()
-    return redirect(request.referrer or url_for('beehives.index'))
-
 
 @beehives_bp.route('/<int:hive_id>/indicators/toggle', methods=['POST'])
 @login_required
