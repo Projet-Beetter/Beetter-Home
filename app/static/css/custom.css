@@ -261,6 +261,28 @@ body.sidebar-loading #sidebar.collapsed {
   font-size: 1.3rem;
 }
 
+/* Clickable dashboard cards: hover and focus styles */
+.clickable-card {
+  cursor: pointer;
+  /* hint compositor to promote to its own layer and reduce repaint jank */
+  will-change: transform, box-shadow;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+.clickable-card:hover,
+.clickable-card:focus-within {
+  transform: translateY(-4px);
+  /* lighter shadow to reduce cost */
+  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+  border-color: rgba(255,193,7,0.18);
+}
+
+.clickable-card .card-body { /* ensure inner controls keep normal cursor */
+  cursor: default;
+}
+
 /* ── Responsive: collapse sidebar on small screens ─────────── */
 @media (max-width: 767.98px) {
   #sidebar {
