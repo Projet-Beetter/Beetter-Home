@@ -12,6 +12,18 @@
 </head>
 <body class="sidebar-loading">
 
+<script>
+  // Early: if the user previously collapsed the sidebar, add a temporary class
+  // to the body to suppress CSS transitions before the sidebar element renders.
+  if (localStorage.getItem('sidebarCollapsed') !== 'false') {
+    document.body.classList.add('sidebar-collapsed-on-load');
+  }
+  // Early: restore dark mode before the page paints to avoid a light/dark flash.
+  if (localStorage.getItem('darkMode') === 'on') {
+    document.body.classList.add('dark-mode');
+  }
+</script>
+
 
 {% if current_user.is_authenticated %}
 <div class="d-flex" id="wrapper">
@@ -19,6 +31,7 @@
   <!-- Sidebar -->
   <nav id="sidebar" class="d-flex flex-column flex-shrink-0">
     <script>
+      // Restore collapsed state on the sidebar element without touching body class.
       if (localStorage.getItem('sidebarCollapsed') !== 'false') {
         document.getElementById('sidebar').classList.add('collapsed');
       }
@@ -153,17 +166,37 @@
   // Sidebar toggle (desktop - collapse/expand)
   const sidebarToggleTop = document.getElementById('sidebarToggleTop');
   const sidebar = document.getElementById('sidebar');
-
   document.body.classList.remove('sidebar-loading', 'sidebar-collapsed-on-load');
-  
+
+  // Prevent rapid repeated toggles which cause layout thrash. Use a short lock while
+  // the sidebar transition is in progress so multiple clicks (or spam reload) won't
+  // retrigger expensive width transitions.
+  let _sidebarTransitioning = false;
   sidebarToggleTop?.addEventListener('click', () => {
-    sidebar?.classList.toggle('collapsed');
-    localStorage.setItem('sidebarCollapsed', sidebar?.classList.contains('collapsed'));
+    if (!_sidebarTransitioning) {
+      _sidebarTransitioning = true;
+      sidebar?.classList.toggle('collapsed');
+      localStorage.setItem('sidebarCollapsed', sidebar?.classList.contains('collapsed'));
+      const onEnd = (e) => {
+        if (e.target === sidebar) {
+          _sidebarTransitioning = false;
+          sidebar.removeEventListener('transitionend', onEnd);
+        }
+      };
+      sidebar?.addEventListener('transitionend', onEnd);
+      // As a safety fallback, release the lock after 500ms in case transitionend
+      // doesn't fire for any reason.
+      setTimeout(() => { _sidebarTransitioning = false; }, 500);
+    }
   });
   
   // Sidebar toggle (mobile - show/hide)
+  let _mobileToggleLock = false;
   document.getElementById('sidebarToggleMobile')?.addEventListener('click', () => {
+    if (_mobileToggleLock) return;
+    _mobileToggleLock = true;
     sidebar?.classList.toggle('d-none');
+    setTimeout(() => { _mobileToggleLock = false; }, 300);
   });
 </script>
 <script>

@@ -36,8 +36,11 @@
         </thead>
         <tbody>
           {% for hive in beehives %}
-          <tr>
-            <td class="fw-semibold">{{ hive.name }}</td>
+          <tr class="position-relative">
+            <td class="fw-semibold">
+              {{ hive.name }}
+              <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="stretched-link" aria-label="Open {{ hive.name }} details"></a>
+            </td>
             <td class="text-muted">{{hive.owner.username}}</td>
             <td class="text-muted">
               {% if hive.street or hive.city %}

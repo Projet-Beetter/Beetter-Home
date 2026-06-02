@@ -19,6 +19,12 @@ body.sidebar-loading #sidebar.collapsed {
   transition: none !important;
 }
 
+/* When restoring collapsed state on load, disable transitions until JS finishes initializing */
+body.sidebar-collapsed-on-load #sidebar,
+body.sidebar-collapsed-on-load #sidebar.collapsed {
+  transition: none !important;
+}
+
 #sidebar.collapsed {
   width: 70px;
 }
@@ -264,23 +270,27 @@ body.sidebar-loading #sidebar.collapsed {
 /* Clickable dashboard cards: hover and focus styles */
 .clickable-card {
   cursor: pointer;
-  /* hint compositor to promote to its own layer and reduce repaint jank */
-  will-change: transform, box-shadow;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  /* Use only inexpensive paint changes: background and border */
+  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 .clickable-card:hover,
 .clickable-card:focus-within {
-  transform: translateY(-4px);
-  /* lighter shadow to reduce cost */
-  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
-  border-color: rgba(255,193,7,0.18);
+  transform: translateY(-2px);
+  background-color: rgba(245,203,92,0.04); /* subtle highlight */
+  border-color: rgba(255,193,7,0.08);
 }
 
 .clickable-card .card-body { /* ensure inner controls keep normal cursor */
   cursor: default;
+}
+
+/* Clickable table rows in beehives list */
+.table tr.position-relative {
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.table tr.position-relative:hover {
+  background-color: rgba(0,0,0,0.03);
 }
 
 /* ── Responsive: collapse sidebar on small screens ─────────── */
