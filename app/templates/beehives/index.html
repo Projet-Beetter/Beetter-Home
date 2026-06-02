@@ -57,7 +57,7 @@
              <i class="bi {{ s.icon }} me-1"></i>{{ s.label }}
             </span>
             </td>
-            <td class="text-end">
+            <td class="text-end" style="position: relative; z-index: 2">
               <form method="post" action="{{ url_for('beehives.toggle_favorite', hive_id=hive.id) }}" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm btn-link p-0 text-warning me-1" title="Toggle favourite">

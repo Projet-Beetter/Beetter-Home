@@ -32,7 +32,7 @@
         {% set hive = item.hive %}
         {% set latest = item.latest %}
           <div class="col-sm-6 col-xl-4">
-            <div class="card border-0 shadow-sm h-100 position-relative clickable-card {% if not hive.enabled %}opacity-50{% endif %}">
+            <div class="card border-0 shadow-sm h-100 position-relative clickable-card {% if not hive.enabled %}opacity-50{% endif %} {% if hive.status in ('critical', 'swarming', 'queenless', 'predator') %}hive-alert-halo{% elif hive.status in ('stressed', 'agitated', 'ventilating', 'virgin_queen') %}hive-warning-halo{% endif %}">
             <div class="card-body">
               <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="stretched-link" aria-label="Open {{ hive.name }} details"></a>
               <div class="d-flex justify-content-between align-items-start mb-3">
@@ -116,7 +116,7 @@
       {% set hive = item.hive %}
       {% set latest = item.latest %}
       <div class="col-sm-6 col-xl-4">
-        <div class="card border-0 shadow-sm h-100 position-relative clickable-card {% if not hive.enabled %}opacity-50{% endif %}">
+        <div class="card border-0 shadow-sm h-100 position-relative clickable-card {% if not hive.enabled %}opacity-50{% endif %} {% if hive.status in ('critical', 'swarming', 'queenless', 'predator') %}hive-alert-halo{% elif hive.status in ('stressed', 'agitated', 'ventilating', 'virgin_queen') %}hive-warning-halo{% endif %}">
           <div class="card-body">
             <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="stretched-link" aria-label="Open {{ hive.name }} details"></a>
             <div class="d-flex justify-content-between align-items-start mb-3">
