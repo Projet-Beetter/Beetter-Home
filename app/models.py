@@ -78,7 +78,7 @@ class Alert(db.Model):
     note = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    hive = db.relationship('Beehive', backref='alerts')
+    hive = db.relationship('Beehive', backref=db.backref('alerts', cascade='all, delete-orphan'))
     read_by = db.relationship('User', secondary=user_alert_reads, lazy='subquery')
 
 class RemoteServerConfig(db.Model):
@@ -105,4 +105,4 @@ class UserHiveIndicator(db.Model):
     indicators = db.Column(db.String(255), nullable=False, default='temperature_int,humidity_int')
 
     user = db.relationship('User', backref=db.backref('hive_indicators', lazy='dynamic'))
-    hive = db.relationship('Beehive', backref=db.backref('user_indicators', lazy='dynamic'))
+    hive = db.relationship('Beehive', backref=db.backref('user_indicators', cascade='all, delete-orphan', lazy='dynamic'))
