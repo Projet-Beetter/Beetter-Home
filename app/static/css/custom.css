@@ -362,6 +362,16 @@ body.dark-mode .topbar-dark-toggle:hover {
 /* ── Chart.js time axis adapter shim ───────────────────────── */
 /* We load chartjs-adapter-date-fns via CDN — no extra CSS needed */
 
+/* ── Dark mode: modal ──────────────────────────────────────── */
+body.dark-mode .modal-content {
+  background: #333533;
+  color: #E8EDDF;
+}
+
+body.dark-mode .btn-close {
+  filter: invert(1);
+}
+
 /* ── Export page beehives scroll ──────────────────────────── */
 .export-hives-scroll {
   scrollbar-width: thin;
