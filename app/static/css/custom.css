@@ -362,6 +362,33 @@ body.dark-mode .topbar-dark-toggle:hover {
 /* ── Chart.js time axis adapter shim ───────────────────────── */
 /* We load chartjs-adapter-date-fns via CDN — no extra CSS needed */
 
+/* ── Export page beehives scroll ──────────────────────────── */
+.export-hives-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(36,36,35,.22) transparent;
+}
+
+.export-hives-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.export-hives-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.export-hives-scroll::-webkit-scrollbar-thumb {
+  background: rgba(36,36,35,.22);
+  border-radius: 3px;
+}
+
+body.dark-mode .export-hives-scroll {
+  scrollbar-color: rgba(255,255,255,.25) transparent;
+}
+
+body.dark-mode .export-hives-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.25);
+}
+
 /* ── Export page checkboxes ────────────────────────────────── */
 .form-check-input {
   border: 1.5px solid rgba(36,36,35,.45);

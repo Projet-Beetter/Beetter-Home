@@ -179,7 +179,7 @@
             <div class="card border-0 shadow-sm">
               <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h6 class="card-title fw-semibold mb-0">Exterior Light (lx)</h6>
+                  <h6 class="card-title fw-semibold mb-0">Exterior Light (%)</h6>
                   <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
                     {% for r in range_options %}
                       <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="lightExtChart" data-sensor-key="light_ext" data-range="{{ r }}">{{ r }}</button>

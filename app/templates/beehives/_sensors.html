@@ -151,7 +151,7 @@
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-warning fs-4"><i class="bi bi-brightness-high"></i></div>
             <div class="fs-2 fw-bold">
-              {% if latest.light_ext %}{{ latest.light_ext.value }} lx{% else %}<span class="text-muted">—</span>{% endif %}
+              {% if latest.light_ext %}{{ latest.light_ext.value }}%{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">Exterior Light</small>
             {% if latest.light_ext %}

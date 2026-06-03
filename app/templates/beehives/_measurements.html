@@ -43,11 +43,11 @@
         }]
       },
       {'key':'luminosity','title':'Luminosity','icon':'brightness-high','color':'text-warning','indicators':[{
-          'key':'light_ext','title':'Exterior Light','value': latest.light_ext.value if latest.light_ext else None,'suffix':'lx','time': latest.light_ext.time if latest.light_ext else None,
+          'key':'light_ext','title':'Exterior Light','value': latest.light_ext.value if latest.light_ext else None,'suffix':'%','time': latest.light_ext.time if latest.light_ext else None,
           'icon':'brightness-high','label':'Exterior Light'
         }],
         'charts':[{
-          'id':'lightExtChart','title':'Exterior Light (lx)','sensors':['light_ext']
+          'id':'lightExtChart','title':'Exterior Light (%)','sensors':['light_ext']
         }]
       }
     ] %}

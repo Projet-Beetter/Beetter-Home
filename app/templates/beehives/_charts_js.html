@@ -8,7 +8,7 @@
     return dataset.labels.map((t, i) => ({ x: t, y: dataset.data[i] }));
   }
 
-  function makeMultiSeriesChart(id, title, seriesConfigs) {
+  function makeMultiSeriesChart(id, title, seriesConfigs, yOptions = {}) {
     const ctx = document.getElementById(id);
     if (!ctx) return;
     const datasets = seriesConfigs.map((sc, idx) => {
@@ -36,7 +36,7 @@
         plugins: { legend: { display: true } },
         scales: {
           x: { type: 'time', time: { tooltipFormat: 'dd MMM HH:mm' }, ticks: { maxTicksLimit: 8 } },
-          y: { beginAtZero: false }
+          y: { beginAtZero: false, ...yOptions }
         }
       }
     });
@@ -109,6 +109,11 @@
       lightExtChart: ['#f9a825']
     };
 
+    const chartScales = {
+      humidityChart:  { min: 0, max: 100 },
+      lightExtChart:  { min: 0, max: 100 },
+    };
+
     document.querySelectorAll('canvas').forEach(canvas => {
       const id = canvas.id;
       const seriesInputs = Array.from(document.querySelectorAll(`.series-toggle[data-chart-id="${id}"]`));
@@ -119,7 +124,7 @@
         visible: cb.checked,
         color: (defaultColorSets[id] || ['#0d6efd'])[idx % 5]
       }));
-      makeMultiSeriesChart(id, '', seriesConfigs);
+      makeMultiSeriesChart(id, '', seriesConfigs, chartScales[id] || {});
     });
 
     initializeRangeSelectors();

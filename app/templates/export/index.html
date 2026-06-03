@@ -53,7 +53,7 @@
     <!-- Beehive selection -->
     <div class="col-md-6">
       <div class="card border-0 shadow-sm h-100">
-        <div class="card-body p-4">
+        <div class="card-body p-4 d-flex flex-column">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <h6 class="fw-bold mb-0">
               <i class="bi bi-collection me-2" style="color:#F5CB5C"></i>Beehives
@@ -65,7 +65,7 @@
           {% if not beehives %}
           <p class="text-muted mb-0">No beehives configured yet.</p>
           {% else %}
-          <div class="d-flex flex-column gap-2">
+          <div class="export-hives-scroll d-flex flex-column gap-2" style="flex:1 1 0; min-height:0; overflow-y:auto; padding-right:4px;">
             {% for hive in beehives %}
             <div class="form-check">
               <input class="form-check-input hive-check" type="checkbox"

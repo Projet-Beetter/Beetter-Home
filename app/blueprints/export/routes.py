@@ -24,7 +24,7 @@ FIELD_CATEGORIES = [
             ('humidity_ext', 'Humidity', '%'),
             ('sound_freq_ext', 'Sound Frequency', 'Hz'),
             ('sound_amp_ext', 'Sound Amplitude', ''),
-            ('light_ext', 'Light Level', ''),
+            ('light_ext', 'Light Level', '%'),
         ],
     },
 ]

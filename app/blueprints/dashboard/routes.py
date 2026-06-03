@@ -35,7 +35,7 @@ def index():
             'sound_amp_int': {'icon':'volume-up','suffix':'','label':'Int. Amplitude','color':'text-secondary'},
             'sound_freq_ext': {'icon':'music-note-beamed','suffix':'Hz','label':'Ext. Peak Freq','color':'text-secondary'},
             'sound_amp_ext': {'icon':'volume-up','suffix':'','label':'Ext. Amplitude','color':'text-secondary'},
-            'light_ext': {'icon':'brightness-high','suffix':'lx','label':'Ext. Light','color':'text-warning'},
+            'light_ext': {'icon':'brightness-high','suffix':'%','label':'Ext. Light','color':'text-warning'},
         }
 
         indicators_data = []
