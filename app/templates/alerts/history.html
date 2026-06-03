@@ -62,9 +62,9 @@
       <div class="flex-grow-1 min-width-0">
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <a href="{{ url_for('beehives.detail', hive_id=alert.hive.id) }}" class="fw-semibold small text-decoration-none text-reset">{{ alert.hive.name }}</a>
-          <span class="badge {{ old.badge }} text-nowrap"><i class="bi {{ old.icon }} me-1"></i>{{ old.label }}</span>
+          <span class="badge {{ old.badge }} text-nowrap">{% if old.icon %}<i class="bi {{ old.icon }} me-1"></i>{% endif %}{{ old.label }}</span>
           <i class="bi bi-arrow-right text-muted small"></i>
-          <span class="badge {{ new.badge }} text-nowrap"><i class="bi {{ new.icon }} me-1"></i>{{ new.label }}</span>
+          <span class="badge {{ new.badge }} text-nowrap">{% if new.icon %}<i class="bi {{ new.icon }} me-1"></i>{% endif %}{{ new.label }}</span>
           <span class="text-muted small"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
         </div>
         {% if alert.note %}

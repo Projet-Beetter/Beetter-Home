@@ -1,10 +1,15 @@
 STATUS_CONFIG = {
-    'calm':     {'label': 'Calm',     'badge': 'bg-success',   'icon': 'bi-emoji-smile'},
-    'stressed': {'label': 'Stressed', 'badge': 'bg-warning',   'icon': 'bi-emoji-expressionless'},
-    'agitated': {'label': 'Agitated', 'badge': 'bg-orange',    'icon': 'bi-emoji-frown'},
-    'critical': {'label': 'Critical', 'badge': 'bg-danger',    'icon': 'bi-exclamation-octagon-fill'},
-    'silent':  {'label': 'Silent',  'badge': 'bg-secondary', 'icon': 'bi-moon-stars-fill'},
-    'no_data':  {'label': 'No data',  'badge': 'bg-dark',      'icon': 'bi-question-circle'},
+    'calm':         {'label': 'Calm',         'badge': 'bg-success',   'icon': ''},
+    'stressed':     {'label': 'Stressed',     'badge': 'bg-warning',   'icon': ''},
+    'agitated':     {'label': 'Agitated',     'badge': 'bg-orange',    'icon': ''},
+    'critical':     {'label': 'Critical',     'badge': 'bg-danger',    'icon': ''},
+    'swarming':     {'label': 'Swarming',     'badge': 'bg-danger',    'icon': ''},
+    'queenless':    {'label': 'Queenless',    'badge': 'bg-danger',    'icon': ''},
+    'predator':     {'label': 'Predator',     'badge': 'bg-danger',    'icon': ''},
+    'ventilating':  {'label': 'Ventilating',  'badge': 'bg-info',      'icon': ''},
+    'virgin_queen': {'label': 'Virgin queen', 'badge': 'bg-purple',    'icon': ''},
+    'silent':       {'label': 'Silent',       'badge': 'bg-secondary', 'icon': ''},
+    'no_data':      {'label': 'No data',      'badge': 'bg-dark',      'icon': ''},
 }
 
 def get_status_config(status):
