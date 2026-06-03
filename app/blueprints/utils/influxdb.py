@@ -128,6 +128,37 @@ from(bucket: "{bucket}")
     return result
 
 
+def query_export_data(beehive_id, measurements, start_str, stop_str=None):
+    """Query raw pivoted data for selected measurements over an arbitrary time range."""
+    valid = [m for m in measurements if m in MEASUREMENTS]
+    if not valid:
+        return []
+    bucket = current_app.config['INFLUXDB_BUCKET']
+    org = current_app.config['INFLUXDB_ORG']
+    meas_filter = ' or '.join(f'r._measurement == "{m}"' for m in valid)
+    range_clause = f'start: {start_str}'
+    if stop_str:
+        range_clause += f', stop: {stop_str}'
+    query = f'''
+from(bucket: "{bucket}")
+  |> range({range_clause})
+  |> filter(fn: (r) => r["beehive_id"] == "{beehive_id}")
+  |> filter(fn: (r) => {meas_filter})
+  |> pivot(rowKey: ["_time"], columnKey: ["_measurement"], valueColumn: "_value")
+'''
+    data = []
+    with _client() as c:
+        for table in c.query_api().query(query, org=org):
+            for r in table.records:
+                row = {'timestamp': r.get_time().strftime('%Y-%m-%dT%H:%M:%SZ')}
+                for field in valid:
+                    v = r.values.get(field)
+                    if v is not None:
+                        row[field] = round(v, 2)
+                data.append(row)
+    return sorted(data, key=lambda x: x['timestamp'])
+
+
 def query_recent_data(beehive_id, since):
     """Return flat list of {timestamp, <measurement>: value, ...} since `since`."""
     bucket = current_app.config['INFLUXDB_BUCKET']

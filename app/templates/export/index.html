@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block title %}Export — Beetter{% endblock %}
+{% block page_title %}Export Data{% endblock %}
+{% block content %}
+
+<form method="post" action="{{ url_for('export.index') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="row g-4">
+
+    <!-- Time Range -->
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h6 class="fw-bold mb-3">
+            <i class="bi bi-calendar-range me-2" style="color:#F5CB5C"></i>Time Range
+          </h6>
+
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            {% for r in range_options %}
+            <input class="btn-check" type="radio" name="range_preset" id="preset_{{ r }}"
+                   value="{{ r }}" autocomplete="off" {% if r == '24h' %}checked{% endif %}>
+            <label class="btn btn-sm btn-outline-secondary" for="preset_{{ r }}">
+              {{ range_labels.get(r, r) }}
+            </label>
+            {% endfor %}
+          </div>
+
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="useCustomRange"
+                   name="use_custom" value="1">
+            <label class="form-check-label fw-semibold small" for="useCustomRange">
+              Custom date range
+            </label>
+          </div>
+
+          <div id="customRangePanel" class="row g-2 mt-1" style="display:none">
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold" for="date_from">From</label>
+              <input type="datetime-local" class="form-control form-control-sm"
+                     name="date_from" id="date_from">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold" for="date_to">To</label>
+              <input type="datetime-local" class="form-control form-control-sm"
+                     name="date_to" id="date_to">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beehive selection -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0">
+              <i class="bi bi-collection me-2" style="color:#F5CB5C"></i>Beehives
+            </h6>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    id="toggleAllHives">Select all</button>
+          </div>
+
+          {% if not beehives %}
+          <p class="text-muted mb-0">No beehives configured yet.</p>
+          {% else %}
+          <div class="d-flex flex-column gap-2">
+            {% for hive in beehives %}
+            <div class="form-check">
+              <input class="form-check-input hive-check" type="checkbox"
+                     name="beehive_ids" value="{{ hive.id }}" id="hive_{{ hive.id }}">
+              <label class="form-check-label" for="hive_{{ hive.id }}">
+                {{ hive.name }}
+                {% if not hive.enabled %}
+                <span class="badge bg-secondary ms-1" style="font-size:.7rem">offline</span>
+                {% endif %}
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Data fields selection -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0">
+              <i class="bi bi-bar-chart-line me-2" style="color:#F5CB5C"></i>Data Fields
+            </h6>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    id="toggleAllFields">Select all</button>
+          </div>
+
+          {% for cat in field_categories %}
+          <p class="small fw-semibold text-muted text-uppercase mb-2 {% if not loop.first %}mt-3{% endif %}"
+             style="font-size:.72rem;letter-spacing:.06em">{{ cat.label }}</p>
+          <div class="d-flex flex-column gap-2">
+            {% for key, label, unit in cat.fields %}
+            <div class="form-check">
+              <input class="form-check-input field-check" type="checkbox"
+                     name="fields" value="{{ key }}" id="field_{{ key }}">
+              <label class="form-check-label" for="field_{{ key }}">
+                {{ label }}{% if unit %} <span class="text-muted">({{ unit }})</span>{% endif %}
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="col-12 d-flex justify-content-end">
+      <button type="submit" class="btn btn-warning px-4">
+        <i class="bi bi-download me-2"></i>Export CSV
+      </button>
+    </div>
+
+  </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Custom date range toggle
+  const useCustom = document.getElementById('useCustomRange');
+  const customPanel = document.getElementById('customRangePanel');
+  const presetInputs = document.querySelectorAll('input[name="range_preset"]');
+
+  useCustom.addEventListener('change', () => {
+    customPanel.style.display = useCustom.checked ? 'flex' : 'none';
+    presetInputs.forEach(r => r.disabled = useCustom.checked);
+  });
+
+  // Select / deselect all hives
+  const toggleHivesBtn = document.getElementById('toggleAllHives');
+  const hiveChecks = document.querySelectorAll('.hive-check');
+  let allHivesOn = false;
+  toggleHivesBtn?.addEventListener('click', () => {
+    allHivesOn = !allHivesOn;
+    hiveChecks.forEach(c => c.checked = allHivesOn);
+    toggleHivesBtn.textContent = allHivesOn ? 'Deselect all' : 'Select all';
+  });
+
+  // Select / deselect all fields
+  const toggleFieldsBtn = document.getElementById('toggleAllFields');
+  const fieldChecks = document.querySelectorAll('.field-check');
+  let allFieldsOn = false;
+  toggleFieldsBtn?.addEventListener('click', () => {
+    allFieldsOn = !allFieldsOn;
+    fieldChecks.forEach(c => c.checked = allFieldsOn);
+    toggleFieldsBtn.textContent = allFieldsOn ? 'Deselect all' : 'Select all';
+  });
+</script>
+{% endblock %}

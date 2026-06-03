@@ -106,10 +106,11 @@
         <i class="bi bi-person-gear"></i>
         <span class="nav-label ms-2">Account</span>
       </a>
-      <button class="btn btn-sm w-100 mb-2 sidebar-dark-toggle" id="darkModeToggle" title="Toggle dark mode" style="color:#CFDBD5">
-        <i class="bi bi-moon" id="darkModeIcon"></i>
-        <span class="nav-label ms-2">Dark mode</span>
-      </button>
+      <a href="{{ url_for('export.index') }}" class="nav-link mb-2" title="Export"
+         {% if request.endpoint and request.endpoint.startswith('export') %}active{% endif %}>
+        <i class="bi bi-download"></i>
+        <span class="nav-label ms-2">Export</span>
+      </a>
       <a href="{{ url_for('auth.logout') }}" class="nav-link text-danger" title="Sign out">
         <i class="bi bi-box-arrow-left"></i>
         <span class="nav-label ms-2">Sign out</span>
@@ -126,6 +127,10 @@
   </button>
   <h6 class="mb-0 fw-semibold">{% block page_title %}{% endblock %}</h6>
   <div class="d-flex align-items-center gap-2 ms-auto">
+    <button class="btn btn-sm topbar-dark-toggle" id="darkModeToggle" title="Toggle dark mode">
+      <i class="bi bi-moon" id="darkModeIcon" style="font-size:1rem;"></i>
+    </button>
+    <div class="vr opacity-25 mx-1" style="height:22px;"></div>
     <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
     <div style="line-height:1.25">
       <div class="fw-semibold" style="font-size:.85rem">{{ current_user.username }}</div>

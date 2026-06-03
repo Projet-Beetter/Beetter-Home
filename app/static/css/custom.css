@@ -244,6 +244,35 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   background: #fff;
   border-bottom: 2px solid rgba(36,36,35,.12);
   min-height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.topbar-dark-toggle {
+  color: #6c757d;
+  background: transparent;
+  border: 1px solid rgba(36,36,35,.15);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  line-height: 1;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.topbar-dark-toggle:hover {
+  color: #F5CB5C;
+  border-color: rgba(255,193,7,.4);
+  background: rgba(255,193,7,.08);
+}
+
+body.dark-mode .topbar-dark-toggle {
+  color: #CFDBD5;
+  border-color: rgba(255,255,255,.2);
+}
+
+body.dark-mode .topbar-dark-toggle:hover {
+  color: #F5CB5C;
+  border-color: rgba(255,193,7,.4);
 }
 
 /* ── Page content ──────────────────────────────────────────── */
@@ -333,6 +362,31 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
 /* ── Chart.js time axis adapter shim ───────────────────────── */
 /* We load chartjs-adapter-date-fns via CDN — no extra CSS needed */
 
+/* ── Export page checkboxes ────────────────────────────────── */
+.form-check-input {
+  border: 1.5px solid rgba(36,36,35,.45);
+}
+
+.form-check-input:checked {
+  background-color: #F5CB5C;
+  border-color: #F5CB5C;
+}
+
+.form-check-input:focus {
+  border-color: #F5CB5C;
+  box-shadow: 0 0 0 .2rem rgba(245,203,92,.25);
+}
+
+body.dark-mode .form-check-input {
+  border-color: rgba(255,255,255,.4);
+  background-color: transparent;
+}
+
+body.dark-mode .form-check-input:checked {
+  background-color: #F5CB5C;
+  border-color: #F5CB5C;
+}
+
 /* ── Utilities ─────────────────────────────────────────────── */
 .font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 
@@ -348,6 +402,8 @@ body.dark-mode .topbar {
   background: #333533;
   border-bottom-color: rgba(255,255,255,0.08);
   color: #E8EDDF;
+  /* keep it fully opaque when sticky-scrolling */
+  backdrop-filter: none;
 }
 
 body.dark-mode .sidebar-toggle-btn:hover {
