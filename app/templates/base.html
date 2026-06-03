@@ -18,14 +18,16 @@
   if (localStorage.getItem('sidebarCollapsed') !== 'false') {
     document.body.classList.add('sidebar-collapsed-on-load');
   }
+</script>
+
+
+{% if current_user.is_authenticated %}
+<script>
   // Early: restore dark mode before the page paints to avoid a light/dark flash.
   if (localStorage.getItem('darkMode') === 'on') {
     document.body.classList.add('dark-mode');
   }
 </script>
-
-
-{% if current_user.is_authenticated %}
 <div class="d-flex" id="wrapper">
 
   <!-- Sidebar -->
@@ -153,6 +155,10 @@
 </div>
 
 {% else %}
+<script>
+  // Force light mode for unauthenticated pages (login/register) regardless of stored preference.
+  document.body.classList.remove('dark-mode');
+</script>
 <!-- Unauthenticated layout -->
 <main>
   {% block auth_content %}{% endblock %}
