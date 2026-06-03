@@ -47,7 +47,7 @@ def index():
                 'suffix': info['suffix'],
                 'label': info['label'],
                 'color': info.get('color',''),
-                'value': latest.get(key).value if latest.get(key) else None
+                'value': latest.get(key)['value'] if latest.get(key) else None
             })
 
         INDICATOR_ORDER = [
