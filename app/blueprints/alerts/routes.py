@@ -1,8 +1,8 @@
-from datetime import datetime
-from flask import render_template, redirect, url_for, flash, abort
+from datetime import datetime, timedelta
+from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
-from ...models import db, Alert
-from ..utils.status import STATUS_CONFIG
+from ...models import db, Alert, Beehive
+from ..utils.status import STATUS_CONFIG, get_dot_color
 from ..utils.alert_sources import ALERT_SOURCES
 from . import alerts_bp
 
@@ -12,14 +12,64 @@ ALERTS_DAYS = 1
 @login_required
 def index():
     today = datetime.utcnow().date()
-    alerts = Alert.query.filter(
+    all_alerts_today = Alert.query.filter(
         Alert.created_at >= today
     ).order_by(Alert.created_at.desc()).all()
-    for alert in alerts:
+
+    for alert in all_alerts_today:
         if current_user not in alert.read_by:
             alert.read_by.append(current_user)
     db.session.commit()
-    return render_template('alerts/index.html', alerts=alerts, status_config=STATUS_CONFIG, alert_sources=ALERT_SOURCES)
+
+    active_hive_ids = set()
+    active_alerts = []
+    for alert in all_alerts_today:
+        if alert.hive.status not in ('calm', 'no_data', 'silent') and alert.hive_id not in active_hive_ids:
+            active_alerts.append(alert)
+            active_hive_ids.add(alert.hive_id)
+
+    all_hives = Beehive.query.order_by(Beehive.name).all()
+
+    return render_template('alerts/index.html',
+        active_alerts=active_alerts,
+        today_alerts=all_alerts_today,
+        all_hives=all_hives,
+        status_config=STATUS_CONFIG,
+        alert_sources=ALERT_SOURCES,
+        get_dot_color=get_dot_color
+    )
+
+@alerts_bp.route('/history')
+@login_required
+def history():
+    hive_id = request.args.get('hive_id', type=int)
+    status_filter = request.args.get('status')
+    source_filter = request.args.get('source')
+    period = request.args.get('period', 'today')
+
+    query = Alert.query
+    if hive_id:
+        query = query.filter(Alert.hive_id == hive_id)
+    if status_filter:
+        query = query.filter(Alert.new_status == status_filter)
+    if source_filter:
+        query = query.filter(Alert.source == source_filter)
+    if period == '7d':
+        query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(days=7))
+    else:
+        query = query.filter(Alert.created_at >= datetime.utcnow().date())
+
+    alerts = query.order_by(Alert.created_at.desc()).all()
+    all_hives = Beehive.query.order_by(Beehive.name).all()
+
+    return render_template('alerts/history.html',
+        alerts=alerts,
+        all_hives=all_hives,
+        status_config=STATUS_CONFIG,
+        alert_sources=ALERT_SOURCES,
+        get_dot_color=get_dot_color,
+        current_filters={'hive_id': hive_id, 'status': status_filter, 'source': source_filter, 'period': period}
+    )
 
 @alerts_bp.route('/<int:alert_id>/delete', methods=['POST'])
 @login_required
@@ -43,5 +93,3 @@ def clear_alerts():
     db.session.commit()
     flash("Today's alerts cleared.", 'info')
     return redirect(url_for('alerts.index'))
-
-

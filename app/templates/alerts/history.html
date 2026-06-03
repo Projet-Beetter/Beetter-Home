@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Alert History — Beetter{% endblock %}
+{% block page_title %}Alerts{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 mt-1">
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('alerts.index') }}" class="btn btn-sm btn-outline-secondary">Active</a>
+    <a href="{{ url_for('alerts.history') }}" class="btn btn-sm btn-warning">History</a>
+  </div>
+  <div class="d-flex gap-2">
+    {% if current_user.is_admin %}
+    <form method="post" action="{{ url_for('alerts.clear_alerts') }}" class="d-inline" onsubmit="return confirm('Clear all alerts for today?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i>Clear all</button>
+    </form>
+    {% endif %}
+    <a href="{{ url_for('alerts.history') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</a>
+  </div>
+</div>
+
+<form method="get" action="{{ url_for('alerts.history') }}" class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+  <select name="hive_id" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+    <option value="">All hives</option>
+    {% for hive in all_hives %}
+    <option value="{{ hive.id }}" {{ 'selected' if current_filters.hive_id == hive.id }}>{{ hive.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="status" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+    <option value="">All statuses</option>
+    {% for key, val in status_config.items() %}
+    <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>{{ val.label }}</option>
+    {% endfor %}
+  </select>
+  <select name="source" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+    <option value="">All sources</option>
+    {% for key, val in alert_sources.items() %}
+    <option value="{{ key }}" {{ 'selected' if current_filters.source == key }}>{{ val.label }}</option>
+    {% endfor %}
+  </select>
+  <select name="period" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+    <option value="today" {{ 'selected' if current_filters.period == 'today' }}>Today</option>
+    <option value="7d" {{ 'selected' if current_filters.period == '7d' }}>Last 7 days</option>
+  </select>
+</form>
+
+{% if not alerts %}
+<div class="card border-0 shadow-sm text-center py-5 text-muted">
+  <i class="bi bi-inbox fs-2"></i>
+  <p class="mt-2 mb-0">No alerts match the current filters.</p>
+</div>
+{% else %}
+<p class="text-muted small text-uppercase fw-semibold mb-2" style="letter-spacing:.05em;">{{ alerts|length }} result{{ 's' if alerts|length != 1 }}</p>
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    {% for alert in alerts %}
+    {% set dot = get_dot_color(alert.new_status) %}
+    {% set old = status_config.get(alert.old_status, status_config['no_data']) %}
+    {% set new = status_config.get(alert.new_status, status_config['no_data']) %}
+    {% set src = alert_sources.get(alert.source, {'label': alert.source, 'icon': 'bi-question-circle'}) %}
+    <div class="d-flex align-items-center gap-3 px-3 py-2 border-bottom border-secondary border-opacity-10">
+      <span class="status-dot {{ dot }}" style="flex-shrink:0;"></span>
+      <div class="flex-grow-1 min-width-0">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <a href="{{ url_for('beehives.detail', hive_id=alert.hive.id) }}" class="fw-semibold small text-decoration-none text-reset">{{ alert.hive.name }}</a>
+          <span class="badge {{ old.badge }} text-nowrap"><i class="bi {{ old.icon }} me-1"></i>{{ old.label }}</span>
+          <i class="bi bi-arrow-right text-muted small"></i>
+          <span class="badge {{ new.badge }} text-nowrap"><i class="bi {{ new.icon }} me-1"></i>{{ new.label }}</span>
+          <span class="text-muted small"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
+        </div>
+        {% if alert.note %}
+        <div class="alert-note text-muted mt-1">"{{ alert.note }}"</div>
+        {% endif %}
+      </div>
+      <div class="text-muted small text-nowrap">{{ alert.created_at.strftime('%d %b %H:%M') }}</div>
+      {% if current_user.is_admin %}
+      <form method="post" action="{{ url_for('alerts.delete_alert', alert_id=alert.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1"><i class="bi bi-trash" style="font-size:.7rem;"></i></button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

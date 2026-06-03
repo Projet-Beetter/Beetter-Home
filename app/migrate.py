@@ -21,6 +21,7 @@ with engine.connect() as conn:
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
         )""",
         "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS source VARCHAR(50) NOT NULL DEFAULT 'manual'",
+        "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS note TEXT",
         """CREATE TABLE IF NOT EXISTS user_alert_reads (
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         alert_id INTEGER REFERENCES alerts(id) ON DELETE CASCADE,

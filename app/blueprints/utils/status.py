@@ -9,3 +9,13 @@ STATUS_CONFIG = {
 
 def get_status_config(status):
     return STATUS_CONFIG.get(status, STATUS_CONFIG['no_data'])
+
+def get_dot_color(status):
+    if status in ('calm', 'ventilating'):
+        return 'dot-green'
+    elif status in ('stressed', 'agitated', 'virgin_queen'):
+        return 'dot-yellow'
+    elif status in ('critical', 'swarming', 'queenless', 'predator'):
+        return 'dot-red'
+    else:
+        return 'dot-black'

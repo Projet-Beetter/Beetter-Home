@@ -153,7 +153,15 @@ def set_status(hive_id):
     if new_status in ('calm', 'stressed', 'agitated', 'critical', 'silent', 'no_data',
                       'swarming', 'queenless', 'predator', 'ventilating', 'virgin_queen'):
         if new_status != hive.status:
-            db.session.add(Alert(hive_id=hive.id, old_status=hive.status, new_status=new_status, source='manual'))
+            if new_status not in ('calm', 'no_data', 'silent'):
+                note = request.form.get('note', '').strip() or None
+                db.session.add(Alert(
+                    hive_id=hive.id,
+                    old_status=hive.status,
+                    new_status=new_status,
+                    source='manual',
+                    note=note
+                ))
             hive.status = new_status
             db.session.commit()
             flash(f'Status updated to {new_status}.', 'success')

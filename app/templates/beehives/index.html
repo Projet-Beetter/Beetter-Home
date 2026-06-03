@@ -82,14 +82,18 @@
                 </button>
               </form>
               {% if current_user.is_admin %}
-              <form method="post" action="{{ url_for('beehives.set_status', hive_id=hive.id) }}" class="d-inline">
+              <form method="post" action="{{ url_for('beehives.set_status', hive_id=hive.id) }}" class="d-inline-flex flex-column gap-1 align-items-end">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <select name="status" class="form-select form-select-sm d-inline w-auto"
-                        onchange="this.form.submit()" title="Set status">
-                  {% for key, val in status_config.items() %}
-                  <option value="{{ key }}" {{ 'selected' if hive.status == key }}>{{ val.label }}</option>
-                  {% endfor %}
-                </select>
+                <div class="d-flex gap-1 align-items-center">
+                  <select name="status" class="form-select form-select-sm w-auto" title="Set status"
+                          onchange="var t=this.closest('form').querySelector('textarea');t.classList.toggle('d-none',this.value==='{{ hive.status }}')">
+                    {% for key, val in status_config.items() %}
+                    <option value="{{ key }}" {{ 'selected' if hive.status == key }}>{{ val.label }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-outline-secondary" title="Apply"><i class="bi bi-check-lg"></i></button>
+                </div>
+                <textarea name="note" rows="1" placeholder="Note (optional)" class="form-control form-control-sm d-none" style="min-width:160px;resize:none;"></textarea>
               </form>
               {% endif %}
               {% endif %}
