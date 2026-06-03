@@ -6,7 +6,7 @@ from ..utils.status import STATUS_CONFIG, get_dot_color
 from ..utils.alert_sources import ALERT_SOURCES
 from . import alerts_bp
 
-ALERTS_DAYS = 1
+ALERTING_STATUSES = ('stressed', 'agitated', 'critical', 'swarming', 'queenless', 'predator', 'virgin_queen')
 
 @alerts_bp.route('/')
 @login_required
@@ -24,7 +24,7 @@ def index():
     active_hive_ids = set()
     active_alerts = []
     for alert in all_alerts_today:
-        if alert.hive.status not in ('calm', 'no_data', 'silent') and alert.hive_id not in active_hive_ids:
+        if alert.hive.status in ALERTING_STATUSES and alert.hive_id not in active_hive_ids:
             active_alerts.append(alert)
             active_hive_ids.add(alert.hive_id)
 
@@ -80,7 +80,7 @@ def delete_alert(alert_id):
     db.session.delete(alert)
     db.session.commit()
     flash('Alert deleted.', 'info')
-    return redirect(url_for('alerts.index'))
+    return redirect(url_for('alerts.history'))
 
 @alerts_bp.route('/clear', methods=['POST'])
 @login_required
@@ -89,7 +89,8 @@ def clear_alerts():
         abort(403)
     today = datetime.utcnow().date()
     for alert in Alert.query.filter(Alert.created_at >= today).all():
-        db.session.delete(alert)
+        if alert.new_status not in ALERTING_STATUSES:
+            db.session.delete(alert)
     db.session.commit()
-    flash("Today's alerts cleared.", 'info')
+    flash("Today's condensed alerts cleared.", 'info')
     return redirect(url_for('alerts.index'))

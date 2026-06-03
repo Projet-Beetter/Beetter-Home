@@ -8,12 +8,6 @@
     <a href="{{ url_for('alerts.history') }}" class="btn btn-sm btn-outline-secondary">History</a>
   </div>
   <div class="d-flex gap-2">
-    {% if current_user.is_admin %}
-    <form method="post" action="{{ url_for('alerts.clear_alerts') }}" class="d-inline" onsubmit="return confirm('Clear all alerts for today?')">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i>Clear all</button>
-    </form>
-    {% endif %}
     <a href="{{ url_for('alerts.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</a>
   </div>
 </div>
@@ -50,12 +44,6 @@
       {% if alert.note %}<div class="alert-note text-muted mt-1">"{{ alert.note }}"</div>{% endif %}
     </div>
     <div class="text-muted small">{{ alert.created_at.strftime('%H:%M') }}</div>
-    {% if current_user.is_admin %}
-    <form method="post" action="{{ url_for('alerts.delete_alert', alert_id=alert.id) }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-    </form>
-    {% endif %}
   </div>
 </div>
 {% endfor %}
@@ -78,12 +66,6 @@
   {% set s = status_config.get(alert.new_status, status_config['no_data']) %}
   <div class="small text-muted flex-grow-1">{{ s.label }}</div>
   <div class="text-muted small ms-auto">{{ alert.created_at.strftime('%H:%M') }}</div>
-  {% if current_user.is_admin %}
-  <form method="post" action="{{ url_for('alerts.delete_alert', alert_id=alert.id) }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1"><i class="bi bi-trash" style="font-size:.7rem;"></i></button>
-  </form>
-  {% endif %}
 </div>
 {% endfor %}
 {% endif %}
