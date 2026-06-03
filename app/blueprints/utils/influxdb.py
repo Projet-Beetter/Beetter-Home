@@ -128,6 +128,20 @@ from(bucket: "{bucket}")
     return result
 
 
+def delete_beehive_data(beehive_id):
+    """Purge all InfluxDB measurements for a beehive so its ID can be safely reused."""
+    bucket = current_app.config['INFLUXDB_BUCKET']
+    org = current_app.config['INFLUXDB_ORG']
+    with _client() as c:
+        c.delete_api().delete(
+            start=datetime(1970, 1, 1, tzinfo=timezone.utc),
+            stop=datetime.now(timezone.utc),
+            predicate=f'beehive_id="{beehive_id}"',
+            bucket=bucket,
+            org=org,
+        )
+
+
 def query_export_data(beehive_id, measurements, start_str, stop_str=None):
     """Query raw pivoted data for selected measurements over an arbitrary time range."""
     valid = [m for m in measurements if m in MEASUREMENTS]

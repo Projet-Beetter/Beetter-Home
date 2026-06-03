@@ -1,7 +1,8 @@
 from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from sqlalchemy import text
 from ...models import db, Beehive, Alert, UserHiveIndicator
-from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS
+from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS, delete_beehive_data
 from ..utils.decorators import editor_required
 from ..utils.status import STATUS_CONFIG
 from .forms import BeehiveForm
@@ -21,7 +22,10 @@ def index():
 def new():
     form = BeehiveForm()
     if form.validate_on_submit():
+        taken = {id for (id,) in db.session.query(Beehive.id).all()}
+        new_id = next(i for i in range(1, (max(taken) if taken else 0) + 2) if i not in taken)
         hive = Beehive(
+            id=new_id,
             name=form.name.data,
             street=form.street.data,
             city=form.city.data,
@@ -34,6 +38,8 @@ def new():
         )
         hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
         db.session.add(hive)
+        db.session.flush()
+        db.session.execute(text("SELECT setval('beehives_id_seq', (SELECT MAX(id) FROM beehives))"))
         db.session.commit()
         flash(f'Beehive "{hive.name}" added.', 'success')
         return redirect(url_for('beehives.index'))
@@ -61,6 +67,10 @@ def edit(hive_id):
 def delete(hive_id):
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     name = hive.name
+    try:
+        delete_beehive_data(str(hive_id))
+    except Exception:
+        flash('Could not purge InfluxDB data — beehive removed from DB anyway.', 'warning')
     db.session.delete(hive)
     db.session.commit()
     flash(f'Beehive "{name}" deleted.', 'info')

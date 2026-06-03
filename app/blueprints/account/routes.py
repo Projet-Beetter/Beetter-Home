@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
-from ...models import db, User
+from ...models import db, User, UserHiveIndicator, Alert, user_alert_reads
 from .forms import ChangeEmailForm, ChangePasswordForm, DeleteAccountForm, AdminUserActionForm
 from . import account_bp
 
@@ -67,6 +67,20 @@ def index():
             else:
                 flash('Invalid role selected.', 'danger')
         elif admin_action_form.action.data == 'delete_user':
+            # Remove user's own alert-read records
+            db.session.execute(
+                user_alert_reads.delete().where(user_alert_reads.c.user_id == target_user.id)
+            )
+            # Remove user's indicator preferences
+            UserHiveIndicator.query.filter_by(user_id=target_user.id).delete()
+            # For each beehive this user owns, clean up alerts and related data
+            for hive in target_user.beehives:
+                UserHiveIndicator.query.filter_by(hive_id=hive.id).delete()
+                for alert in hive.alerts:
+                    db.session.execute(
+                        user_alert_reads.delete().where(user_alert_reads.c.alert_id == alert.id)
+                    )
+                Alert.query.filter_by(hive_id=hive.id).delete()
             db.session.delete(target_user)
             flash(f"{target_user.username} has been removed.", 'success')
         else:
