@@ -21,12 +21,14 @@ def index():
             alert.read_by.append(current_user)
     db.session.commit()
 
-    active_hive_ids = set()
+    active_hives = Beehive.query.filter(
+        Beehive.status.in_(ALERTING_STATUSES)
+    ).order_by(Beehive.name).all()
+
     active_alerts = []
-    for alert in all_alerts_today:
-        if alert.hive.status in ALERTING_STATUSES and alert.hive_id not in active_hive_ids:
-            active_alerts.append(alert)
-            active_hive_ids.add(alert.hive_id)
+    for hive in active_hives:
+        last_alert = Alert.query.filter_by(hive_id=hive.id).order_by(Alert.created_at.desc()).first()
+        active_alerts.append({'hive': hive, 'alert': last_alert})
 
     all_hives = Beehive.query.order_by(Beehive.name).all()
 

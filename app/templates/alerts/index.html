@@ -28,22 +28,24 @@
 
 {% if active_alerts %}
 <p class="text-muted small text-uppercase fw-semibold mb-2" style="letter-spacing:.05em;">Active — {{ active_alerts|length }} unresolved</p>
-{% for alert in active_alerts %}
-{% set dot = get_dot_color(alert.hive.status) %}
+{% for item in active_alerts %}
+{% set hive = item.hive %}
+{% set alert = item.alert %}
+{% set dot = get_dot_color(hive.status) %}
 <div class="card border-0 shadow-sm mb-2 alert-item severity-{{ 'red' if dot == 'dot-red' else 'yellow' if dot == 'dot-yellow' else 'none' }}"
-     data-hive="{{ alert.hive.id }}" data-dot="{{ dot }}">
+     data-hive="{{ hive.id }}" data-dot="{{ dot }}">
   <div class="card-body py-2 px-3 d-flex align-items-start gap-3">
     <span class="status-dot {{ dot }} mt-1"></span>
     <div class="flex-grow-1">
       <div class="fw-semibold">
-        <a href="{{ url_for('beehives.detail', hive_id=alert.hive.id) }}" class="text-decoration-none text-reset">{{ alert.hive.name }}</a>
+        <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="text-decoration-none text-reset">{{ hive.name }}</a>
       </div>
-      {% set s = status_config.get(alert.hive.status, status_config['no_data']) %}
+      {% set s = status_config.get(hive.status, status_config['no_data']) %}
       <div class="small {{ 'text-danger' if dot == 'dot-red' else 'text-warning' if dot == 'dot-yellow' else 'text-secondary' }}">{{ s.label }}</div>
-      {% if alert.hive.city %}<div class="text-muted" style="font-size:.8rem;">{{ alert.hive.city }}</div>{% endif %}
-      {% if alert.note %}<div class="alert-note text-muted mt-1">"{{ alert.note }}"</div>{% endif %}
+      {% if hive.city %}<div class="text-muted" style="font-size:.8rem;">{{ hive.city }}</div>{% endif %}
+      {% if alert and alert.note %}<div class="alert-note text-muted mt-1">"{{ alert.note }}"</div>{% endif %}
     </div>
-    <div class="text-muted small">{{ alert.created_at.strftime('%H:%M') }}</div>
+    <div class="text-muted small">{{ alert.created_at.strftime('%H:%M') if alert else '—' }}</div>
   </div>
 </div>
 {% endfor %}
