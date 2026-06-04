@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, HiddenField, SelectField
+from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from ...models import User
 
@@ -26,8 +26,3 @@ class ChangePasswordForm(FlaskForm):
 class DeleteAccountForm(FlaskForm):
     password = PasswordField('Confirm your password', validators=[DataRequired()])
     submit = SubmitField('Delete my account', render_kw={'class': 'btn btn-danger w-100 fw-semibold'})
-
-
-class AdminUserActionForm(FlaskForm):
-    user_id = HiddenField(validators=[DataRequired()])
-    action = HiddenField(validators=[DataRequired()])

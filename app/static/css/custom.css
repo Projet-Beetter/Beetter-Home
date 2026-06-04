@@ -275,6 +275,22 @@ body.dark-mode .topbar-dark-toggle:hover {
   border-color: rgba(255,193,7,.4);
 }
 
+.topbar-account-link {
+  color: inherit;
+  border-radius: 6px;
+  padding: 0.25rem 0.4rem;
+  transition: background 0.15s ease;
+}
+
+.topbar-account-link:hover {
+  background: rgba(0,0,0,.06);
+  color: inherit;
+}
+
+body.dark-mode .topbar-account-link:hover {
+  background: rgba(255,255,255,.08);
+}
+
 /* ── Page content ──────────────────────────────────────────── */
 #page-content {
   background: #E8EDDF;

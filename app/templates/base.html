@@ -77,14 +77,6 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="{{ url_for('settings.index') }}"
-             class="nav-link" data-bs-toggle="tooltip" title="Servers"
-             {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}>
-            <i class="bi bi-database-gear"></i>
-            <span class="nav-label ms-2">Servers</span>
-          </a>
-        </li>
-        <li class="nav-item">
           <a href="{{ url_for('alerts.index') }}"
              class="nav-link d-flex align-items-center" data-bs-toggle="tooltip" title="Alerts"
              {% if request.endpoint and request.endpoint.startswith('alerts') %}active{% endif %}>
@@ -102,10 +94,18 @@
 
     <!-- Sidebar Bottom -->
     <div class="sidebar-bottom px-2 py-3">
-      <a href="{{ url_for('account.index') }}" class="nav-link mb-2" title="Account">
-        <i class="bi bi-person-gear"></i>
-        <span class="nav-label ms-2">Account</span>
+      {% if current_user.is_admin %}
+      <a href="{{ url_for('admin.index') }}" class="nav-link mb-2" title="Admin Panel"
+         {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}>
+        <i class="bi bi-shield-lock"></i>
+        <span class="nav-label ms-2">Admin Panel</span>
       </a>
+      {% else %}
+      <span class="nav-link mb-2 opacity-50" style="cursor:not-allowed;" title="Admin only">
+        <i class="bi bi-shield-lock"></i>
+        <span class="nav-label ms-2">Admin Panel</span>
+      </span>
+      {% endif %}
       <a href="{{ url_for('export.index') }}" class="nav-link mb-2" title="Export"
          {% if request.endpoint and request.endpoint.startswith('export') %}active{% endif %}>
         <i class="bi bi-download"></i>
@@ -131,11 +131,15 @@
       <i class="bi bi-moon" id="darkModeIcon" style="font-size:1rem;"></i>
     </button>
     <div class="vr opacity-25 mx-1" style="height:22px;"></div>
-    <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
-    <div style="line-height:1.25">
-      <div class="fw-semibold" style="font-size:.85rem">{{ current_user.username }}</div>
-      <div style="font-size:.75rem; color:#6c757d;">{{ current_user.role }}</div>
-    </div>
+    <a href="{{ url_for('account.index') }}" class="d-flex align-items-center gap-2 text-decoration-none topbar-account-link"
+       title="Account settings"
+       {% if request.endpoint and request.endpoint.startswith('account') %}aria-current="page"{% endif %}>
+      <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
+      <div style="line-height:1.25">
+        <div class="fw-semibold" style="font-size:.85rem">{{ current_user.username }}</div>
+        <div style="font-size:.75rem; color:#6c757d;">{{ current_user.role }}</div>
+      </div>
+    </a>
   </div>
 </header>
 

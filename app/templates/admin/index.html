@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel — Beetter{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="account-page">
+  <div class="account-panel shadow-sm">
+    <div class="account-panel-header">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="account-panel-icon d-flex align-items-center justify-content-center">
+          <i class="bi bi-shield-lock"></i>
+        </span>
+        <div>
+          <h3 class="mb-1">Admin control center</h3>
+          <p class="mb-0 account-panel-description">
+            Manage user access levels, remote servers, and beehive settings.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="account-panel-body">
+
+      <!-- ── User management ───────────────────────────────── -->
+      <div class="account-section">
+        <div class="section-header">
+          <i class="bi bi-people"></i>
+          <span>User management</span>
+        </div>
+
+        {% if managed_users %}
+        <div class="table-responsive mt-3">
+          <table class="table table-borderless align-middle admin-user-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in managed_users %}
+              <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td class="text-capitalize">{{ user.role }}</td>
+                <td class="text-end">
+                  <form method="post" class="d-inline-flex align-items-center gap-2">
+                    {{ admin_action_form.csrf_token }}
+                    <input type="hidden" name="admin-user_id" value="{{ user.id }}">
+                    <input type="hidden" name="admin-action" value="change_role">
+                    <select name="admin-role" class="form-select form-select-sm" style="width: 11rem;">
+                      <option value="viewer" {% if user.role == 'viewer' %}selected{% endif %}>Viewer</option>
+                      <option value="editor" {% if user.role == 'editor' %}selected{% endif %}>Editor</option>
+                      <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-account-admin">Update role</button>
+                  </form>
+                  <form method="post" class="d-inline ms-1" id="deleteUserForm{{ user.id }}">
+                    {{ admin_action_form.csrf_token }}
+                    <input type="hidden" name="admin-user_id" value="{{ user.id }}">
+                    <input type="hidden" name="admin-action" value="delete_user">
+                    <button type="button" class="btn btn-sm btn-account-admin-danger"
+                            data-bs-toggle="modal" data-bs-target="#deleteUserModal"
+                            data-form-id="deleteUserForm{{ user.id }}"
+                            data-username="{{ user.username }}">
+                      Remove
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted mt-3 mb-0">No non-admin users to manage.</p>
+        {% endif %}
+      </div>
+
+      <div class="account-divider"></div>
+
+      <!-- ── Remote servers ────────────────────────────────── -->
+      <div class="account-section">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <div class="section-header mb-0">
+            <i class="bi bi-cloud-upload"></i>
+            <span>Remote servers</span>
+          </div>
+          <a href="{{ url_for('settings.remote_new') }}" class="btn btn-sm btn-warning">
+            <i class="bi bi-plus-lg me-1"></i>Add server
+          </a>
+        </div>
+
+        {% if configs %}
+        <div class="table-responsive mt-3">
+          <table class="table table-borderless align-middle admin-user-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>URL</th>
+                <th>Interval</th>
+                <th>Last push</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cfg in configs %}
+              <tr>
+                <td class="fw-semibold">{{ cfg.name }}</td>
+                <td class="text-muted small font-monospace">{{ cfg.url }}</td>
+                <td>{{ cfg.push_interval }} min</td>
+                <td class="small text-muted">
+                  {% if cfg.last_push_at %}
+                    {{ cfg.last_push_at.strftime('%Y-%m-%d %H:%M') }}
+                  {% else %}
+                    Never
+                  {% endif %}
+                </td>
+                <td>
+                  {% if not cfg.enabled %}
+                    <span class="badge bg-secondary">Disabled</span>
+                  {% elif cfg.last_push_status == 'success' %}
+                    <span class="badge bg-success">OK</span>
+                  {% elif cfg.last_push_status == 'error' %}
+                    <span class="badge bg-danger" title="{{ cfg.last_push_message }}">Error</span>
+                  {% else %}
+                    <span class="badge bg-light text-dark">Pending</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <a href="{{ url_for('settings.remote_edit', config_id=cfg.id) }}"
+                     class="btn btn-sm btn-outline-warning" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <form method="post" action="{{ url_for('settings.remote_toggle', config_id=cfg.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm {{ 'btn-outline-secondary' if cfg.enabled else 'btn-outline-success' }}"
+                            title="{{ 'Disable' if cfg.enabled else 'Enable' }}">
+                      <i class="bi {{ 'bi-pause' if cfg.enabled else 'bi-play' }}"></i>
+                    </button>
+                  </form>
+                  <form method="post" action="{{ url_for('settings.remote_delete', config_id=cfg.id) }}" class="d-inline"
+                        id="deleteServerForm{{ cfg.id }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
+                            data-bs-toggle="modal" data-bs-target="#deleteServerModal"
+                            data-form-id="deleteServerForm{{ cfg.id }}"
+                            data-server-name="{{ cfg.name }}">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted mt-3 mb-0">No remote servers configured.</p>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Delete user confirmation modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold" id="deleteUserModalLabel">
+          <i class="bi bi-exclamation-triangle text-danger me-2"></i>Remove user
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Are you sure you want to remove <strong id="deleteUserName"></strong>?</p>
+        <p class="text-muted small mb-0">Their account, beehives, and all associated data will be permanently deleted.</p>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="deleteUserConfirm">
+          <i class="bi bi-person-x me-1"></i>Remove
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete server confirmation modal -->
+<div class="modal fade" id="deleteServerModal" tabindex="-1" aria-labelledby="deleteServerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold" id="deleteServerModalLabel">
+          <i class="bi bi-exclamation-triangle text-danger me-2"></i>Delete server
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Are you sure you want to delete <strong id="deleteServerName"></strong>?</p>
+        <p class="text-muted small mb-0">This cannot be undone.</p>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="deleteServerConfirm">
+          <i class="bi bi-trash me-1"></i>Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // User removal modal
+  const deleteUserModal = document.getElementById('deleteUserModal');
+  let pendingUserFormId = null;
+  deleteUserModal.addEventListener('show.bs.modal', (e) => {
+    const btn = e.relatedTarget;
+    document.getElementById('deleteUserName').textContent = btn.dataset.username;
+    pendingUserFormId = btn.dataset.formId;
+  });
+  document.getElementById('deleteUserConfirm').addEventListener('click', () => {
+    if (pendingUserFormId) document.getElementById(pendingUserFormId).submit();
+  });
+
+  // Server deletion modal
+  const deleteServerModal = document.getElementById('deleteServerModal');
+  let pendingServerFormId = null;
+  deleteServerModal.addEventListener('show.bs.modal', (e) => {
+    const btn = e.relatedTarget;
+    document.getElementById('deleteServerName').textContent = btn.dataset.serverName;
+    pendingServerFormId = btn.dataset.formId;
+  });
+  document.getElementById('deleteServerConfirm').addEventListener('click', () => {
+    if (pendingServerFormId) document.getElementById(pendingServerFormId).submit();
+  });
+</script>
+{% endblock %}
