@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import render_template, redirect, url_for, flash, request, abort
+from flask import render_template, redirect, url_for, request, abort
 from flask_login import login_required, current_user
 from ...models import db, Alert, Beehive
 from ..utils.status import STATUS_CONFIG, get_dot_color
@@ -47,7 +47,7 @@ def history():
     hive_id = request.args.get('hive_id', type=int)
     status_filter = request.args.get('status')
     source_filter = request.args.get('source')
-    period = request.args.get('period', 'today')
+    period = request.args.get('period', '24h')
 
     query = Alert.query
     if hive_id:
@@ -56,10 +56,15 @@ def history():
         query = query.filter(Alert.new_status == status_filter)
     if source_filter:
         query = query.filter(Alert.source == source_filter)
-    if period == '7d':
+
+    if period == '1h':
+        query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(hours=1))
+    elif period == '24h':
+        query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(hours=24))
+    elif period == '7d':
         query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(days=7))
-    else:
-        query = query.filter(Alert.created_at >= datetime.utcnow().date())
+    elif period == '30d':
+        query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(days=30))
 
     alerts = query.order_by(Alert.created_at.desc()).all()
     all_hives = Beehive.query.order_by(Beehive.name).all()
@@ -73,26 +78,12 @@ def history():
         current_filters={'hive_id': hive_id, 'status': status_filter, 'source': source_filter, 'period': period}
     )
 
-@alerts_bp.route('/<int:alert_id>/delete', methods=['POST'])
+@alerts_bp.route('/<int:alert_id>/note', methods=['POST'])
 @login_required
-def delete_alert(alert_id):
+def update_note(alert_id):
     if not current_user.is_admin:
         abort(403)
     alert = Alert.query.get_or_404(alert_id)
-    db.session.delete(alert)
+    alert.note = request.form.get('note', '').strip() or None
     db.session.commit()
-    flash('Alert deleted.', 'info')
-    return redirect(url_for('alerts.history'))
-
-@alerts_bp.route('/clear', methods=['POST'])
-@login_required
-def clear_alerts():
-    if not current_user.is_admin:
-        abort(403)
-    today = datetime.utcnow().date()
-    for alert in Alert.query.filter(Alert.created_at >= today).all():
-        if alert.new_status not in ALERTING_STATUSES:
-            db.session.delete(alert)
-    db.session.commit()
-    flash("Today's condensed alerts cleared.", 'info')
-    return redirect(url_for('alerts.index'))
+    return redirect(request.referrer or url_for('alerts.history'))

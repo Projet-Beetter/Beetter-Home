@@ -8,40 +8,36 @@
     <a href="{{ url_for('alerts.history') }}" class="btn btn-sm btn-warning">History</a>
   </div>
   <div class="d-flex gap-2">
-    {% if current_user.is_admin %}
-    <form method="post" action="{{ url_for('alerts.clear_alerts') }}" class="d-inline" onsubmit="return confirm('Clear all alerts for today?')">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i>Clear all</button>
-    </form>
-    {% endif %}
-    <a href="{{ url_for('alerts.history') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</a>
+    <a href="{{ url_for('alerts.history', hive_id=current_filters.hive_id or '', status=current_filters.status or '', source=current_filters.source or '', period=current_filters.period) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</a>
   </div>
 </div>
 
-<form method="get" action="{{ url_for('alerts.history') }}" class="d-flex gap-2 mb-3 flex-wrap align-items-center">
-  <select name="hive_id" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+<div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+  <select name="hive_id" class="form-select form-select-sm w-auto" onchange="applyFilter('hive_id', this.value)">
     <option value="">All hives</option>
     {% for hive in all_hives %}
     <option value="{{ hive.id }}" {{ 'selected' if current_filters.hive_id == hive.id }}>{{ hive.name }}</option>
     {% endfor %}
   </select>
-  <select name="status" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+  <select name="status" class="form-select form-select-sm w-auto" onchange="applyFilter('status', this.value)">
     <option value="">All statuses</option>
     {% for key, val in status_config.items() %}
     <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>{{ val.label }}</option>
     {% endfor %}
   </select>
-  <select name="source" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+  <select name="source" class="form-select form-select-sm w-auto" onchange="applyFilter('source', this.value)">
     <option value="">All sources</option>
     {% for key, val in alert_sources.items() %}
     <option value="{{ key }}" {{ 'selected' if current_filters.source == key }}>{{ val.label }}</option>
     {% endfor %}
   </select>
-  <select name="period" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-    <option value="today" {{ 'selected' if current_filters.period == 'today' }}>Today</option>
-    <option value="7d" {{ 'selected' if current_filters.period == '7d' }}>Last 7 days</option>
-  </select>
-</form>
+  <div class="d-flex gap-1">
+    {% for p, label in [('1h','1h'), ('24h','24h'), ('7d','7d'), ('30d','30d')] %}
+    <a href="{{ url_for('alerts.history', hive_id=current_filters.hive_id or '', status=current_filters.status or '', source=current_filters.source or '', period=p) }}"
+       class="btn btn-sm {{ 'btn-warning' if current_filters.period == p else 'btn-outline-secondary' }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+</div>
 
 {% if not alerts %}
 <div class="card border-0 shadow-sm text-center py-5 text-muted">
@@ -57,30 +53,56 @@
     {% set old = status_config.get(alert.old_status, status_config['no_data']) %}
     {% set new = status_config.get(alert.new_status, status_config['no_data']) %}
     {% set src = alert_sources.get(alert.source, {'label': alert.source, 'icon': 'bi-question-circle'}) %}
-    <div class="d-flex align-items-center gap-3 px-3 py-2 border-bottom border-secondary border-opacity-10">
-      <span class="status-dot {{ dot }}" style="flex-shrink:0;"></span>
-      <div class="flex-grow-1 min-width-0">
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-          <a href="{{ url_for('beehives.detail', hive_id=alert.hive.id) }}" class="fw-semibold small text-decoration-none text-reset">{{ alert.hive.name }}</a>
-          <span class="badge {{ old.badge }} text-nowrap">{% if old.icon %}<i class="bi {{ old.icon }} me-1"></i>{% endif %}{{ old.label }}</span>
-          <i class="bi bi-arrow-right text-muted small"></i>
-          <span class="badge {{ new.badge }} text-nowrap">{% if new.icon %}<i class="bi {{ new.icon }} me-1"></i>{% endif %}{{ new.label }}</span>
-          <span class="text-muted small"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
+    <div class="px-3 py-2 border-bottom border-secondary border-opacity-10">
+      <div class="d-flex align-items-center gap-3">
+        <span class="status-dot {{ dot }}" style="flex-shrink:0;"></span>
+        <div class="flex-grow-1 min-width-0">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{{ url_for('beehives.detail', hive_id=alert.hive.id) }}" class="fw-semibold small text-decoration-none text-reset">{{ alert.hive.name }}</a>
+            <span class="badge {{ old.badge }} text-nowrap">{% if old.icon %}<i class="bi {{ old.icon }} me-1"></i>{% endif %}{{ old.label }}</span>
+            <i class="bi bi-arrow-right text-muted small"></i>
+            <span class="badge {{ new.badge }} text-nowrap">{% if new.icon %}<i class="bi {{ new.icon }} me-1"></i>{% endif %}{{ new.label }}</span>
+            <span class="text-muted small"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
+          </div>
+          {% if alert.note %}
+          <div class="alert-note text-muted mt-1">"{{ alert.note }}"</div>
+          {% endif %}
         </div>
-        {% if alert.note %}
-        <div class="alert-note text-muted mt-1">"{{ alert.note }}"</div>
+        <div class="text-muted small text-nowrap">{{ alert.created_at.strftime('%d %b %H:%M') }}</div>
+        {% if current_user.is_admin %}
+        <button class="btn btn-sm btn-outline-secondary py-0 px-1" type="button"
+                data-bs-toggle="collapse" data-bs-target="#note-{{ alert.id }}" title="Edit note">
+          <i class="bi bi-pencil" style="font-size:.7rem;"></i>
+        </button>
         {% endif %}
       </div>
-      <div class="text-muted small text-nowrap">{{ alert.created_at.strftime('%d %b %H:%M') }}</div>
       {% if current_user.is_admin %}
-      <form method="post" action="{{ url_for('alerts.delete_alert', alert_id=alert.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1"><i class="bi bi-trash" style="font-size:.7rem;"></i></button>
-      </form>
+      <div class="collapse mt-1" id="note-{{ alert.id }}">
+        <form method="post" action="{{ url_for('alerts.update_note', alert_id=alert.id) }}" class="d-flex gap-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="note" class="form-control form-control-sm"
+                 placeholder="Add a note..." value="{{ alert.note or '' }}">
+          <button type="submit" class="btn btn-sm btn-warning">Save</button>
+        </form>
+      </div>
       {% endif %}
     </div>
     {% endfor %}
   </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function applyFilter(key, value) {
+  const params = new URLSearchParams(window.location.search);
+  if (value) {
+    params.set(key, value);
+  } else {
+    params.delete(key);
+  }
+  window.location.href = '{{ url_for("alerts.history") }}?' + params.toString();
+}
+</script>
 {% endblock %}

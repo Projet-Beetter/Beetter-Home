@@ -43,8 +43,10 @@
       {% set s = status_config.get(hive.status, status_config['no_data']) %}
       <div class="small {{ 'text-danger' if dot == 'dot-red' else 'text-warning' if dot == 'dot-yellow' else 'text-secondary' }}">{{ s.label }}</div>
       {% if hive.city %}<div class="text-muted" style="font-size:.8rem;">{{ hive.city }}</div>{% endif %}
-      {% if alert and alert.note %}<div class="alert-note text-muted mt-1">"{{ alert.note }}"</div>{% endif %}
     </div>
+    {% if alert and alert.note %}
+    <div class="alert-note text-muted fst-italic me-3 text-center" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.95rem;">"{{ alert.note }}"</div>
+    {% endif %}
     <div class="text-muted small">{{ alert.created_at.strftime('%H:%M') if alert else '—' }}</div>
   </div>
 </div>
