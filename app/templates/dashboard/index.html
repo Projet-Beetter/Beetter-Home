@@ -34,7 +34,7 @@
             <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="stretched-link" aria-label="Open {{ hive.name }} details"></a>
             <div class="d-flex justify-content-between align-items-start mb-3">
               <div>
-                <h6 class="card-title fw-bold mb-0">{{ hive.name }}</h6>
+                <h6 class="card-title fw-bold mb-0">{{ hive.name }}<span class="text-muted fw-normal ms-1" style="font-size:.7rem;">#{{ hive.id }}</span></h6>
                 {% if hive.city %}
                   <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ hive.city }}</small>
                 {% endif %}
