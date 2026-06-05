@@ -231,6 +231,10 @@ TRANSLATIONS = {
         "field_new_pw": "New password",
         "field_confirm_new_pw": "Confirm new password",
         "field_delete_pw": "Confirm your password",
+        # Account submit buttons
+        "btn_update_email": "Update email",
+        "btn_change_password": "Change password",
+        "btn_delete_account": "Delete my account",
     },
     "fr": {
         # Sidebar nav
@@ -339,7 +343,7 @@ TRANSLATIONS = {
         "account_danger": "Zone de danger",
         "account_danger_desc": "La suppression de votre compte supprimera définitivement toutes vos données, y compris vos ruches et vos paramètres. Cette action est irréversible.",
         # Admin
-        "admin_title": "Centre d’administration",
+        "admin_title": "Centre Administrateur",
         "admin_desc": "Gérez les accès utilisateurs, les serveurs distants et les paramètres des ruches.",
         "admin_users": "Gestion des utilisateurs",
         "admin_col_name": "Nom",
@@ -462,8 +466,12 @@ TRANSLATIONS = {
         "field_pw_confirm": "Mot de passe (pour confirmer)",
         "field_current_pw": "Mot de passe actuel",
         "field_new_pw": "Nouveau mot de passe",
-        "field_confirm_new_pw": "Confirmer le nouveau mot de passe",
+        "field_confirm_new_pw": "Confirmer le mot de passe",
         "field_delete_pw": "Confirmez votre mot de passe",
+        # Account submit buttons
+        "btn_update_email": "Mettre à jour l'e-mail",
+        "btn_change_password": "Changer le mot de passe",
+        "btn_delete_account": "Supprimer mon compte",
     },
 }
 
