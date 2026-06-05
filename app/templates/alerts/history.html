@@ -19,11 +19,20 @@
     <option value="{{ hive.id }}" {{ 'selected' if current_filters.hive_id == hive.id }}>{{ hive.name }}</option>
     {% endfor %}
   </select>
-  <select name="status" class="form-select form-select-sm w-auto" onchange="applyFilter('status', this.value)">
-    <option value="">{{ _t('alerts_all_statuses') }}</option>
-    {% for key, val in status_config.items() %}
-    <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>{{ val.label }}</option>
-    {% endfor %}
+  <select name="status" class="form-select form-select-sm w-auto" onchange="applyStatusFilter(this.value)">
+    <option value="">All states</option>
+    <optgroup label="Critical">
+      <option value="family:critical" {{ 'selected' if current_filters.family == 'critical' }}>— All critical</option>
+      {% for key, val in status_config.items() if val.family == 'critical' %}
+      <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>  {{ val.label }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Agitated">
+      <option value="family:agitated" {{ 'selected' if current_filters.family == 'agitated' }}>— All agitated</option>
+      {% for key, val in status_config.items() if val.family == 'agitated' %}
+      <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>  {{ val.label }}</option>
+      {% endfor %}
+    </optgroup>
   </select>
   <select name="source" class="form-select form-select-sm w-auto" onchange="applyFilter('source', this.value)">
     <option value="">{{ _t('alerts_all_sources') }}</option>
@@ -101,6 +110,18 @@ function applyFilter(key, value) {
     params.set(key, value);
   } else {
     params.delete(key);
+  }
+  window.location.href = '{{ url_for("alerts.history") }}?' + params.toString();
+}
+
+function applyStatusFilter(value) {
+  const params = new URLSearchParams(window.location.search);
+  params.delete('status');
+  params.delete('family');
+  if (value.startsWith('family:')) {
+    params.set('family', value.replace('family:', ''));
+  } else if (value) {
+    params.set('status', value);
   }
   window.location.href = '{{ url_for("alerts.history") }}?' + params.toString();
 }

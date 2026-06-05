@@ -2,11 +2,9 @@ from datetime import datetime, timedelta
 from flask import render_template, redirect, url_for, request, abort
 from flask_login import login_required, current_user
 from ...models import db, Alert, Beehive
-from ..utils.status import STATUS_CONFIG, get_dot_color
+from ..utils.status import STATUS_CONFIG, STATUS_FAMILIES, ALERTING_STATUSES, get_dot_color
 from ..utils.alert_sources import ALERT_SOURCES
 from . import alerts_bp
-
-ALERTING_STATUSES = ('stressed', 'agitated', 'critical', 'swarming', 'queenless', 'predator', 'virgin_queen')
 
 @alerts_bp.route('/')
 @login_required
@@ -46,6 +44,7 @@ def index():
 def history():
     hive_id = request.args.get('hive_id', type=int)
     status_filter = request.args.get('status')
+    family_filter = request.args.get('family')
     source_filter = request.args.get('source')
     period = request.args.get('period', '24h')
 
@@ -54,6 +53,9 @@ def history():
         query = query.filter(Alert.hive_id == hive_id)
     if status_filter:
         query = query.filter(Alert.new_status == status_filter)
+    elif family_filter:
+        family_statuses = [k for k, v in STATUS_CONFIG.items() if v.get('family') == family_filter]
+        query = query.filter(Alert.new_status.in_(family_statuses))
     if source_filter:
         query = query.filter(Alert.source == source_filter)
 
@@ -73,9 +75,10 @@ def history():
         alerts=alerts,
         all_hives=all_hives,
         status_config=STATUS_CONFIG,
+        status_families=STATUS_FAMILIES,
         alert_sources=ALERT_SOURCES,
         get_dot_color=get_dot_color,
-        current_filters={'hive_id': hive_id, 'status': status_filter, 'source': source_filter, 'period': period}
+        current_filters={'hive_id': hive_id, 'status': status_filter, 'family': family_filter, 'source': source_filter, 'period': period}
     )
 
 @alerts_bp.route('/<int:alert_id>/note', methods=['POST'])

@@ -4,12 +4,10 @@ from sqlalchemy import text
 from ...models import db, Beehive, Alert, UserHiveIndicator
 from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS, delete_beehive_data
 from ..utils.decorators import editor_required
-from ..utils.status import STATUS_CONFIG
+from ..utils.status import STATUS_CONFIG, ALERTING_STATUSES, get_dot_color
 from .forms import BeehiveForm
 from . import beehives_bp
 from ..utils.geocode import geocode
-
-ALERTING_STATUSES = ('stressed', 'agitated', 'critical', 'swarming', 'queenless', 'predator', 'virgin_queen')
 
 @beehives_bp.route('/')
 @login_required
@@ -162,8 +160,7 @@ def set_status(hive_id):
         abort(403)
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     new_status = request.form.get('status')
-    if new_status in ('calm', 'stressed', 'agitated', 'critical', 'silent', 'no_data',
-                      'swarming', 'queenless', 'predator', 'ventilating', 'virgin_queen'):
+    if new_status in STATUS_CONFIG:
         if new_status != hive.status:
             note = request.form.get('note', '').strip() or None
             db.session.add(Alert(

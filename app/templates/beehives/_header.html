@@ -25,9 +25,26 @@
     <div class="d-flex gap-1 align-items-center">
       <select name="status" class="form-select form-select-sm w-auto" title="Set status"
               onchange="var t=this.closest('form').querySelector('textarea');t.classList.toggle('d-none',this.value==='{{ hive.status }}')">
-        {% for key, val in status_config.items() %}
-        <option value="{{ key }}" {{ 'selected' if hive.status == key }}>{{ val.label }}</option>
-        {% endfor %}
+        <optgroup label="Calm">
+          <option value="calm" {{ 'selected' if hive.status == 'calm' }}>Calm</option>
+          <option value="foraging" {{ 'selected' if hive.status == 'foraging' }}>Foraging</option>
+          <option value="ventilating" {{ 'selected' if hive.status == 'ventilating' }}>Ventilating</option>
+        </optgroup>
+        <optgroup label="Agitated">
+          <option value="agitated" {{ 'selected' if hive.status == 'agitated' }}>Agitated</option>
+          <option value="stressed" {{ 'selected' if hive.status == 'stressed' }}>Stressed</option>
+          <option value="virgin_queen" {{ 'selected' if hive.status == 'virgin_queen' }}>Virgin queen</option>
+        </optgroup>
+        <optgroup label="Critical">
+          <option value="critical" {{ 'selected' if hive.status == 'critical' }}>Critical</option>
+          <option value="swarming" {{ 'selected' if hive.status == 'swarming' }}>Swarming</option>
+          <option value="queenless" {{ 'selected' if hive.status == 'queenless' }}>Queenless</option>
+          <option value="predator" {{ 'selected' if hive.status == 'predator' }}>Predator</option>
+        </optgroup>
+        <optgroup label="Other">
+          <option value="silent" {{ 'selected' if hive.status == 'silent' }}>Silent</option>
+          <option value="no_data" {{ 'selected' if hive.status == 'no_data' }}>No data</option>
+        </optgroup>
       </select>
       <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ _t('hive_apply') }}"><i class="bi bi-check-lg"></i></button>
     </div>

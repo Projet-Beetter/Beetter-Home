@@ -19,10 +19,20 @@
     <option value="{{ hive.id }}">{{ hive.name }}</option>
     {% endfor %}
   </select>
-  <select class="form-select form-select-sm w-auto" onchange="filterAlerts()" id="filter-color">
+  <select class="form-select form-select-sm w-auto" onchange="filterAlerts()" id="filter-status">
     <option value="">{{ _t('alerts_all_states') }}</option>
-    <option value="dot-red">{{ _t('alerts_critical') }}</option>
-    <option value="dot-yellow">{{ _t('alerts_warning') }}</option>
+    <optgroup label="Critical">
+      <option value="family:critical">— All critical</option>
+      {% for key, val in status_config.items() if val.family == 'critical' %}
+      <option value="{{ key }}">  {{ val.label }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Agitated">
+      <option value="family:agitated">— All agitated</option>
+      {% for key, val in status_config.items() if val.family == 'agitated' %}
+      <option value="{{ key }}">  {{ val.label }}</option>
+      {% endfor %}
+    </optgroup>
   </select>
 </div>
 
@@ -33,7 +43,7 @@
 {% set alert = item.alert %}
 {% set dot = get_dot_color(hive.status) %}
 <div class="card border-0 shadow-sm mb-2 alert-item severity-{{ 'red' if dot == 'dot-red' else 'yellow' if dot == 'dot-yellow' else 'none' }}"
-     data-hive="{{ hive.id }}" data-dot="{{ dot }}">
+     data-hive="{{ hive.id }}" data-dot="{{ dot }}" data-status="{{ hive.status }}">
   <div class="card-body py-2 px-3 d-flex align-items-start gap-3">
     <span class="status-dot {{ dot }} mt-1"></span>
     <div class="flex-grow-1">
@@ -77,17 +87,23 @@
 
 {% block scripts %}
 <script>
+const familyToDot = { critical: 'dot-red', agitated: 'dot-yellow', calm: 'dot-green' };
+
 function filterAlerts() {
   const hive = document.getElementById('filter-hive').value;
-  const color = document.getElementById('filter-color').value;
-  document.querySelectorAll('[data-hive]').forEach(el => {
+  const statusVal = document.getElementById('filter-status').value;
+  document.querySelectorAll('.alert-item[data-hive]').forEach(el => {
     const matchHive = !hive || el.dataset.hive === hive;
-    const matchColor = !color || el.dataset.dot === color;
-    if (matchHive && matchColor) {
-      el.classList.remove('d-none');
-    } else {
-      el.classList.add('d-none');
+    let matchStatus = true;
+    if (statusVal) {
+      if (statusVal.startsWith('family:')) {
+        const dot = familyToDot[statusVal.replace('family:', '')];
+        matchStatus = el.dataset.dot === dot;
+      } else {
+        matchStatus = el.dataset.status === statusVal;
+      }
     }
+    el.classList.toggle('d-none', !(matchHive && matchStatus));
   });
 }
 </script>

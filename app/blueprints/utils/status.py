@@ -1,26 +1,42 @@
-STATUS_CONFIG = {
-    'calm':         {'label': 'Calm',         'badge': 'bg-success',   'icon': ''},
-    'stressed':     {'label': 'Stressed',     'badge': 'bg-warning',   'icon': ''},
-    'agitated':     {'label': 'Agitated',     'badge': 'bg-orange',    'icon': ''},
-    'critical':     {'label': 'Critical',     'badge': 'bg-danger',    'icon': ''},
-    'swarming':     {'label': 'Swarming',     'badge': 'bg-danger',    'icon': ''},
-    'queenless':    {'label': 'Queenless',    'badge': 'bg-danger',    'icon': ''},
-    'predator':     {'label': 'Predator',     'badge': 'bg-danger',    'icon': ''},
-    'ventilating':  {'label': 'Ventilating',  'badge': 'bg-info',      'icon': ''},
-    'virgin_queen': {'label': 'Virgin queen', 'badge': 'bg-purple',    'icon': ''},
-    'silent':       {'label': 'Silent',       'badge': 'bg-secondary', 'icon': ''},
-    'no_data':      {'label': 'No data',      'badge': 'bg-dark',      'icon': ''},
+STATUS_FAMILIES = {
+    'calm':     {'label': 'Calm',     'color': '#22c55e', 'alerting': False},
+    'agitated': {'label': 'Agitated', 'color': '#f97316', 'alerting': True},
+    'critical': {'label': 'Critical', 'color': '#ef4444', 'alerting': True},
 }
+
+STATUS_CONFIG = {
+    # Calm family
+    'calm':         {'label': 'Calm',         'family': 'calm',     'badge': 'bg-success',   'icon': ''},
+    'foraging':     {'label': 'Foraging',     'family': 'calm',     'badge': 'bg-success',   'icon': ''},
+    'ventilating':  {'label': 'Ventilating',  'family': 'calm',     'badge': 'bg-success',   'icon': ''},
+    # Agitated family
+    'stressed':     {'label': 'Stressed',     'family': 'agitated', 'badge': 'bg-orange',    'icon': ''},
+    'agitated':     {'label': 'Agitated',     'family': 'agitated', 'badge': 'bg-orange',    'icon': ''},
+    'virgin_queen': {'label': 'Virgin queen', 'family': 'agitated', 'badge': 'bg-orange',    'icon': ''},
+    # Critical family
+    'critical':     {'label': 'Critical',     'family': 'critical', 'badge': 'bg-danger',    'icon': ''},
+    'swarming':     {'label': 'Swarming',     'family': 'critical', 'badge': 'bg-danger',    'icon': ''},
+    'queenless':    {'label': 'Queenless',    'family': 'critical', 'badge': 'bg-danger',    'icon': ''},
+    'predator':     {'label': 'Predator',     'family': 'critical', 'badge': 'bg-danger',    'icon': ''},
+    # No family
+    'silent':       {'label': 'Silent',       'family': None,       'badge': 'bg-secondary', 'icon': ''},
+    'no_data':      {'label': 'No data',      'family': None,       'badge': 'bg-dark',      'icon': ''},
+}
+
+ALERTING_STATUSES = tuple(k for k, v in STATUS_CONFIG.items() if v.get('family') in ('agitated', 'critical'))
 
 def get_status_config(status):
     return STATUS_CONFIG.get(status, STATUS_CONFIG['no_data'])
 
 def get_dot_color(status):
-    if status in ('calm', 'ventilating'):
-        return 'dot-green'
-    elif status in ('stressed', 'agitated', 'virgin_queen'):
-        return 'dot-yellow'
-    elif status in ('critical', 'swarming', 'queenless', 'predator'):
+    family = STATUS_CONFIG.get(status, {}).get('family')
+    if family == 'critical':
         return 'dot-red'
-    else:
-        return 'dot-black'
+    elif family == 'agitated':
+        return 'dot-yellow'
+    elif family == 'calm':
+        return 'dot-green'
+    return 'dot-black'
+
+def get_status_family(status):
+    return STATUS_CONFIG.get(status, {}).get('family')
