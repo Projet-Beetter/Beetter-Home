@@ -1,33 +1,33 @@
 {% extends 'base.html' %}
-{% block title %}Alerts — Beetter{% endblock %}
-{% block page_title %}Alerts{% endblock %}
+{% block title %}{{ _t('page_alerts') }} — Beetter{% endblock %}
+{% block page_title %}{{ _t('page_alerts') }}{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3 mt-1">
   <div class="d-flex gap-2">
-    <a href="{{ url_for('alerts.index') }}" class="btn btn-sm btn-warning">Active</a>
-    <a href="{{ url_for('alerts.history') }}" class="btn btn-sm btn-outline-secondary">History</a>
+    <a href="{{ url_for('alerts.index') }}" class="btn btn-sm btn-warning">{{ _t('alerts_active_tab') }}</a>
+    <a href="{{ url_for('alerts.history') }}" class="btn btn-sm btn-outline-secondary">{{ _t('alerts_history_tab') }}</a>
   </div>
   <div class="d-flex gap-2">
-    <a href="{{ url_for('alerts.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</a>
+    <a href="{{ url_for('alerts.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>{{ _t('alerts_refresh') }}</a>
   </div>
 </div>
 
 <div class="d-flex gap-2 mb-3 flex-wrap">
   <select class="form-select form-select-sm w-auto" onchange="filterAlerts()" id="filter-hive">
-    <option value="">All hives</option>
+    <option value="">{{ _t('alerts_all_hives') }}</option>
     {% for hive in all_hives %}
     <option value="{{ hive.id }}">{{ hive.name }}</option>
     {% endfor %}
   </select>
   <select class="form-select form-select-sm w-auto" onchange="filterAlerts()" id="filter-color">
-    <option value="">All states</option>
-    <option value="dot-red">Critical</option>
-    <option value="dot-yellow">Warning</option>
+    <option value="">{{ _t('alerts_all_states') }}</option>
+    <option value="dot-red">{{ _t('alerts_critical') }}</option>
+    <option value="dot-yellow">{{ _t('alerts_warning') }}</option>
   </select>
 </div>
 
 {% if active_alerts %}
-<p class="text-muted small text-uppercase fw-semibold mb-2" style="letter-spacing:.05em;">Active — {{ active_alerts|length }} unresolved</p>
+<p class="text-muted small text-uppercase fw-semibold mb-2" style="letter-spacing:.05em;">{{ _t('alerts_active_section') }} — {{ active_alerts|length }} {{ _t('alerts_unresolved') }}</p>
 {% for item in active_alerts %}
 {% set hive = item.hive %}
 {% set alert = item.alert %}
@@ -54,12 +54,12 @@
 {% else %}
 <div class="card border-0 shadow-sm text-center py-4 text-muted mb-3">
   <i class="bi bi-check-circle fs-2 text-success"></i>
-  <p class="mt-2 mb-0">No active alerts — all hives are calm.</p>
+  <p class="mt-2 mb-0">{{ _t('alerts_empty') }}</p>
 </div>
 {% endif %}
 
 {% if today_alerts %}
-<p class="text-muted small text-uppercase fw-semibold mb-2 mt-3" style="letter-spacing:.05em;">Today — condensed</p>
+<p class="text-muted small text-uppercase fw-semibold mb-2 mt-3" style="letter-spacing:.05em;">{{ _t('alerts_today') }}</p>
 {% for alert in today_alerts %}
 {% set dot = get_dot_color(alert.new_status) %}
 <div class="card border-0 shadow-sm mb-1 d-flex flex-row align-items-center gap-3 px-3 py-2"

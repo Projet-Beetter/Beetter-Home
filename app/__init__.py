@@ -1,10 +1,11 @@
 import os
 from datetime import datetime
-from flask import Flask
+from flask import Flask, session, redirect, request
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 from .models import db, bcrypt, User
 from .scheduler import init_scheduler
+from .i18n import get_text
 
 
 def create_app():
@@ -60,19 +61,30 @@ def create_app():
 
     from .models import Alert, user_alert_reads
 
+    @app.route('/set-lang/<lang>')
+    def set_lang(lang):
+        if lang in ('en', 'fr'):
+            session['lang'] = lang
+        return redirect(request.referrer or '/')
+
     @app.context_processor
-    def inject_alerts_count():
+    def inject_globals():
+        lang = session.get('lang', 'en')
+        alerts_count = 0
         if current_user.is_authenticated:
             today = datetime.utcnow().date()
             read_ids = db.session.query(user_alert_reads.c.alert_id).filter(
                 user_alert_reads.c.user_id == current_user.id
             ).subquery()
-            count = Alert.query.filter(
+            alerts_count = Alert.query.filter(
                 Alert.created_at >= today,
                 ~Alert.id.in_(read_ids)
             ).count()
-            return {'alerts_count': count}
-        return {'alerts_count': 0}
+        return {
+            'alerts_count': alerts_count,
+            'current_lang': lang,
+            '_t': lambda key: get_text(key, lang),
+        }
 
 
     with app.app_context():

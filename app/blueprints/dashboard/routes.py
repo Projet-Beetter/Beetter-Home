@@ -27,15 +27,15 @@ def index():
             indicators = ['temperature_int', 'humidity_int']
 
         mapping = {
-            'temperature_int': {'icon':'thermometer-half','suffix':'°C','label':'Int. Temp','color':'text-danger'},
-            'temperature_ext': {'icon':'thermometer-half','suffix':'°C','label':'Ext. Temp','color':'text-danger'},
-            'humidity_int': {'icon':'droplet-half','suffix':'%','label':'Int. Humidity','color':'text-primary'},
-            'humidity_ext': {'icon':'droplet-half','suffix':'%','label':'Ext. Humidity','color':'text-primary'},
-            'sound_freq_int': {'icon':'music-note-beamed','suffix':'Hz','label':'Int. Peak Freq','color':'text-secondary'},
-            'sound_amp_int': {'icon':'volume-up','suffix':'','label':'Int. Amplitude','color':'text-secondary'},
-            'sound_freq_ext': {'icon':'music-note-beamed','suffix':'Hz','label':'Ext. Peak Freq','color':'text-secondary'},
-            'sound_amp_ext': {'icon':'volume-up','suffix':'','label':'Ext. Amplitude','color':'text-secondary'},
-            'light_ext': {'icon':'brightness-high','suffix':'%','label':'Ext. Light','color':'text-warning'},
+            'temperature_int': {'icon':'thermometer-half','suffix':'°C','label':'dash_ind_temp_int','color':'text-danger'},
+            'temperature_ext': {'icon':'thermometer-half','suffix':'°C','label':'dash_ind_temp_ext','color':'text-danger'},
+            'humidity_int': {'icon':'droplet-half','suffix':'%','label':'dash_ind_hum_int','color':'text-primary'},
+            'humidity_ext': {'icon':'droplet-half','suffix':'%','label':'dash_ind_hum_ext','color':'text-primary'},
+            'sound_freq_int': {'icon':'music-note-beamed','suffix':'Hz','label':'dash_ind_freq_int','color':'text-secondary'},
+            'sound_amp_int': {'icon':'volume-up','suffix':'','label':'dash_ind_amp_int','color':'text-secondary'},
+            'sound_freq_ext': {'icon':'music-note-beamed','suffix':'Hz','label':'dash_ind_freq_ext','color':'text-secondary'},
+            'sound_amp_ext': {'icon':'volume-up','suffix':'','label':'dash_ind_amp_ext','color':'text-secondary'},
+            'light_ext': {'icon':'brightness-high','suffix':'%','label':'dash_ind_light_ext','color':'text-warning'},
         }
 
         indicators_data = []

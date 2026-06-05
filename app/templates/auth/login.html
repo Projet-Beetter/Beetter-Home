@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Sign in — Beetter{% endblock %}
+{% block title %}{{ _t('auth_signin_title') }} — Beetter{% endblock %}
 
 {% block auth_content %}
 <div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
@@ -7,7 +7,7 @@
     <div class="card-body p-5">
       <div class="text-center mb-4">
         <img src="{{ url_for('static', filename='images/Logo_Beetter.png') }}" alt="Beetter " class="img-fluid" style="max-width:180px;">
-        <p class="text-muted small">Sign in to your account</p>
+        <p class="text-muted small">{{ _t('auth_signin_subtitle') }}</p>
       </div>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -19,14 +19,14 @@
       <form method="post" novalidate>
         {{ form.hidden_tag() }}
         <div class="mb-3">
-          {{ form.username.label(class="form-label") }}
+          <label class="form-label" for="{{ form.username.id }}">{{ _t('field_username') }}</label>
           {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
           {% for e in form.username.errors %}
             <div class="invalid-feedback">{{ e }}</div>
           {% endfor %}
         </div>
         <div class="mb-3">
-          {{ form.password.label(class="form-label") }}
+          <label class="form-label" for="{{ form.password.id }}">{{ _t('field_password') }}</label>
           <div class="input-group">
             {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), id='login-password') }}
             <button type="button" class="btn btn-outline-secondary btn-toggle-password" data-target="#login-password" title="Show/hide password">
@@ -39,14 +39,21 @@
         </div>
         <div class="mb-4 form-check">
           {{ form.remember(class="form-check-input") }}
-          {{ form.remember.label(class="form-check-label") }}
+          <label class="form-check-label" for="{{ form.remember.id }}">{{ _t('field_remember') }}</label>
         </div>
         {{ form.submit(class="btn btn-warning w-100 fw-semibold") }}
       </form>
 
       <p class="text-center text-muted small mt-4 mb-0">
-        No account? <a href="{{ url_for('auth.register') }}">Register</a>
+        {{ _t('auth_no_account') }} <a href="{{ url_for('auth.register') }}">{{ _t('auth_register_link') }}</a>
       </p>
+
+      <div class="text-center mt-3">
+        <a href="{{ url_for('set_lang', lang='fr' if current_lang == 'en' else 'en') }}"
+           class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-translate me-1"></i>{{ 'FR' if current_lang == 'en' else 'EN' }}
+        </a>
+      </div>
     </div>
   </div>
 </div>

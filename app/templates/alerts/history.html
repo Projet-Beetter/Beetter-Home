@@ -1,32 +1,32 @@
 {% extends 'base.html' %}
-{% block title %}Alert History — Beetter{% endblock %}
-{% block page_title %}Alerts{% endblock %}
+{% block title %}{{ _t('page_alerts') }} — Beetter{% endblock %}
+{% block page_title %}{{ _t('page_alerts') }}{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3 mt-1">
   <div class="d-flex gap-2">
-    <a href="{{ url_for('alerts.index') }}" class="btn btn-sm btn-outline-secondary">Active</a>
-    <a href="{{ url_for('alerts.history') }}" class="btn btn-sm btn-warning">History</a>
+    <a href="{{ url_for('alerts.index') }}" class="btn btn-sm btn-outline-secondary">{{ _t('alerts_active_tab') }}</a>
+    <a href="{{ url_for('alerts.history') }}" class="btn btn-sm btn-warning">{{ _t('alerts_history_tab') }}</a>
   </div>
   <div class="d-flex gap-2">
-    <a href="{{ url_for('alerts.history', hive_id=current_filters.hive_id or '', status=current_filters.status or '', source=current_filters.source or '', period=current_filters.period) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</a>
+    <a href="{{ url_for('alerts.history', hive_id=current_filters.hive_id or '', status=current_filters.status or '', source=current_filters.source or '', period=current_filters.period) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>{{ _t('alerts_refresh') }}</a>
   </div>
 </div>
 
 <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
   <select name="hive_id" class="form-select form-select-sm w-auto" onchange="applyFilter('hive_id', this.value)">
-    <option value="">All hives</option>
+    <option value="">{{ _t('alerts_all_hives') }}</option>
     {% for hive in all_hives %}
     <option value="{{ hive.id }}" {{ 'selected' if current_filters.hive_id == hive.id }}>{{ hive.name }}</option>
     {% endfor %}
   </select>
   <select name="status" class="form-select form-select-sm w-auto" onchange="applyFilter('status', this.value)">
-    <option value="">All statuses</option>
+    <option value="">{{ _t('alerts_all_statuses') }}</option>
     {% for key, val in status_config.items() %}
     <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>{{ val.label }}</option>
     {% endfor %}
   </select>
   <select name="source" class="form-select form-select-sm w-auto" onchange="applyFilter('source', this.value)">
-    <option value="">All sources</option>
+    <option value="">{{ _t('alerts_all_sources') }}</option>
     {% for key, val in alert_sources.items() %}
     <option value="{{ key }}" {{ 'selected' if current_filters.source == key }}>{{ val.label }}</option>
     {% endfor %}
@@ -42,10 +42,10 @@
 {% if not alerts %}
 <div class="card border-0 shadow-sm text-center py-5 text-muted">
   <i class="bi bi-inbox fs-2"></i>
-  <p class="mt-2 mb-0">No alerts match the current filters.</p>
+  <p class="mt-2 mb-0">{{ _t('alerts_no_match') }}</p>
 </div>
 {% else %}
-<p class="text-muted small text-uppercase fw-semibold mb-2" style="letter-spacing:.05em;">{{ alerts|length }} result{{ 's' if alerts|length != 1 }}</p>
+<p class="text-muted small text-uppercase fw-semibold mb-2" style="letter-spacing:.05em;">{{ alerts|length }} {{ _t('alerts_results') if alerts|length != 1 else _t('alerts_result') }}</p>
 <div class="card border-0 shadow-sm">
   <div class="card-body p-0">
     {% for alert in alerts %}
@@ -71,7 +71,7 @@
         <div class="text-muted small text-nowrap">{{ alert.created_at.strftime('%d %b %H:%M') }}</div>
         {% if current_user.is_admin %}
         <button class="btn btn-sm btn-outline-secondary py-0 px-1" type="button"
-                data-bs-toggle="collapse" data-bs-target="#note-{{ alert.id }}" title="Edit note">
+                data-bs-toggle="collapse" data-bs-target="#note-{{ alert.id }}" title="{{ _t('hive_edit') }}">
           <i class="bi bi-pencil" style="font-size:.7rem;"></i>
         </button>
         {% endif %}
@@ -81,8 +81,8 @@
         <form method="post" action="{{ url_for('alerts.update_note', alert_id=alert.id) }}" class="d-flex gap-2">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="text" name="note" class="form-control form-control-sm"
-                 placeholder="Add a note..." value="{{ alert.note or '' }}">
-          <button type="submit" class="btn btn-sm btn-warning">Save</button>
+                 placeholder="{{ _t('alerts_note_placeholder') }}" value="{{ alert.note or '' }}">
+          <button type="submit" class="btn btn-sm btn-warning">{{ _t('alerts_save') }}</button>
         </form>
       </div>
       {% endif %}

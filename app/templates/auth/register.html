@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Register — Beetter{% endblock %}
+{% block title %}{{ _t('auth_register_title') }} — Beetter{% endblock %}
 
 {% block auth_content %}
 <div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
@@ -7,7 +7,7 @@
     <div class="card-body p-5">
       <div class="text-center mb-4">
         <img src="{{ url_for('static', filename='images/Logo_Beetter.png') }}" alt="Beetter " class="img-fluid" style="max-width:180px;">
-        <p class="text-muted small">Sign in to your account</p>
+        <p class="text-muted small">{{ _t('auth_register_subtitle') }}</p>
       </div>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -18,9 +18,15 @@
 
       <form method="post" novalidate>
         {{ form.hidden_tag() }}
+        {% set field_label_map = {
+          'username': _t('field_username'),
+          'email': _t('field_email'),
+          'password': _t('field_password'),
+          'password2': _t('field_confirm_pw')
+        } %}
         {% for field in [form.username, form.email, form.password, form.password2] %}
           <div class="mb-3">
-            {{ field.label(class="form-label") }}
+            <label class="form-label" for="{{ field.id }}">{{ field_label_map[field.name] }}</label>
             {% if field.name in ['password', 'password2'] %}
               <div class="input-group">
                 {{ field(class="form-control" + (" is-invalid" if field.errors else ""), id=('register-' ~ field.name)) }}
@@ -40,8 +46,15 @@
       </form>
 
       <p class="text-center text-muted small mt-4 mb-0">
-        Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
+        {{ _t('auth_have_account') }} <a href="{{ url_for('auth.login') }}">{{ _t('auth_signin_link') }}</a>
       </p>
+
+      <div class="text-center mt-3">
+        <a href="{{ url_for('set_lang', lang='fr' if current_lang == 'en' else 'en') }}"
+           class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-translate me-1"></i>{{ 'FR' if current_lang == 'en' else 'EN' }}</a>
+        </a>
+      </div>
     </div>
   </div>
 </div>

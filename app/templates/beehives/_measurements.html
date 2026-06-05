@@ -1,53 +1,53 @@
 <div class="mb-4">
   <div class="accordion" id="beehiveMeasurementsAccordion">
     {% for section in [
-      {'key':'temperature','title':'Temperature','icon':'thermometer-half','color':'text-danger','indicators':[{
-          'key':'temperature_int','title':'Interior Temperature','value': latest.temperature_int.value if latest.temperature_int else None,'suffix':'°C','time': latest.temperature_int.time if latest.temperature_int else None,
-          'icon':'thermometer-half','label':'Interior Temperature'
+      {'key':'temperature','title':_t('sensor_temperature'),'icon':'thermometer-half','color':'text-danger','indicators':[{
+          'key':'temperature_int','title':_t('sensor_int_temp'),'value': latest.temperature_int.value if latest.temperature_int else None,'suffix':'°C','time': latest.temperature_int.time if latest.temperature_int else None,
+          'icon':'thermometer-half','label':_t('sensor_int_temp')
         },{
-          'key':'temperature_ext','title':'Exterior Temperature','value': latest.temperature_ext.value if latest.temperature_ext else None,'suffix':'°C','time': latest.temperature_ext.time if latest.temperature_ext else None,
-          'icon':'thermometer-half','label':'Exterior Temperature'
+          'key':'temperature_ext','title':_t('sensor_ext_temp'),'value': latest.temperature_ext.value if latest.temperature_ext else None,'suffix':'°C','time': latest.temperature_ext.time if latest.temperature_ext else None,
+          'icon':'thermometer-half','label':_t('sensor_ext_temp')
         }],
         'charts':[{
-          'id':'temperatureChart','title':'Temperature (°C)','sensors':['temperature_int','temperature_ext']
+          'id':'temperatureChart','title':_t('sensor_temperature') ~ ' (°C)','sensors':['temperature_int','temperature_ext']
         }]
       },
-      {'key':'humidity','title':'Humidity','icon':'droplet-half','color':'text-primary','indicators':[{
-          'key':'humidity_int','title':'Interior Humidity','value': latest.humidity_int.value if latest.humidity_int else None,'suffix':'%','time': latest.humidity_int.time if latest.humidity_int else None,
-          'icon':'droplet-half','label':'Interior Humidity'
+      {'key':'humidity','title':_t('sensor_humidity'),'icon':'droplet-half','color':'text-primary','indicators':[{
+          'key':'humidity_int','title':_t('sensor_int_hum'),'value': latest.humidity_int.value if latest.humidity_int else None,'suffix':'%','time': latest.humidity_int.time if latest.humidity_int else None,
+          'icon':'droplet-half','label':_t('sensor_int_hum')
         },{
-          'key':'humidity_ext','title':'Exterior Humidity','value': latest.humidity_ext.value if latest.humidity_ext else None,'suffix':'%','time': latest.humidity_ext.time if latest.humidity_ext else None,
-          'icon':'droplet-half','label':'Exterior Humidity'
+          'key':'humidity_ext','title':_t('sensor_ext_hum'),'value': latest.humidity_ext.value if latest.humidity_ext else None,'suffix':'%','time': latest.humidity_ext.time if latest.humidity_ext else None,
+          'icon':'droplet-half','label':_t('sensor_ext_hum')
         }],
         'charts':[{
-          'id':'humidityChart','title':'Humidity (%)','sensors':['humidity_int','humidity_ext']
+          'id':'humidityChart','title':_t('sensor_humidity') ~ ' (%)','sensors':['humidity_int','humidity_ext']
         }]
       },
-      {'key':'sound','title':'Sound & Frequency','icon':'music-note-beamed','color':'text-secondary','indicators':[{
-          'key':'sound_freq_int','title':'Interior Peak Frequency','value': latest.sound_freq_int.value if latest.sound_freq_int else None,'suffix':'Hz','time': latest.sound_freq_int.time if latest.sound_freq_int else None,
-          'icon':'music-note-beamed','label':'Interior Sound — Peak Frequency'
+      {'key':'sound','title':_t('sensor_sound'),'icon':'music-note-beamed','color':'text-secondary','indicators':[{
+          'key':'sound_freq_int','title':_t('sensor_int_freq'),'value': latest.sound_freq_int.value if latest.sound_freq_int else None,'suffix':'Hz','time': latest.sound_freq_int.time if latest.sound_freq_int else None,
+          'icon':'music-note-beamed','label':_t('sensor_int_freq')
         },{
-          'key':'sound_amp_int','title':'Interior Amplitude','value': latest.sound_amp_int.value if latest.sound_amp_int else None,'suffix':'','time': None,
-          'icon':'volume-up','label':'Interior Sound — Amplitude'
+          'key':'sound_amp_int','title':_t('sensor_int_amp'),'value': latest.sound_amp_int.value if latest.sound_amp_int else None,'suffix':'','time': None,
+          'icon':'volume-up','label':_t('sensor_int_amp')
         },{
-          'key':'sound_freq_ext','title':'Exterior Peak Frequency','value': latest.sound_freq_ext.value if latest.sound_freq_ext else None,'suffix':'Hz','time': latest.sound_freq_ext.time if latest.sound_freq_ext else None,
-          'icon':'music-note-beamed','label':'Exterior Sound — Peak Frequency'
+          'key':'sound_freq_ext','title':_t('sensor_ext_freq'),'value': latest.sound_freq_ext.value if latest.sound_freq_ext else None,'suffix':'Hz','time': latest.sound_freq_ext.time if latest.sound_freq_ext else None,
+          'icon':'music-note-beamed','label':_t('sensor_ext_freq')
         },{
-          'key':'sound_amp_ext','title':'Exterior Amplitude','value': latest.sound_amp_ext.value if latest.sound_amp_ext else None,'suffix':'','time': None,
-          'icon':'volume-up','label':'Exterior Sound — Amplitude'
+          'key':'sound_amp_ext','title':_t('sensor_ext_amp'),'value': latest.sound_amp_ext.value if latest.sound_amp_ext else None,'suffix':'','time': None,
+          'icon':'volume-up','label':_t('sensor_ext_amp')
         }],
         'charts':[{
-          'id':'soundFreqChart','title':'Sound — Peak Frequency (Hz)','sensors':['sound_freq_int','sound_freq_ext']
+          'id':'soundFreqChart','title':_t('sensor_sound') ~ ' — Hz','sensors':['sound_freq_int','sound_freq_ext']
         },{
-          'id':'soundAmpChart','title':'Sound — Amplitude','sensors':['sound_amp_int','sound_amp_ext']
+          'id':'soundAmpChart','title':_t('sensor_sound') ~ ' — Amp','sensors':['sound_amp_int','sound_amp_ext']
         }]
       },
-      {'key':'luminosity','title':'Luminosity','icon':'brightness-high','color':'text-warning','indicators':[{
-          'key':'light_ext','title':'Exterior Light','value': latest.light_ext.value if latest.light_ext else None,'suffix':'%','time': latest.light_ext.time if latest.light_ext else None,
-          'icon':'brightness-high','label':'Exterior Light'
+      {'key':'luminosity','title':_t('sensor_luminosity'),'icon':'brightness-high','color':'text-warning','indicators':[{
+          'key':'light_ext','title':_t('sensor_ext_light'),'value': latest.light_ext.value if latest.light_ext else None,'suffix':'%','time': latest.light_ext.time if latest.light_ext else None,
+          'icon':'brightness-high','label':_t('sensor_ext_light')
         }],
         'charts':[{
-          'id':'lightExtChart','title':'Exterior Light (%)','sensors':['light_ext']
+          'id':'lightExtChart','title':_t('sensor_luminosity') ~ ' (%)','sensors':['light_ext']
         }]
       }
     ] %}
@@ -57,9 +57,9 @@
             <div>
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-{{ section.icon }} {{ section.color }}"></i>
-                <strong>{{ section.title }} indicators & charts</strong>
+                {% if current_lang == 'fr' %}<strong>{{ _t('sensor_ind_charts') }} {{ section.title }}</strong>{% else %}<strong>{{ section.title }} {{ _t('sensor_ind_charts') }}</strong>{% endif %}
               </div>
-              <div class="small text-muted">Click to expand and view both indicators and graphs.</div>
+              <div class="small text-muted">{{ _t('sensor_expand_hint') }}</div>
             </div>
           </button>
         </h2>
@@ -75,7 +75,7 @@
                         <input type="hidden" name="sensor_key" value="{{ indicator.key }}">
                         <input type="hidden" name="section_key" value="{{ section.key }}">
                         {% set selected = indicator.key in selected_indicators %}
-                        <button type="submit" class="btn btn-sm btn-outline-secondary p-0" title="{{ 'Remove from dashboard' if selected else 'Add to dashboard' }}">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary p-0" title="{{ _t('sensor_rem_dash') if selected else _t('sensor_add_dash') }}">
                           <i class="bi {{ 'bi-dash-lg' if selected else 'bi-plus-lg' }}"></i>
                         </button>
                       </form>

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Export — Beetter{% endblock %}
-{% block page_title %}Export Data{% endblock %}
+{% block title %}{{ _t('page_export') }} — Beetter{% endblock %}
+{% block page_title %}{{ _t('page_export') }}{% endblock %}
 {% block content %}
 
 <form method="post" action="{{ url_for('export.index') }}">
@@ -13,7 +13,7 @@
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
           <h6 class="fw-bold mb-3">
-            <i class="bi bi-calendar-range me-2" style="color:#F5CB5C"></i>Time Range
+            <i class="bi bi-calendar-range me-2" style="color:#F5CB5C"></i>{{ _t('export_time_range') }}
           </h6>
 
           <div class="d-flex flex-wrap gap-2 mb-3">
@@ -21,7 +21,7 @@
             <input class="btn-check" type="radio" name="range_preset" id="preset_{{ r }}"
                    value="{{ r }}" autocomplete="off" {% if r == '24h' %}checked{% endif %}>
             <label class="btn btn-sm btn-outline-secondary" for="preset_{{ r }}">
-              {{ range_labels.get(r, r) }}
+              {{ _t('range_' ~ r) }}
             </label>
             {% endfor %}
           </div>
@@ -30,18 +30,18 @@
             <input class="form-check-input" type="checkbox" id="useCustomRange"
                    name="use_custom" value="1">
             <label class="form-check-label fw-semibold small" for="useCustomRange">
-              Custom date range
+              {{ _t('export_custom_range') }}
             </label>
           </div>
 
           <div id="customRangePanel" class="row g-2 mt-1" style="display:none">
             <div class="col-sm-6">
-              <label class="form-label small fw-semibold" for="date_from">From</label>
+              <label class="form-label small fw-semibold" for="date_from">{{ _t('export_from') }}</label>
               <input type="datetime-local" class="form-control form-control-sm"
                      name="date_from" id="date_from">
             </div>
             <div class="col-sm-6">
-              <label class="form-label small fw-semibold" for="date_to">To</label>
+              <label class="form-label small fw-semibold" for="date_to">{{ _t('export_to') }}</label>
               <input type="datetime-local" class="form-control form-control-sm"
                      name="date_to" id="date_to">
             </div>
@@ -56,14 +56,14 @@
         <div class="card-body p-4 d-flex flex-column">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <h6 class="fw-bold mb-0">
-              <i class="bi bi-collection me-2" style="color:#F5CB5C"></i>Beehives
+              <i class="bi bi-collection me-2" style="color:#F5CB5C"></i>{{ _t('export_beehives') }}
             </h6>
             <button type="button" class="btn btn-sm btn-outline-secondary"
-                    id="toggleAllHives">Select all</button>
+                    id="toggleAllHives">{{ _t('export_select_all') }}</button>
           </div>
 
           {% if not beehives %}
-          <p class="text-muted mb-0">No beehives configured yet.</p>
+          <p class="text-muted mb-0">{{ _t('export_no_hives') }}</p>
           {% else %}
           <div class="export-hives-scroll d-flex flex-column gap-2" style="flex:1 1 0; min-height:0; overflow-y:auto; padding-right:4px;">
             {% for hive in beehives %}
@@ -73,7 +73,7 @@
               <label class="form-check-label" for="hive_{{ hive.id }}">
                 {{ hive.name }}
                 {% if not hive.enabled %}
-                <span class="badge bg-secondary ms-1" style="font-size:.7rem">offline</span>
+                <span class="badge bg-secondary ms-1" style="font-size:.7rem">{{ _t('export_offline') }}</span>
                 {% endif %}
               </label>
             </div>
@@ -90,22 +90,22 @@
         <div class="card-body p-4">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <h6 class="fw-bold mb-0">
-              <i class="bi bi-bar-chart-line me-2" style="color:#F5CB5C"></i>Data Fields
+              <i class="bi bi-bar-chart-line me-2" style="color:#F5CB5C"></i>{{ _t('export_fields') }}
             </h6>
             <button type="button" class="btn btn-sm btn-outline-secondary"
-                    id="toggleAllFields">Select all</button>
+                    id="toggleAllFields">{{ _t('export_select_all') }}</button>
           </div>
 
           {% for cat in field_categories %}
           <p class="small fw-semibold text-muted text-uppercase mb-2 {% if not loop.first %}mt-3{% endif %}"
-             style="font-size:.72rem;letter-spacing:.06em">{{ cat.label }}</p>
+             style="font-size:.72rem;letter-spacing:.06em">{{ _t('export_' ~ cat.label.lower()) }}</p>
           <div class="d-flex flex-column gap-2">
             {% for key, label, unit in cat.fields %}
             <div class="form-check">
               <input class="form-check-input field-check" type="checkbox"
                      name="fields" value="{{ key }}" id="field_{{ key }}">
               <label class="form-check-label" for="field_{{ key }}">
-                {{ label }}{% if unit %} <span class="text-muted">({{ unit }})</span>{% endif %}
+                {{ _t('export_field_' ~ label) }}{% if unit %} <span class="text-muted">({{ unit }})</span>{% endif %}
               </label>
             </div>
             {% endfor %}
@@ -118,7 +118,7 @@
     <!-- Submit -->
     <div class="col-12 d-flex justify-content-end">
       <button type="submit" class="btn btn-warning px-4">
-        <i class="bi bi-download me-2"></i>Export CSV
+        <i class="bi bi-download me-2"></i>{{ _t('export_btn') }}
       </button>
     </div>
 
@@ -129,7 +129,6 @@
 
 {% block scripts %}
 <script>
-  // Custom date range toggle
   const useCustom = document.getElementById('useCustomRange');
   const customPanel = document.getElementById('customRangePanel');
   const presetInputs = document.querySelectorAll('input[name="range_preset"]');
@@ -139,24 +138,24 @@
     presetInputs.forEach(r => r.disabled = useCustom.checked);
   });
 
-  // Select / deselect all hives
   const toggleHivesBtn = document.getElementById('toggleAllHives');
   const hiveChecks = document.querySelectorAll('.hive-check');
+  const selectAllText = {{ _t('export_select_all') | tojson }};
+  const deselectAllText = {{ _t('export_deselect_all') | tojson }};
   let allHivesOn = false;
   toggleHivesBtn?.addEventListener('click', () => {
     allHivesOn = !allHivesOn;
     hiveChecks.forEach(c => c.checked = allHivesOn);
-    toggleHivesBtn.textContent = allHivesOn ? 'Deselect all' : 'Select all';
+    toggleHivesBtn.textContent = allHivesOn ? deselectAllText : selectAllText;
   });
 
-  // Select / deselect all fields
   const toggleFieldsBtn = document.getElementById('toggleAllFields');
   const fieldChecks = document.querySelectorAll('.field-check');
   let allFieldsOn = false;
   toggleFieldsBtn?.addEventListener('click', () => {
     allFieldsOn = !allFieldsOn;
     fieldChecks.forEach(c => c.checked = allFieldsOn);
-    toggleFieldsBtn.textContent = allFieldsOn ? 'Deselect all' : 'Select all';
+    toggleFieldsBtn.textContent = allFieldsOn ? deselectAllText : selectAllText;
   });
 </script>
 {% endblock %}

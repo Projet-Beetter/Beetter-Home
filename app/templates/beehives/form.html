@@ -11,57 +11,57 @@
           {{ form.hidden_tag() }}
 
           <h6 class="fw-semibold mb-3 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em">
-            General
+            {{ _t('form_general') }}
           </h6>
           <div class="mb-3">
-            {{ form.name.label(class="form-label") }}
+            <label class="form-label" for="{{ form.name.id }}">{{ _t('field_hive_name') }}</label>
             {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
             {% for e in form.name.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
           </div>
           <div class="mb-3">
-  {{ form.street.label(class="form-label") }}
-  {{ form.street(class="form-control" + (" is-invalid" if form.street.errors else ""),
-     placeholder="e.g. 12 rue de la Paix") }}
-  {% for e in form.street.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-</div>
-<div class="row g-3 mb-4">
-  <div class="col-md-8 position-relative">
-    {{ form.city.label(class="form-label") }}
-    {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else ""),
-       placeholder="e.g. Lyon", id="city-input", autocomplete="off") }}
-    {% for e in form.city.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-    <ul id="city-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index:1000;display:none;top:100%;"></ul>
-  </div>
-  <div class="col-md-4">
-    {{ form.postal_code.label(class="form-label") }}
-    {{ form.postal_code(class="form-control" + (" is-invalid" if form.postal_code.errors else ""),
-       placeholder="e.g. 69001") }}
-    {% for e in form.postal_code.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-  </div>
-</div>
+            <label class="form-label" for="{{ form.street.id }}">{{ _t('field_street') }}</label>
+            {{ form.street(class="form-control" + (" is-invalid" if form.street.errors else ""),
+               placeholder="e.g. 12 rue de la Paix") }}
+            {% for e in form.street.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-8 position-relative">
+              <label class="form-label" for="{{ form.city.id }}">{{ _t('field_city') }}</label>
+              {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else ""),
+                 placeholder="e.g. Lyon", id="city-input", autocomplete="off") }}
+              {% for e in form.city.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+              <ul id="city-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index:1000;display:none;top:100%;"></ul>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="{{ form.postal_code.id }}">{{ _t('field_postal_code') }}</label>
+              {{ form.postal_code(class="form-control" + (" is-invalid" if form.postal_code.errors else ""),
+                 placeholder="e.g. 69001") }}
+              {% for e in form.postal_code.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+            </div>
+          </div>
           <h6 class="fw-semibold mb-3 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em">
-            LoRa / LoRaWAN
+            {{ _t('form_lora') }}
           </h6>
           <div class="mb-3">
-            {{ form.device_eui.label(class="form-label") }}
+            <label class="form-label" for="{{ form.device_eui.id }}">{{ _t('field_device_eui') }}</label>
             {{ form.device_eui(class="form-control font-monospace" + (" is-invalid" if form.device_eui.errors else ""),
                placeholder="e.g. A8404175283AF10B") }}
             {% for e in form.device_eui.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-            <div class="form-text">Leave blank to configure later.</div>
+            <div class="form-text">{{ _t('form_eui_hint') }}</div>
           </div>
           <div class="row g-3 mb-3">
             <div class="col-md-4">
-              {{ form.lora_frequency.label(class="form-label") }}
+              <label class="form-label" for="{{ form.lora_frequency.id }}">{{ _t('field_lora_freq') }}</label>
               {{ form.lora_frequency(class="form-control" + (" is-invalid" if form.lora_frequency.errors else "")) }}
               {% for e in form.lora_frequency.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
             </div>
             <div class="col-md-4">
-              {{ form.spreading_factor.label(class="form-label") }}
+              <label class="form-label" for="{{ form.spreading_factor.id }}">{{ _t('field_sf') }}</label>
               {{ form.spreading_factor(class="form-control" + (" is-invalid" if form.spreading_factor.errors else "")) }}
               {% for e in form.spreading_factor.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
             </div>
             <div class="col-md-4">
-              {{ form.bandwidth.label(class="form-label") }}
+              <label class="form-label" for="{{ form.bandwidth.id }}">{{ _t('field_bw') }}</label>
               {{ form.bandwidth(class="form-control" + (" is-invalid" if form.bandwidth.errors else "")) }}
               {% for e in form.bandwidth.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
             </div>
@@ -69,7 +69,7 @@
 
           <div class="d-flex gap-2 mt-4">
             {{ form.submit(class="btn btn-warning") }}
-            <a href="{{ url_for('beehives.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            <a href="{{ url_for('beehives.index') }}" class="btn btn-outline-secondary">{{ _t('btn_cancel') }}</a>
           </div>
         </form>
       </div>

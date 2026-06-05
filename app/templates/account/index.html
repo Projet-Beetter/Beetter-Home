@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Account Settings — Beetter{% endblock %}
-{% block page_title %}Account Settings{% endblock %}
+{% block title %}{{ _t('page_account') }} — Beetter{% endblock %}
+{% block page_title %}{{ _t('page_account') }}{% endblock %}
 
 {% block content %}
 <div class="account-page">
@@ -11,8 +11,8 @@
           <i class="bi bi-person-circle"></i>
         </span>
         <div>
-          <h3 class="mb-1">Manage your account</h3>
-          <p class="mb-0 account-panel-description">Update your email, password, or delete your account.</p>
+          <h3 class="mb-1">{{ _t('account_title') }}</h3>
+          <p class="mb-0 account-panel-description">{{ _t('account_desc') }}</p>
         </div>
       </div>
     </div>
@@ -22,19 +22,19 @@
         {{ email_form.hidden_tag() }}
         <div class="section-header">
           <i class="bi bi-envelope"></i>
-          <span>Email address</span>
+          <span>{{ _t('account_email_section') }}</span>
         </div>
-        <p class="section-description">Current email: <strong>{{ current_user.email }}</strong></p>
+        <p class="section-description">{{ _t('account_email_current') }} <strong>{{ current_user.email }}</strong></p>
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            {{ email_form.email.label(class="form-label") }}
+            <label class="form-label" for="{{ email_form.email.id }}">{{ _t('field_new_email') }}</label>
             {{ email_form.email(class="form-control" + (" is-invalid" if email_form.email.errors else "")) }}
             {% for e in email_form.email.errors %}
               <div class="invalid-feedback">{{ e }}</div>
             {% endfor %}
           </div>
           <div class="col-md-6">
-            {{ email_form.password.label(class="form-label") }}
+            <label class="form-label" for="{{ email_form.password.id }}">{{ _t('field_pw_confirm') }}</label>
             {{ email_form.password(class="form-control" + (" is-invalid" if email_form.password.errors else "")) }}
             {% for e in email_form.password.errors %}
               <div class="invalid-feedback">{{ e }}</div>
@@ -52,25 +52,25 @@
         {{ password_form.hidden_tag() }}
         <div class="section-header">
           <i class="bi bi-lock"></i>
-          <span>Password</span>
+          <span>{{ _t('account_password_section') }}</span>
         </div>
         <div class="row g-3 mb-3">
           <div class="col-md-4">
-            {{ password_form.current_password.label(class="form-label") }}
+            <label class="form-label" for="{{ password_form.current_password.id }}">{{ _t('field_current_pw') }}</label>
             {{ password_form.current_password(class="form-control" + (" is-invalid" if password_form.current_password.errors else "")) }}
             {% for e in password_form.current_password.errors %}
               <div class="invalid-feedback">{{ e }}</div>
             {% endfor %}
           </div>
           <div class="col-md-4">
-            {{ password_form.new_password.label(class="form-label") }}
+            <label class="form-label" for="{{ password_form.new_password.id }}">{{ _t('field_new_pw') }}</label>
             {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else "")) }}
             {% for e in password_form.new_password.errors %}
               <div class="invalid-feedback">{{ e }}</div>
             {% endfor %}
           </div>
           <div class="col-md-4">
-            {{ password_form.confirm_password.label(class="form-label") }}
+            <label class="form-label" for="{{ password_form.confirm_password.id }}">{{ _t('field_confirm_new_pw') }}</label>
             {{ password_form.confirm_password(class="form-control" + (" is-invalid" if password_form.confirm_password.errors else "")) }}
             {% for e in password_form.confirm_password.errors %}
               <div class="invalid-feedback">{{ e }}</div>
@@ -88,15 +88,14 @@
         {{ delete_form.hidden_tag() }}
         <div class="section-header">
           <i class="bi bi-exclamation-triangle-fill"></i>
-          <span>Danger zone</span>
+          <span>{{ _t('account_danger') }}</span>
         </div>
         <p class="section-description section-description-danger">
-          Deleting your account will permanently remove all your data, including your beehives and settings.
-          This action cannot be undone.
+          {{ _t('account_danger_desc') }}
         </p>
         <div class="row g-3 mb-3">
           <div class="col-12">
-            {{ delete_form.password.label(class="form-label") }}
+            <label class="form-label" for="{{ delete_form.password.id }}">{{ _t('field_delete_pw') }}</label>
             {{ delete_form.password(class="form-control" + (" is-invalid" if delete_form.password.errors else "")) }}
             {% for e in delete_form.password.errors %}
               <div class="invalid-feedback">{{ e }}</div>

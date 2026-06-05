@@ -249,6 +249,36 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   z-index: 1030;
 }
 
+.topbar-lang-btn {
+  color: #6c757d;
+  background: transparent;
+  border: 1px solid rgba(36,36,35,.15);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.topbar-lang-btn:hover {
+  color: #F5CB5C;
+  border-color: rgba(255,193,7,.4);
+  background: rgba(255,193,7,.08);
+}
+
+body.dark-mode .topbar-lang-btn {
+  color: #CFDBD5;
+  border-color: rgba(255,255,255,.2);
+}
+
+body.dark-mode .topbar-lang-btn:hover {
+  color: #F5CB5C;
+  border-color: rgba(255,193,7,.4);
+}
+
 .topbar-dark-toggle {
   color: #6c757d;
   background: transparent;

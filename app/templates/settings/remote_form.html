@@ -9,16 +9,22 @@
       <div class="card-body p-4">
         <form method="post" novalidate>
           {{ form.hidden_tag() }}
+          {% set server_labels = {
+            'name': _t('field_server_name'),
+            'url': _t('field_server_url'),
+            'api_key': _t('field_api_key'),
+            'push_interval': _t('field_push_interval')
+          } %}
           {% for field in [form.name, form.url, form.api_key, form.push_interval] %}
             <div class="mb-3">
-              {{ field.label(class="form-label") }}
+              <label class="form-label" for="{{ field.id }}">{{ server_labels[field.name] }}</label>
               {{ field(class="form-control" + (" is-invalid" if field.errors else "")) }}
               {% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
             </div>
           {% endfor %}
           <div class="d-flex gap-2 mt-4">
             {{ form.submit(class="btn btn-warning") }}
-            <a href="{{ url_for('admin.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            <a href="{{ url_for('admin.index') }}" class="btn btn-outline-secondary">{{ _t('btn_cancel') }}</a>
           </div>
         </form>
       </div>
