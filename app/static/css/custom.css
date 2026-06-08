@@ -849,3 +849,23 @@ body.dark-mode .account-divider {
 .alert-item.severity-red    { border-left-color: #ef4444; }
 .alert-item.severity-yellow { border-left-color: #f59e0b; }
 .alert-note { font-style: italic; font-size: .85rem; }
+
+/* ── Dashboard card family borders ─────────────────────────── */
+.hive-border-critical {
+  border-left: 3px solid #ef4444 !important;
+  box-shadow: -3px 0 10px rgba(239,68,68,0.5) !important;
+  border-radius: 0 var(--bs-card-border-radius) var(--bs-card-border-radius) 0;
+}
+.hive-border-agitated {
+  border-left: 3px solid #f97316 !important;
+  box-shadow: -3px 0 10px rgba(249,115,22,0.5) !important;
+  border-radius: 0 var(--bs-card-border-radius) var(--bs-card-border-radius) 0;
+}
+.metric-card {
+  cursor: pointer;
+  transition: all .15s;
+}
+.metric-card:hover { opacity: .85; }
+.metric-card.active { outline: 2px solid currentColor; }
+.sep-silent { color: #1a1a1a; }
+body.dark-mode .sep-silent { color: #ffffff; }
