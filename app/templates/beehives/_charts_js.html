@@ -2,13 +2,60 @@
   const chartData = {{ chart_data | tojson }};
   const chartApiUrl = "{{ url_for('api.chart_data', hive_id=hive.id) }}";
   const charts = {};
+  const currentRange = {{ range_str | tojson }};
+
+  // ── Accordion state persistence (survives language switch) ──
+  const accordionStateKey = 'btr_accordion_' + window.location.pathname;
+
+  function saveAccordionState() {
+    const openIds = [];
+    document.querySelectorAll('.accordion-collapse.show').forEach(el => openIds.push(el.id));
+    localStorage.setItem(accordionStateKey, JSON.stringify(openIds));
+  }
+
+  function restoreAccordionState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(accordionStateKey) || '[]');
+      saved.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.classList.contains('show')) {
+          el.classList.add('show');
+          const btn = document.querySelector(`[data-bs-target="#${id}"]`);
+          if (btn) { btn.classList.remove('collapsed'); btn.setAttribute('aria-expanded', 'true'); }
+        }
+      });
+    } catch(e) {}
+  }
+
+  // ── Chart helpers ──
+  function getTimeOptions(range) {
+    if (range === '7d' || range === '30d') {
+      return { unit: 'day', displayFormats: { day: 'dd MMM' }, tooltipFormat: 'dd MMM yyyy' };
+    }
+    return { unit: 'hour', displayFormats: { hour: 'HH:mm' }, tooltipFormat: 'dd MMM HH:mm' };
+  }
+
+  function boundaryTickHook(scale) {
+    const allTimes = [];
+    scale.chart.data.datasets.forEach(ds => {
+      (ds.data || []).forEach(pt => {
+        const t = new Date(pt.x).valueOf();
+        if (!isNaN(t)) allTimes.push(t);
+      });
+    });
+    if (!allTimes.length || !scale.ticks.length) return;
+    const minVal = allTimes.reduce((m, v) => v < m ? v : m, Infinity);
+    const maxVal = allTimes.reduce((m, v) => v > m ? v : m, -Infinity);
+    if (scale.ticks[0].value > minVal) scale.ticks.unshift({ value: minVal });
+    if (scale.ticks[scale.ticks.length - 1].value < maxVal) scale.ticks.push({ value: maxVal });
+  }
 
   function convertToPoints(dataset) {
     if (!dataset || !dataset.labels) return [];
     return dataset.labels.map((t, i) => ({ x: t, y: dataset.data[i] }));
   }
 
-  function makeMultiSeriesChart(id, title, seriesConfigs, yOptions = {}) {
+  function makeMultiSeriesChart(id, title, seriesConfigs, yOptions = {}, range = '24h') {
     const ctx = document.getElementById(id);
     if (!ctx) return;
     const datasets = seriesConfigs.map((sc, idx) => {
@@ -35,7 +82,12 @@
         responsive: true,
         plugins: { legend: { display: true } },
         scales: {
-          x: { type: 'time', time: { tooltipFormat: 'dd MMM HH:mm' }, ticks: { maxTicksLimit: 8 } },
+          x: {
+            type: 'time',
+            time: getTimeOptions(range),
+            ticks: { maxTicksLimit: 8 },
+            afterBuildTicks: boundaryTickHook,
+          },
           y: { beginAtZero: false, ...yOptions }
         }
       }
@@ -47,8 +99,7 @@
     const chart = charts[chartId];
     if (!chart) return;
     chart.data.datasets.forEach(ds => {
-      const key = ds.sensorKey;
-      ds.data = convertToPoints(dataObj[key] || { labels: [], data: [] });
+      ds.data = convertToPoints(dataObj[ds.sensorKey] || { labels: [], data: [] });
     });
     chart.update();
   }
@@ -58,9 +109,8 @@
       const response = await fetch(`${chartApiUrl}?range=${encodeURIComponent(range)}`);
       if (!response.ok) { console.error('Unable to load chart data:', response.statusText); return; }
       const data = await response.json();
-      const keys = Array.isArray(sensorKeys) ? sensorKeys : (sensorKeys || '').split(',');
-      const subset = {};
-      keys.forEach(k => { subset[k] = data[k] || { labels: [], data: [] }; });
+      const chart = charts[chartId];
+      if (chart) chart.options.scales.x.time = getTimeOptions(range);
       updateMultiChart(chartId, data);
     } catch (error) { console.error('Chart loading error:', error); }
   }
@@ -88,10 +138,9 @@
     document.querySelectorAll('.series-toggle').forEach(cb => {
       cb.addEventListener('change', () => {
         const chartId = cb.dataset.chartId;
-        const sensorKey = cb.dataset.sensorKey;
         const chart = charts[chartId];
         if (!chart) return;
-        const dsIndex = chart.data.datasets.findIndex(d => d.sensorKey === sensorKey);
+        const dsIndex = chart.data.datasets.findIndex(d => d.sensorKey === cb.dataset.sensorKey);
         if (dsIndex === -1) return;
         chart.data.datasets[dsIndex].hidden = !cb.checked;
         chart.update();
@@ -100,7 +149,9 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Create multi-series charts by reading the checkboxes present in the DOM
+    // Restore before chart init so opened sections have correct canvas dimensions
+    restoreAccordionState();
+
     const defaultColorSets = {
       temperatureChart: ['#dc3545','#e46060'],
       humidityChart: ['#0d6efd','#4b8dff'],
@@ -110,8 +161,8 @@
     };
 
     const chartScales = {
-      humidityChart:  { min: 0, max: 100 },
-      lightExtChart:  { min: 0, max: 100 },
+      humidityChart: { min: 0, max: 100 },
+      lightExtChart: { min: 0, max: 100 },
     };
 
     document.querySelectorAll('canvas').forEach(canvas => {
@@ -124,21 +175,21 @@
         visible: cb.checked,
         color: (defaultColorSets[id] || ['#0d6efd'])[idx % 5]
       }));
-      makeMultiSeriesChart(id, '', seriesConfigs, chartScales[id] || {});
+      makeMultiSeriesChart(id, '', seriesConfigs, chartScales[id] || {}, currentRange);
     });
 
     initializeRangeSelectors();
     initializeSeriesToggles();
 
-    // Ensure charts render correctly when accordion sections become visible
     document.querySelectorAll('.accordion-collapse').forEach(c => {
       c.addEventListener('shown.bs.collapse', (e) => {
+        saveAccordionState();
         e.target.querySelectorAll('canvas').forEach(canvas => {
-          const id = canvas.id;
-          const ch = charts[id];
+          const ch = charts[canvas.id];
           if (ch) { ch.resize(); ch.update(); }
         });
       });
+      c.addEventListener('hidden.bs.collapse', saveAccordionState);
     });
   });
 </script>

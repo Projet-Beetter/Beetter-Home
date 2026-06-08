@@ -159,6 +159,11 @@ TRANSLATIONS = {
         "range_24h": "Last 24 hours",
         "range_7d": "Last 7 days",
         "range_30d": "Last 30 days",
+        "range_btn_1h": "1h",
+        "range_btn_6h": "6h",
+        "range_btn_24h": "24h",
+        "range_btn_7d": "7d",
+        "range_btn_30d": "30d",
         # Alerts
         "alerts_active_tab": "Active",
         "alerts_history_tab": "History",
@@ -396,6 +401,11 @@ TRANSLATIONS = {
         "range_24h": "24 dernières heures",
         "range_7d": "7 derniers jours",
         "range_30d": "30 derniers jours",
+        "range_btn_1h": "1h",
+        "range_btn_6h": "6h",
+        "range_btn_24h": "24h",
+        "range_btn_7d": "7j",
+        "range_btn_30d": "30j",
         # Alerts
         "alerts_active_tab": "Actives",
         "alerts_history_tab": "Historique",

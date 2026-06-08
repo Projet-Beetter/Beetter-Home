@@ -102,7 +102,7 @@
                         <div class="d-flex align-items-center gap-2">
                           <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
                             {% for r in range_options %}
-                              <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="{{ chart.id }}" data-sensor-keys="{{ chart.sensors|join(',') }}" data-range="{{ r }}">{{ r }}</button>
+                              <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="{{ chart.id }}" data-sensor-keys="{{ chart.sensors|join(',') }}" data-range="{{ r }}">{{ _t('range_btn_' ~ r) }}</button>
                             {% endfor %}
                           </div>
                         </div>
