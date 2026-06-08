@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from flask import Flask, session, redirect, request
+from flask import Flask, session, redirect, request, url_for
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 from .models import db, bcrypt, User
@@ -60,6 +60,12 @@ def create_app():
     csrf.exempt(api_bp)
 
     from .models import Alert, user_alert_reads
+
+    @app.route('/')
+    def index():
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard.index'))
+        return redirect(url_for('auth.login'))
 
     @app.route('/set-lang/<lang>')
     def set_lang(lang):
