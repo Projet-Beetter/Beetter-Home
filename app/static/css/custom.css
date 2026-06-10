@@ -19,7 +19,6 @@ body.sidebar-loading #sidebar.collapsed {
   transition: none !important;
 }
 
-/* When restoring collapsed state on load, disable transitions until JS finishes initializing */
 body.sidebar-collapsed-on-load #sidebar,
 body.sidebar-collapsed-on-load #sidebar.collapsed {
   transition: none !important;
@@ -46,28 +45,13 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
 
 .sidebar-bottom {
   border-top: 1px solid rgba(255,255,255,.08);
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .sidebar-nav {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-}
-
-.sidebar-bottom {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-#sidebar.collapsed .sidebar-nav,
-#sidebar.collapsed .sidebar-bottom {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  align-items: center;
-}
-
-#sidebar.collapsed .sidebar-nav .nav-item {
-  width: 100%;
+  overflow-x: hidden;
 }
 
 .sidebar-brand {
@@ -105,15 +89,14 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   justify-content: center;
 }
 
-/* Expanded: centered rectangle */
 #sidebar:not(.collapsed) .sidebar-toggle-btn {
   width: calc(100% - 1rem);
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Collapsed: square */
 #sidebar.collapsed .sidebar-toggle-btn {
   margin-left: 0 !important;
   width: 36px;
@@ -130,22 +113,6 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   background: rgba(255,193,7,.08);
 }
 
-#sidebar.collapsed .nav-link {
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-  width: 36px;
-  height: 36px;
-  margin: 0 auto;
-  overflow: hidden;
-  border-radius: 6px;
-}
-
-#sidebar.collapsed .nav-link i {
-  min-width: unset;
-  margin: 0;
-  line-height: 1;
-}
 .user-info-expanded {
   transition: opacity 0.3s ease;
   flex-grow: 1;
@@ -158,11 +125,12 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
 #sidebar .nav-link {
   color: #CFDBD5;
   border-radius: 6px;
-  padding: .55rem .75rem;
+  padding: 0 .75rem;
+  height: 36px;
   font-size: .9rem;
   display: flex;
   align-items: center;
-  transition: padding 0.3s ease, opacity 0.3s ease, background 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
   min-width: 0;
 }
 
@@ -177,18 +145,6 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   font-weight: 600;
 }
 
-#sidebar .nav-label {
-  transition: opacity 0.3s ease, max-width 0.3s ease;
-  max-width: none;
-  overflow: hidden;
-}
-
-#sidebar.collapsed .nav-label {
-  max-width: 0;
-  opacity: 0;
-  margin: 0;
-}
-
 #sidebar .nav-link i,
 .sidebar-dark-toggle i {
   min-width: 1.3rem;
@@ -196,9 +152,17 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   flex-shrink: 0;
 }
 
-#sidebar.collapsed .nav-link i,
-#sidebar.collapsed .sidebar-dark-toggle i {
-  min-width: unset;
+#sidebar .nav-label {
+  transition: opacity 0.3s ease, max-width 0.3s ease;
+  max-width: none;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-bottom .nav-link {
+  transition: background 0.2s ease, color 0.2s ease;
+  min-width: 0;
+  margin-bottom: 0 !important;
 }
 
 .sidebar-dark-toggle {
@@ -211,7 +175,7 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   justify-content: flex-start;
   background: transparent;
   border: none;
-  transition: padding 0.3s ease, opacity 0.3s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   width: auto;
   min-width: 0;
 }
@@ -226,43 +190,46 @@ body.sidebar-collapsed-on-load #sidebar.collapsed {
   box-shadow: none;
 }
 
+/* ── Collapsed sidebar ─────────────────────────────────────── */
+#sidebar.collapsed .sidebar-nav,
+#sidebar.collapsed .sidebar-bottom {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#sidebar.collapsed .sidebar-bottom {
+  align-items: center;
+}
+
+#sidebar.collapsed .sidebar-nav ul {
+  align-items: center;
+  padding: 0;
+}
+
+#sidebar.collapsed .nav-link,
+#sidebar.collapsed .sidebar-dark-toggle {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  margin: 0 auto !important;
+}
+
+#sidebar.collapsed .nav-link i,
+#sidebar.collapsed .sidebar-dark-toggle i {
+  min-width: unset;
+  margin: 0;
+}
+
+#sidebar.collapsed .nav-label,
 #sidebar.collapsed .sidebar-dark-toggle .nav-label {
   max-width: 0;
   opacity: 0;
-}
-
-#sidebar.collapsed .sidebar-dark-toggle,
-#sidebar.collapsed .nav-link {
-  justify-content: center;
-  width: 36px;
-  padding: 0;
-  height: 36px;
-}
-
-.sidebar-nav {
-  overflow-x: hidden !important;
-}
-
-.sidebar-bottom .nav-link {
-  transition: padding 0.3s ease, opacity 0.3s ease, background 0.2s ease, color 0.2s ease;
-  min-width: 0;
-}
-
-
-#sidebar.collapsed .sidebar-bottom .nav-link,
-#sidebar.collapsed .sidebar-bottom .sidebar-dark-toggle {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  justify-content: center;
-  margin: 0 auto;
-}
-
-#sidebar.collapsed .sidebar-nav .nav-item,
-#sidebar.collapsed .sidebar-bottom .nav-item {
-  width: 70px !important;
-  display: flex !important;
-  justify-content: center !important;
+  overflow: hidden;
+  margin: 0 !important;
+  white-space: nowrap;
 }
 
 /* ── Top bar ───────────────────────────────────────────────── */
@@ -895,38 +862,3 @@ body.dark-mode .account-divider {
 .metric-card.active { outline: 2px solid currentColor; }
 .sep-silent { color: #1a1a1a; }
 body.dark-mode .sep-silent { color: #ffffff; }
-
-#sidebar.collapsed .nav-label {
-  display: none !important;
-}
-
-#sidebar.collapsed .sidebar-nav ul {
-  width: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  padding: 0 !important;
-}
-
-#sidebar.collapsed .sidebar-nav .nav-item,
-#sidebar.collapsed .sidebar-bottom .nav-item {
-  width: 70px !important;
-  display: flex !important;
-  justify-content: center !important;
-}
-
-#sidebar.collapsed .nav-link {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  padding: 0 !important;
-  width: 36px !important;
-  height: 36px !important;
-  margin: 0 auto !important;
-}
-
-#sidebar.collapsed .nav-link i {
-  min-width: unset !important;
-  margin: 0 !important;
-  width: auto !important;
-}
