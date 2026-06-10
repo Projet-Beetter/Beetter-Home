@@ -51,28 +51,25 @@
 
     <div class="border-bottom border-secondary"></div>
 
-    <div class="sidebar-nav flex-grow-1 overflow-y-auto px-2 py-3">
+    <div class="sidebar-nav flex-grow-1 overflow-y-auto py-3">
       <ul class="nav nav-pills flex-column gap-1">
         <li class="nav-item">
           <a href="{{ url_for('dashboard.index') }}"
-             class="nav-link" data-bs-toggle="tooltip" title="{{ _t('nav_dashboard') }}"
-             {% if request.endpoint and request.endpoint.startswith('dashboard') %}active{% endif %}>
+             class="nav-link {% if request.endpoint and request.endpoint.startswith('dashboard') %}active{% endif %}" data-bs-toggle="tooltip" title="{{ _t('nav_dashboard') }}">
             <i class="bi bi-speedometer2"></i>
             <span class="nav-label ms-2">{{ _t('nav_dashboard') }}</span>
           </a>
         </li>
         <li class="nav-item">
           <a href="{{ url_for('beehives.index') }}"
-             class="nav-link" data-bs-toggle="tooltip" title="{{ _t('nav_beehives') }}"
-             {% if request.endpoint and request.endpoint.startswith('beehives') %}active{% endif %}>
+             class="nav-link {% if request.endpoint and request.endpoint.startswith('beehives') %}active{% endif %}" data-bs-toggle="tooltip" title="{{ _t('nav_beehives') }}">
             <i class="bi bi-collection"></i>
             <span class="nav-label ms-2">{{ _t('nav_beehives') }}</span>
           </a>
         </li>
         <li class="nav-item">
           <a href="{{ url_for('alerts.index') }}"
-             class="nav-link d-flex align-items-center" data-bs-toggle="tooltip" title="{{ _t('nav_alerts') }}"
-             {% if request.endpoint and request.endpoint.startswith('alerts') %}active{% endif %}>
+             class="nav-link d-flex align-items-center {% if request.endpoint and request.endpoint.startswith('alerts') %}active{% endif %}" data-bs-toggle="tooltip" title="{{ _t('nav_alerts') }}">
             <i class="bi bi-bell"></i>
             <span class="nav-label ms-2">{{ _t('nav_alerts') }}</span>
             {% if alerts_count > 0 %}
@@ -85,16 +82,14 @@
 
     <div class="border-top border-secondary"></div>
 
-    <div class="sidebar-bottom px-2 py-3">
+    <div class="sidebar-bottom py-3">
       {% if current_user.is_admin %}
-      <a href="{{ url_for('admin.index') }}" class="nav-link mb-2" title="{{ _t('nav_admin') }}"
-         {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}>
+      <a href="{{ url_for('admin.index') }}" class="nav-link mb-2 {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}" title="{{ _t('nav_admin') }}">
         <i class="bi bi-shield-lock"></i>
         <span class="nav-label ms-2">{{ _t('nav_admin') }}</span>
       </a>
       {% endif %}
-      <a href="{{ url_for('export.index') }}" class="nav-link mb-2" title="{{ _t('nav_export') }}"
-         {% if request.endpoint and request.endpoint.startswith('export') %}active{% endif %}>
+      <a href="{{ url_for('export.index') }}" class="nav-link mb-2 {% if request.endpoint and request.endpoint.startswith('export') %}active{% endif %}" title="{{ _t('nav_export') }}">
         <i class="bi bi-download"></i>
         <span class="nav-label ms-2">{{ _t('nav_export') }}</span>
       </a>
@@ -169,6 +164,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script>
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
   const sidebarToggleTop = document.getElementById('sidebarToggleTop');
   const sidebar = document.getElementById('sidebar');
   document.body.classList.remove('sidebar-loading', 'sidebar-collapsed-on-load');
