@@ -21,16 +21,16 @@
   </select>
   <select class="form-select form-select-sm w-auto" onchange="filterAlerts()" id="filter-status">
     <option value="">{{ _t('alerts_all_states') }}</option>
-    <optgroup label="Critical">
-      <option value="family:critical">— All critical</option>
+    <optgroup label="{{ _t('status_family_critical') }}">
+      <option value="family:critical">{{ _t('alerts_all_critical') }}</option>
       {% for key, val in status_config.items() if val.family == 'critical' %}
-      <option value="{{ key }}">  {{ val.label }}</option>
+      <option value="{{ key }}">  {{ _t('status_' + key) }}</option>
       {% endfor %}
     </optgroup>
-    <optgroup label="Agitated">
-      <option value="family:agitated">— All agitated</option>
+    <optgroup label="{{ _t('status_family_agitated') }}">
+      <option value="family:agitated">{{ _t('alerts_all_agitated') }}</option>
       {% for key, val in status_config.items() if val.family == 'agitated' %}
-      <option value="{{ key }}">  {{ val.label }}</option>
+      <option value="{{ key }}">  {{ _t('status_' + key) }}</option>
       {% endfor %}
     </optgroup>
   </select>
@@ -51,7 +51,7 @@
         <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="text-decoration-none text-reset">{{ hive.name }}</a>
       </div>
       {% set s = status_config.get(hive.status, status_config['no_data']) %}
-      <div class="small {{ 'text-danger' if dot == 'dot-red' else 'text-warning' if dot == 'dot-yellow' else 'text-secondary' }}">{{ s.label }}</div>
+      <div class="small {{ 'text-danger' if dot == 'dot-red' else 'text-warning' if dot == 'dot-yellow' else 'text-secondary' }}">{{ _t('status_' + hive.status) }}</div>
       {% if hive.city %}<div class="text-muted" style="font-size:.8rem;">{{ hive.city }}</div>{% endif %}
     </div>
     {% if alert and alert.note %}
@@ -78,7 +78,7 @@
   <div class="fw-semibold small">{{ alert.hive.name }}</div>
   {% if alert.note %}<div class="alert-note text-muted small" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"{{ alert.note }}"</div>{% endif %}
   {% set s = status_config.get(alert.new_status, status_config['no_data']) %}
-  <div class="small text-muted flex-grow-1">{{ s.label }}</div>
+  <div class="small text-muted flex-grow-1">{{ _t('status_' + alert.new_status) }}</div>
   <div class="text-muted small ms-auto">{{ alert.created_at.strftime('%H:%M') }}</div>
 </div>
 {% endfor %}

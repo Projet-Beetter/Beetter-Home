@@ -22,31 +22,31 @@
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-all" onclick="setFilter('all')">
       <div class="fw-bold fs-4">{{ metrics.total }}</div>
-      <small class="text-muted">All hives</small>
+      <small class="text-muted">{{ _t('dash_metric_all') }}</small>
     </div>
   </div>
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-critical" onclick="setFilter('critical')" style="color:#b91c1c;">
       <div class="fw-bold fs-4 text-danger">{{ metrics.alerts }}</div>
-      <small style="color:#b91c1c;">Critical</small>
+      <small style="color:#b91c1c;">{{ _t('dash_metric_critical') }}</small>
     </div>
   </div>
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-agitated" onclick="setFilter('agitated')" style="color:#f97316;">
       <div class="fw-bold fs-4" style="color:#f97316;">{{ metrics.agitated }}</div>
-      <small style="color:#f97316;">Agitated</small>
+      <small style="color:#f97316;">{{ _t('dash_metric_agitated') }}</small>
     </div>
   </div>
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-calm" onclick="setFilter('calm')" style="color:#166534;">
       <div class="fw-bold fs-4 text-success">{{ metrics.calm }}</div>
-      <small style="color:#166534;">Calm</small>
+      <small style="color:#166534;">{{ _t('dash_metric_calm') }}</small>
     </div>
   </div>
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-silent" onclick="setFilter('silent')">
       <div class="fw-bold fs-4 text-muted">{{ metrics.silent }}</div>
-      <small class="text-muted">Silent / No data</small>
+      <small class="text-muted">{{ _t('dash_metric_silent') }}</small>
     </div>
   </div>
 </div>
@@ -63,7 +63,7 @@
     {% endfor %}
     {% if section_hives %}
       {% set sep_colors = {'critical': '#ef4444', 'agitated': '#f97316', 'calm': '#22c55e'} %}
-      {% set sep_label = status_families[family]['label'] if family and family in status_families else 'Silent / No data' %}
+      {% set sep_label = status_families[family]['label'] if family and family in status_families else _t('dash_metric_silent') %}
       <div class="col-12 section-separator" data-family="{{ 'silent' if family is none else family }}" style="padding-top:4px;">
         <span class="{{ 'sep-silent' if not family else '' }}" style="{% if family %}color:{{ sep_colors.get(family) }};{% endif %}font-size:1rem;font-weight:600;">— {{ sep_label }}</span>
       </div>
@@ -81,7 +81,7 @@
                 {% if hive.city %}<div class="text-muted" style="font-size:.75rem;"><i class="bi bi-geo-alt me-1"></i>{{ hive.city }}</div>{% endif %}
               </div>
               {% set s = status_config.get(hive.status, status_config['no_data']) %}
-              <span class="badge {{ s.badge }}">{{ s.label }}</span>
+              <span class="badge {{ s.badge }}">{{ _t('status_' + hive.status) }}</span>
             </div>
             <div class="indicators-grid" data-count="{{ item.indicators|length }}">
               {% for ind in item.indicators %}

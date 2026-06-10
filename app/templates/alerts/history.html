@@ -20,17 +20,17 @@
     {% endfor %}
   </select>
   <select name="status" class="form-select form-select-sm w-auto" onchange="applyStatusFilter(this.value)">
-    <option value="">All states</option>
-    <optgroup label="Critical">
-      <option value="family:critical" {{ 'selected' if current_filters.family == 'critical' }}>— All critical</option>
+    <option value="">{{ _t('alerts_all_states') }}</option>
+    <optgroup label="{{ _t('status_family_critical') }}">
+      <option value="family:critical" {{ 'selected' if current_filters.family == 'critical' }}>{{ _t('alerts_all_critical') }}</option>
       {% for key, val in status_config.items() if val.family == 'critical' %}
-      <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>  {{ val.label }}</option>
+      <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>  {{ _t('status_' + key) }}</option>
       {% endfor %}
     </optgroup>
-    <optgroup label="Agitated">
-      <option value="family:agitated" {{ 'selected' if current_filters.family == 'agitated' }}>— All agitated</option>
+    <optgroup label="{{ _t('status_family_agitated') }}">
+      <option value="family:agitated" {{ 'selected' if current_filters.family == 'agitated' }}>{{ _t('alerts_all_agitated') }}</option>
       {% for key, val in status_config.items() if val.family == 'agitated' %}
-      <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>  {{ val.label }}</option>
+      <option value="{{ key }}" {{ 'selected' if current_filters.status == key }}>  {{ _t('status_' + key) }}</option>
       {% endfor %}
     </optgroup>
   </select>
@@ -68,9 +68,9 @@
         <div class="flex-grow-1 min-width-0">
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <a href="{{ url_for('beehives.detail', hive_id=alert.hive.id) }}" class="fw-semibold small text-decoration-none text-reset">{{ alert.hive.name }}</a>
-            <span class="badge {{ old.badge }} text-nowrap">{% if old.icon %}<i class="bi {{ old.icon }} me-1"></i>{% endif %}{{ old.label }}</span>
+            <span class="badge {{ old.badge }} text-nowrap">{% if old.icon %}<i class="bi {{ old.icon }} me-1"></i>{% endif %}{{ _t('status_' + alert.old_status) }}</span>
             <i class="bi bi-arrow-right text-muted small"></i>
-            <span class="badge {{ new.badge }} text-nowrap">{% if new.icon %}<i class="bi {{ new.icon }} me-1"></i>{% endif %}{{ new.label }}</span>
+            <span class="badge {{ new.badge }} text-nowrap">{% if new.icon %}<i class="bi {{ new.icon }} me-1"></i>{% endif %}{{ _t('status_' + alert.new_status) }}</span>
             <span class="text-muted small"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
           </div>
           {% if alert.note %}
