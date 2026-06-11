@@ -933,3 +933,59 @@ body.dark-mode .metric-status-card .fw-semibold {
 .metric-dot.warn    { background: #BA7517; }
 .metric-dot.crit    { background: #E24B4A; }
 .metric-dot.no_data { background: #ccc; }
+
+/* ── Calendar ────────────────────────────────────────────── */
+.cal-legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* FullCalendar light-mode tweaks */
+.fc { font-size: 13px; }
+.fc .fc-button-primary {
+  background-color: #333533;
+  border-color: #444;
+}
+.fc .fc-button-primary:hover {
+  background-color: #555;
+  border-color: #555;
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background-color: #378ADD;
+  border-color: #378ADD;
+}
+.fc .fc-today-button:disabled { opacity: .4; }
+.fc-event { cursor: pointer; }
+
+/* FullCalendar dark-mode overrides */
+body.dark-mode .fc {
+  --fc-border-color: #3a3a38;
+  --fc-today-bg-color: rgba(55,138,221,.12);
+  --fc-neutral-bg-color: #2d2d2b;
+  --fc-page-bg-color: #242423;
+  --fc-list-event-hover-bg-color: #333533;
+  color: #E8EDDF;
+}
+body.dark-mode .fc-col-header-cell-cushion,
+body.dark-mode .fc-daygrid-day-number,
+body.dark-mode .fc-list-event-title a,
+body.dark-mode .fc-list-day-cushion,
+body.dark-mode .fc-toolbar-title { color: #E8EDDF; }
+body.dark-mode .fc .fc-button-primary {
+  background-color: #3a3a38;
+  border-color: #555;
+  color: #E8EDDF;
+}
+body.dark-mode .fc .fc-button-primary:hover { background-color: #555; }
+body.dark-mode .fc .fc-button-primary:not(:disabled).fc-button-active,
+body.dark-mode .fc .fc-button-primary:not(:disabled):active {
+  background-color: #378ADD;
+  border-color: #378ADD;
+}
+body.dark-mode .fc-list-day-cushion { background: #2d2d2b; }
+body.dark-mode .fc-theme-standard td,
+body.dark-mode .fc-theme-standard th,
+body.dark-mode .fc-theme-standard .fc-scrollgrid { border-color: #3a3a38; }

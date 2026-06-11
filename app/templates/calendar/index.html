@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% block title %}{{ _t('nav_calendar') }}{% if hive %} — {{ hive.name }}{% endif %} — Beetter{% endblock %}
+{% block page_title %}{{ _t('nav_calendar') }}{% if hive %} — {{ hive.name }}{% endif %}{% endblock %}
+
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+
+{# ── Top bar ─────────────────────────────────────────────────────────────── #}
+<div class="d-flex align-items-center flex-wrap gap-2 mb-3 mt-1">
+  {% if hive %}
+    <a href="{{ url_for('calendar.index') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>{{ _t('cal_back_global') }}
+    </a>
+  {% endif %}
+
+  {# Legend #}
+  <div class="d-flex align-items-center gap-3 flex-wrap ms-auto">
+    {% for key, cfg in event_types.items() %}
+      <span class="d-flex align-items-center gap-1" style="font-size:12px">
+        <span class="cal-legend-dot" style="background:{{ cfg.color }}"></span>
+        {{ _t('cal_event_' ~ key) }}
+      </span>
+    {% endfor %}
+  </div>
+
+  {% if can_write %}
+    <button class="btn btn-sm btn-primary" id="newEventBtn">
+      <i class="bi bi-plus-lg me-1"></i>{{ _t('cal_new_event') }}
+    </button>
+  {% endif %}
+</div>
+
+{# ── Calendar ─────────────────────────────────────────────────────────────── #}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-3">
+    <div id="calendar"></div>
+  </div>
+</div>
+
+{# ── Event detail modal ───────────────────────────────────────────────────── #}
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-semibold" id="detail-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <div class="mb-3">
+          <span class="badge" id="detail-type-badge" style="font-size:12px;font-weight:500"></span>
+        </div>
+        <dl class="row mb-0" style="font-size:14px">
+          <dt class="col-4 text-muted fw-normal">{{ _t('cal_field_hive') }}</dt>
+          <dd class="col-8 mb-2 fw-semibold" id="detail-hive"></dd>
+          <dt class="col-4 text-muted fw-normal">{{ _t('cal_field_start') }}</dt>
+          <dd class="col-8 mb-2" id="detail-start"></dd>
+          <dt class="col-4 text-muted fw-normal" id="detail-end-label" style="display:none">{{ _t('cal_field_end') }}</dt>
+          <dd class="col-8 mb-2" id="detail-end" style="display:none"></dd>
+          <dt class="col-4 text-muted fw-normal" id="detail-notes-label">{{ _t('cal_field_notes') }}</dt>
+          <dd class="col-8 mb-2" id="detail-notes"></dd>
+          <dt class="col-4 text-muted fw-normal">{{ _t('cal_created_by') }}</dt>
+          <dd class="col-8 mb-0" id="detail-creator"></dd>
+        </dl>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">{{ _t('btn_cancel') }}</button>
+        <button type="button" class="btn btn-sm btn-outline-warning" id="detail-edit-btn" style="display:none">
+          <i class="bi bi-pencil me-1"></i>{{ _t('btn_edit') }}
+        </button>
+        <button type="button" class="btn btn-sm btn-danger" id="detail-delete-btn" style="display:none">
+          <i class="bi bi-trash me-1"></i>{{ _t('btn_delete') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Create / Edit modal ──────────────────────────────────────────────────── #}
+<div class="modal fade" id="eventFormModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-semibold" id="modal-form-title">{{ _t('cal_form_title_create') }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="event-form" novalidate>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">{{ _t('cal_field_title') }} <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="event-title" maxlength="120">
+          </div>
+          <div class="row mb-3">
+            <div class="col">
+              <label class="form-label small fw-semibold">{{ _t('cal_field_type') }}</label>
+              <select class="form-select form-select-sm" id="event-type">
+                {% for key, cfg in event_types.items() %}
+                  <option value="{{ key }}">{{ _t('cal_event_' ~ key) }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col">
+              <label class="form-label small fw-semibold">{{ _t('cal_field_hive') }}</label>
+              <select class="form-select form-select-sm" id="event-hive">
+                <option value="">{{ _t('cal_field_hive_global') }}</option>
+                {% for h in hives %}
+                  <option value="{{ h.id }}">{{ h.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="event-allday" checked>
+            <label class="form-check-label small" for="event-allday">{{ _t('cal_field_allday') }}</label>
+          </div>
+          <div class="row mb-3">
+            <div class="col">
+              <label class="form-label small fw-semibold">{{ _t('cal_field_start') }} <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" id="event-start">
+            </div>
+            <div class="col">
+              <label class="form-label small fw-semibold">{{ _t('cal_field_end') }}</label>
+              <input type="date" class="form-control form-control-sm" id="event-end">
+            </div>
+          </div>
+          <div class="mb-1">
+            <label class="form-label small fw-semibold">{{ _t('cal_field_notes') }}</label>
+            <textarea class="form-control form-control-sm" id="event-notes" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">{{ _t('btn_cancel') }}</button>
+        <button type="button" class="btn btn-sm btn-primary" id="save-event-btn">
+          <i class="bi bi-check-lg me-1"></i>{{ _t('cal_btn_save') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script>
+  const csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content;
+  const canWrite   = {{ can_write | tojson }};
+  const eventsUrl  = {{ events_url | tojson }};
+  const defaultHiveId = {{ (hive.id | string) if hive else 'null' }};
+
+  const detailModal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
+  const formModal   = new bootstrap.Modal(document.getElementById('eventFormModal'));
+  let editingEventId = null;
+
+  // ── FullCalendar ──────────────────────────────────────────────────────────
+  const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+    initialView: 'dayGridMonth',
+    locale: '{{ current_lang }}',
+    headerToolbar: {
+      left:   'prev,next today',
+      center: 'title',
+      right:  'dayGridMonth,timeGridWeek,listWeek'
+    },
+    height: 'auto',
+    events: eventsUrl,
+
+    eventClick(info) {
+      const e = info.event;
+      const p = e.extendedProps;
+
+      document.getElementById('detail-title').textContent = e.title;
+
+      const badge = document.getElementById('detail-type-badge');
+      badge.textContent = p.type_label;
+      badge.style.background = e.backgroundColor + '33';
+      badge.style.color       = e.backgroundColor;
+      badge.style.border      = '1px solid ' + e.backgroundColor + '66';
+
+      document.getElementById('detail-hive').textContent = p.hive_name;
+      document.getElementById('detail-creator').textContent = p.created_by;
+
+      const fmtDate = d => d ? d.toLocaleDateString() : '';
+      const fmtDt   = d => d ? d.toLocaleString()     : '';
+
+      document.getElementById('detail-start').textContent = e.allDay ? fmtDate(e.start) : fmtDt(e.start);
+
+      const endEl      = document.getElementById('detail-end');
+      const endLabelEl = document.getElementById('detail-end-label');
+      if (e.end) {
+        endEl.textContent    = e.allDay ? fmtDate(e.end) : fmtDt(e.end);
+        endEl.style.display  = '';
+        endLabelEl.style.display = '';
+      } else {
+        endEl.style.display      = 'none';
+        endLabelEl.style.display = 'none';
+      }
+
+      const notesEl      = document.getElementById('detail-notes');
+      const notesLabelEl = document.getElementById('detail-notes-label');
+      if (p.notes) {
+        notesEl.textContent      = p.notes;
+        notesEl.style.display    = '';
+        notesLabelEl.style.display = '';
+      } else {
+        notesEl.style.display      = 'none';
+        notesLabelEl.style.display = 'none';
+      }
+
+      const editBtn   = document.getElementById('detail-edit-btn');
+      const deleteBtn = document.getElementById('detail-delete-btn');
+      if (canWrite) {
+        editBtn.style.display   = '';
+        deleteBtn.style.display = '';
+        editBtn.onclick = () => { detailModal.hide(); openEditForm(e); };
+        deleteBtn.onclick = () => {
+          if (confirm('{{ _t("cal_confirm_delete") }}')) deleteEvent(e.id);
+        };
+      } else {
+        editBtn.style.display   = 'none';
+        deleteBtn.style.display = 'none';
+      }
+
+      detailModal.show();
+    },
+
+    dateClick(info) {
+      if (!canWrite) return;
+      resetForm();
+      document.getElementById('event-start').value = info.dateStr;
+      if (defaultHiveId) document.getElementById('event-hive').value = defaultHiveId;
+      document.getElementById('modal-form-title').textContent = '{{ _t("cal_form_title_create") }}';
+      formModal.show();
+    },
+  });
+  calendar.render();
+
+  // ── Form helpers ─────────────────────────────────────────────────────────
+
+  function resetForm() {
+    document.getElementById('event-form').reset();
+    document.getElementById('event-start').type = 'date';
+    document.getElementById('event-end').type   = 'date';
+    editingEventId = null;
+  }
+
+  function openEditForm(event) {
+    editingEventId = event.id;
+    const allDay   = event.allDay;
+
+    document.getElementById('modal-form-title').textContent = '{{ _t("cal_form_title_edit") }}';
+    document.getElementById('event-title').value  = event.title;
+    document.getElementById('event-type').value   = event.extendedProps.type;
+    document.getElementById('event-hive').value   = event.extendedProps.hive_id || '';
+    document.getElementById('event-allday').checked = allDay;
+    document.getElementById('event-notes').value  = event.extendedProps.notes || '';
+
+    const startInput = document.getElementById('event-start');
+    const endInput   = document.getElementById('event-end');
+    startInput.type  = allDay ? 'date' : 'datetime-local';
+    endInput.type    = allDay ? 'date' : 'datetime-local';
+
+    startInput.value = event.start ? formatForInput(event.start, allDay) : '';
+    endInput.value   = event.end   ? formatForInput(event.end,   allDay) : '';
+
+    formModal.show();
+  }
+
+  function formatForInput(date, allDay) {
+    const iso = date.toISOString();
+    return allDay ? iso.slice(0, 10) : iso.slice(0, 16);
+  }
+
+  function normalizeDate(value) {
+    if (!value) return null;
+    if (value.length === 10) return value + 'T00:00:00';
+    if (value.length === 16) return value + ':00';
+    return value;
+  }
+
+  // Toggle date/datetime inputs when all-day changes
+  document.getElementById('event-allday').addEventListener('change', function () {
+    const allDay     = this.checked;
+    const startInput = document.getElementById('event-start');
+    const endInput   = document.getElementById('event-end');
+    const prevStart  = startInput.value;
+    const prevEnd    = endInput.value;
+
+    startInput.type = allDay ? 'date' : 'datetime-local';
+    endInput.type   = allDay ? 'date' : 'datetime-local';
+    startInput.value = prevStart.slice(0, allDay ? 10 : 16);
+    endInput.value   = prevEnd.slice(0,   allDay ? 10 : 16);
+  });
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+
+  document.getElementById('save-event-btn').addEventListener('click', saveEvent);
+
+  async function saveEvent() {
+    const title = document.getElementById('event-title').value.trim();
+    if (!title) {
+      document.getElementById('event-title').focus();
+      return;
+    }
+    const data = {
+      title,
+      event_type: document.getElementById('event-type').value,
+      hive_id:    document.getElementById('event-hive').value ? parseInt(document.getElementById('event-hive').value) : null,
+      all_day:    document.getElementById('event-allday').checked,
+      start_date: normalizeDate(document.getElementById('event-start').value),
+      end_date:   normalizeDate(document.getElementById('event-end').value),
+      notes:      document.getElementById('event-notes').value,
+    };
+
+    if (!data.start_date) {
+      document.getElementById('event-start').focus();
+      return;
+    }
+
+    const url    = editingEventId ? `/calendar/events/${editingEventId}/edit` : '/calendar/events/create';
+    const method = editingEventId ? 'PUT' : 'POST';
+
+    try {
+      const resp = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify(data),
+      });
+      if (resp.ok) {
+        formModal.hide();
+        calendar.refetchEvents();
+      } else {
+        const err = await resp.json().catch(() => ({}));
+        alert(err.error || 'Error saving event.');
+      }
+    } catch (e) {
+      alert('Network error.');
+    }
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+
+  async function deleteEvent(eventId) {
+    try {
+      const resp = await fetch(`/calendar/events/${eventId}/delete`, {
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': csrfToken },
+      });
+      if (resp.ok) {
+        detailModal.hide();
+        calendar.refetchEvents();
+      } else {
+        alert('Error deleting event.');
+      }
+    } catch (e) {
+      alert('Network error.');
+    }
+  }
+
+  // ── New event button ──────────────────────────────────────────────────────
+
+  document.getElementById('newEventBtn')?.addEventListener('click', () => {
+    resetForm();
+    if (defaultHiveId) document.getElementById('event-hive').value = defaultHiveId;
+    document.getElementById('modal-form-title').textContent = '{{ _t("cal_form_title_create") }}';
+    formModal.show();
+  });
+</script>
+{% endblock %}

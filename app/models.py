@@ -97,6 +97,25 @@ class RemoteServerConfig(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
 
+class HiveEvent(db.Model):
+    __tablename__ = "hive_events"
+
+    id         = db.Column(db.Integer, primary_key=True)
+    title      = db.Column(db.String(120), nullable=False)
+    event_type = db.Column(db.String(30), nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date   = db.Column(db.DateTime, nullable=True)
+    all_day    = db.Column(db.Boolean, default=True)
+    notes      = db.Column(db.Text, nullable=True)
+    hive_id    = db.Column(db.Integer, db.ForeignKey("beehives.id"), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    hive    = db.relationship("Beehive", backref=db.backref("events", cascade="all, delete-orphan", lazy=True))
+    creator = db.relationship("User", backref=db.backref("events", lazy=True))
+
+
 class UserHiveIndicator(db.Model):
     __tablename__ = 'user_hive_indicators'
 

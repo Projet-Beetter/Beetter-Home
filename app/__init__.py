@@ -47,6 +47,7 @@ def create_app():
     from .blueprints.alerts import alerts_bp
     from .blueprints.export import export_bp
     from .blueprints.admin import admin_bp
+    from .blueprints.calendar import calendar_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -57,6 +58,7 @@ def create_app():
     app.register_blueprint(alerts_bp)
     app.register_blueprint(export_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(calendar_bp)
     csrf.exempt(api_bp)
 
     from .models import Alert, user_alert_reads
