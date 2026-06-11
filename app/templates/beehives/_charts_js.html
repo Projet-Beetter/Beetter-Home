@@ -124,12 +124,22 @@
 
   function initializeRangeSelectors() {
     document.querySelectorAll('.range-selector').forEach(button => {
-      button.addEventListener('click', () => {
-        const chartId = button.dataset.chartId;
-        const sensorKeys = button.dataset.sensorKeys;
+      button.addEventListener('click', async () => {
         const range = button.dataset.range;
-        setRangeButtonState(chartId, range);
-        loadChartRange(chartId, sensorKeys, range);
+        document.querySelectorAll('.range-selector').forEach(b => {
+          b.classList.toggle('btn-warning', b.dataset.range === range);
+          b.classList.toggle('btn-outline-secondary', b.dataset.range !== range);
+        });
+        try {
+          const response = await fetch(`${chartApiUrl}?range=${encodeURIComponent(range)}`);
+          if (!response.ok) { console.error('Unable to load chart data:', response.statusText); return; }
+          const data = await response.json();
+          Object.keys(charts).forEach(chartId => {
+            const chart = charts[chartId];
+            if (chart) chart.options.scales.x.time = getTimeOptions(range);
+            updateMultiChart(chartId, data);
+          });
+        } catch (error) { console.error('Chart loading error:', error); }
       });
     });
   }

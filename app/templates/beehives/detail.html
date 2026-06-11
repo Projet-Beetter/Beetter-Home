@@ -7,8 +7,40 @@
 
 {% block content %}
 {% include 'beehives/_header.html' %}
-{% include 'beehives/_measurements.html' %}
-{% include 'beehives/_location.html' %}
+
+<div class="detail-layout mt-2">
+  <!-- LEFT PANEL: metric cards + map/weather/time -->
+  <div class="detail-left">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <p class="mb-2 text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Current readings</p>
+        <div class="row g-2">
+          {% for m in metrics %}
+          <div class="col-6">
+            <div class="metric-status-card {{ m.status }}">
+              <i class="bi {{ m.icon }}" style="color:{{ m.color }};font-size:14px"></i>
+              <div class="fw-semibold" style="font-size:15px;line-height:1;margin-top:3px">
+                {% if m.value is not none %}
+                  {{ m.value }}{{ m.unit }}<span class="metric-dot {{ m.status }}"></span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </div>
+              <div class="text-muted" style="font-size:10px;margin-top:2px">{{ m.label }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% include 'beehives/_location.html' %}
+  </div>
+
+  <!-- RIGHT PANEL: charts -->
+  <div>
+    {% include 'beehives/_measurements.html' %}
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

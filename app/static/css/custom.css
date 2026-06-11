@@ -862,3 +862,74 @@ body.dark-mode .account-divider {
 .metric-card.active { outline: 2px solid currentColor; }
 .sep-silent { color: #1a1a1a; }
 body.dark-mode .sep-silent { color: #ffffff; }
+
+/* ── Detail page two-column layout ──────────────────────────── */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 767px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-left {
+  position: sticky;
+  top: 56px;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(36,36,35,.22) transparent;
+}
+
+.detail-left::-webkit-scrollbar { width: 4px; }
+.detail-left::-webkit-scrollbar-track { background: transparent; }
+.detail-left::-webkit-scrollbar-thumb { background: rgba(36,36,35,.22); border-radius: 2px; }
+
+body.dark-mode .detail-left {
+  scrollbar-color: rgba(255,255,255,.18) transparent;
+}
+body.dark-mode .detail-left::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.18);
+}
+
+/* Metric cards with status border */
+.metric-status-card {
+  background: #f5f7f3;
+  border-radius: 8px;
+  padding: 8px 10px;
+  border-left: 3px solid #ccc;
+}
+
+.metric-status-card.ok      { border-color: #639922; }
+.metric-status-card.warn    { border-color: #BA7517; }
+.metric-status-card.crit    { border-color: #E24B4A; }
+.metric-status-card.no_data { border-color: #ccc; }
+
+body.dark-mode .metric-status-card {
+  background: #2d2d2b;
+  color: #E8EDDF;
+}
+
+body.dark-mode .metric-status-card .fw-semibold {
+  color: #E8EDDF;
+}
+
+/* Inline status dot for metric value */
+.metric-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: 2px;
+}
+
+.metric-dot.ok      { background: #639922; }
+.metric-dot.warn    { background: #BA7517; }
+.metric-dot.crit    { background: #E24B4A; }
+.metric-dot.no_data { background: #ccc; }

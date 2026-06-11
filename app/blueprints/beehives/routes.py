@@ -9,6 +9,32 @@ from .forms import BeehiveForm
 from . import beehives_bp
 from ..utils.geocode import geocode
 
+# ── Sensor thresholds ───────────────────────────────────────
+# Each key maps to (ok_min, ok_max, warn_min, warn_max)
+# Green  : value is within ok range
+# Orange : value is within warn range but outside ok
+# Red    : value is outside warn range entirely
+THRESHOLDS = {
+    "temperature_int":  (32, 38,  28, 42),
+    "temperature_ext":  (5,  35,  0,  40),
+    "humidity_int":     (50, 75,  40, 85),
+    "humidity_ext":     (30, 90,  20, 95),
+    "sound_freq_int":   (180, 320, 150, 400),
+    "sound_amp_int":    (0.3, 1.5, 0.1, 2.0),
+    "light_ext":        (0, 20, 0, 60),
+}
+
+def get_threshold_status(key, value):
+    """Return 'ok', 'warn', or 'crit' based on THRESHOLDS."""
+    if value is None or key not in THRESHOLDS:
+        return "no_data"
+    ok_min, ok_max, warn_min, warn_max = THRESHOLDS[key]
+    if ok_min <= value <= ok_max:
+        return "ok"
+    if warn_min <= value <= warn_max:
+        return "warn"
+    return "crit"
+
 @beehives_bp.route('/')
 @login_required
 def index():
@@ -105,11 +131,27 @@ def detail(hive_id):
             latest = query_latest_values(str(hive.id))
         except Exception:
             flash('Could not reach InfluxDB. Check your connection.', 'warning')
+    def _v(key):
+        obj = latest.get(key)
+        return obj['value'] if obj is not None else None
+
+    metrics = [
+        {"key": "temperature_int", "label": "Temp. int.",  "value": _v('temperature_int'), "unit": "°C",  "icon": "bi-thermometer-half",  "color": "#E24B4A"},
+        {"key": "temperature_ext", "label": "Temp. ext.",  "value": _v('temperature_ext'), "unit": "°C",  "icon": "bi-thermometer-half",  "color": "#F4836B"},
+        {"key": "humidity_int",    "label": "Hum. int.",   "value": _v('humidity_int'),    "unit": "%",   "icon": "bi-droplet-half",      "color": "#378ADD"},
+        {"key": "humidity_ext",    "label": "Hum. ext.",   "value": _v('humidity_ext'),    "unit": "%",   "icon": "bi-droplet-half",      "color": "#85B7EB"},
+        {"key": "sound_freq_int",  "label": "Frequency",   "value": _v('sound_freq_int'),  "unit": " Hz", "icon": "bi-music-note-beamed", "color": "#639922"},
+        {"key": "light_ext",       "label": "Light",       "value": _v('light_ext'),       "unit": "%",   "icon": "bi-brightness-high",   "color": "#BA7517"},
+    ]
+    for m in metrics:
+        m["status"] = get_threshold_status(m["key"], m["value"])
+
     return render_template(
     'beehives/detail.html',
     hive=hive,
     chart_data=chart_data,
     latest=latest,
+    metrics=metrics,
     range_str=range_str,
     range_options=RANGE_OPTIONS,
     status_config=STATUS_CONFIG,

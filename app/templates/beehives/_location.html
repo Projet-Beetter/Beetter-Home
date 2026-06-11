@@ -1,38 +1,44 @@
 {% if hive.latitude and hive.longitude %}
-<div class="row g-3 mt-2">
-  <div class="col-12 col-lg-6">
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <h6 class="card-title fw-semibold mb-3"><i class="bi bi-geo-alt text-warning me-2"></i>{{ _t('location') }}</h6>
-        <div id="hive-map" style="height:260px; border-radius:0.5rem;"></div>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-lg-6 d-flex flex-column gap-3">
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-          <h6 class="card-title fw-semibold mb-0"><i class="bi bi-cloud-sun text-info me-2"></i>{{ _t('weather') }}</h6>
-          <button id="temp-unit-toggle" class="btn btn-sm btn-outline-secondary" style="display:none;">°F</button>
-        </div>
-        <div id="weather-loading" class="text-muted small">{{ _t('weather_loading') }}</div>
-        <div id="weather-content" style="display:none;"></div>
-        <div id="weather-error" class="text-muted small" style="display:none;">{{ _t('weather_unavailable') }}</div>
-      </div>
-    </div>
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <h6 class="card-title fw-semibold mb-3"><i class="bi bi-clock text-secondary me-2"></i>{{ _t('local_time') }}</h6>
-        <div id="time-loading" class="text-muted small">{{ _t('time_loading') }}</div>
-        <div id="time-content" style="display:none;"></div>
-        <div id="time-error" class="text-muted small" style="display:none;">{{ _t('time_unavailable') }}</div>
-      </div>
-    </div>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <h6 class="card-title fw-semibold mb-2">
+      <i class="bi bi-geo-alt text-warning me-2"></i>{{ _t('location') }}
+    </h6>
+    <div id="hive-map" style="height:200px; border-radius:0.5rem;"></div>
   </div>
 </div>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h6 class="card-title fw-semibold mb-0">
+        <i class="bi bi-cloud-sun text-info me-2"></i>{{ _t('weather') }}
+      </h6>
+      <button id="temp-unit-toggle" class="btn btn-sm btn-outline-secondary" style="display:none;">°F</button>
+    </div>
+    <div id="weather-loading" class="text-muted small">{{ _t('weather_loading') }}</div>
+    <div id="weather-content" style="display:none;"></div>
+    <div id="weather-error" class="text-muted small" style="display:none;">{{ _t('weather_unavailable') }}</div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <h6 class="card-title fw-semibold mb-2">
+      <i class="bi bi-clock text-secondary me-2"></i>{{ _t('local_time') }}
+    </h6>
+    <div id="time-loading" class="text-muted small">{{ _t('time_loading') }}</div>
+    <div id="time-content" style="display:none;"></div>
+    <div id="time-error" class="text-muted small" style="display:none;">{{ _t('time_unavailable') }}</div>
+  </div>
+</div>
+
 {% else %}
-<div class="card border-0 shadow-sm text-center py-4 text-muted mt-2">
+
+<div class="card border-0 shadow-sm text-center py-4 text-muted mb-3">
   <i class="bi bi-geo-alt fs-2"></i>
   <p class="mt-2 mb-0">{{ _t('no_location') }}</p>
 </div>
+
 {% endif %}

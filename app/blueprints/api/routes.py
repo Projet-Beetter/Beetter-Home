@@ -52,7 +52,7 @@ def ingest():
 @login_required
 def chart_data(hive_id):
     """Returns Chart.js-ready data for the given beehive."""
-    hive = Beehive.query.filter_by(id=hive_id, user_id=current_user.id).first_or_404()
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     range_str = request.args.get('range', '24h')
     if range_str not in RANGE_OPTIONS:
         range_str = '24h'

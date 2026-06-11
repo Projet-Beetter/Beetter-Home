@@ -1,129 +1,104 @@
-<div class="mb-4">
-  <div class="accordion" id="beehiveMeasurementsAccordion">
-    {% for section in [
-      {'key':'temperature','title':_t('sensor_temperature'),'icon':'thermometer-half','color':'text-danger','indicators':[{
-          'key':'temperature_int','title':_t('sensor_int_temp'),'value': latest.temperature_int.value if latest.temperature_int else None,'suffix':'°C','time': latest.temperature_int.time if latest.temperature_int else None,
-          'icon':'thermometer-half','label':_t('sensor_int_temp')
-        },{
-          'key':'temperature_ext','title':_t('sensor_ext_temp'),'value': latest.temperature_ext.value if latest.temperature_ext else None,'suffix':'°C','time': latest.temperature_ext.time if latest.temperature_ext else None,
-          'icon':'thermometer-half','label':_t('sensor_ext_temp')
-        }],
-        'charts':[{
-          'id':'temperatureChart','title':_t('sensor_temperature') ~ ' (°C)','sensors':['temperature_int','temperature_ext']
-        }]
-      },
-      {'key':'humidity','title':_t('sensor_humidity'),'icon':'droplet-half','color':'text-primary','indicators':[{
-          'key':'humidity_int','title':_t('sensor_int_hum'),'value': latest.humidity_int.value if latest.humidity_int else None,'suffix':'%','time': latest.humidity_int.time if latest.humidity_int else None,
-          'icon':'droplet-half','label':_t('sensor_int_hum')
-        },{
-          'key':'humidity_ext','title':_t('sensor_ext_hum'),'value': latest.humidity_ext.value if latest.humidity_ext else None,'suffix':'%','time': latest.humidity_ext.time if latest.humidity_ext else None,
-          'icon':'droplet-half','label':_t('sensor_ext_hum')
-        }],
-        'charts':[{
-          'id':'humidityChart','title':_t('sensor_humidity') ~ ' (%)','sensors':['humidity_int','humidity_ext']
-        }]
-      },
-      {'key':'sound','title':_t('sensor_sound'),'icon':'music-note-beamed','color':'text-secondary','indicators':[{
-          'key':'sound_freq_int','title':_t('sensor_int_freq'),'value': latest.sound_freq_int.value if latest.sound_freq_int else None,'suffix':'Hz','time': latest.sound_freq_int.time if latest.sound_freq_int else None,
-          'icon':'music-note-beamed','label':_t('sensor_int_freq')
-        },{
-          'key':'sound_amp_int','title':_t('sensor_int_amp'),'value': latest.sound_amp_int.value if latest.sound_amp_int else None,'suffix':'','time': None,
-          'icon':'volume-up','label':_t('sensor_int_amp')
-        },{
-          'key':'sound_freq_ext','title':_t('sensor_ext_freq'),'value': latest.sound_freq_ext.value if latest.sound_freq_ext else None,'suffix':'Hz','time': latest.sound_freq_ext.time if latest.sound_freq_ext else None,
-          'icon':'music-note-beamed','label':_t('sensor_ext_freq')
-        },{
-          'key':'sound_amp_ext','title':_t('sensor_ext_amp'),'value': latest.sound_amp_ext.value if latest.sound_amp_ext else None,'suffix':'','time': None,
-          'icon':'volume-up','label':_t('sensor_ext_amp')
-        }],
-        'charts':[{
-          'id':'soundFreqChart','title':_t('sensor_sound') ~ ' — Hz','sensors':['sound_freq_int','sound_freq_ext']
-        },{
-          'id':'soundAmpChart','title':_t('sensor_sound') ~ ' — Amp','sensors':['sound_amp_int','sound_amp_ext']
-        }]
-      },
-      {'key':'luminosity','title':_t('sensor_luminosity'),'icon':'brightness-high','color':'text-warning','indicators':[{
-          'key':'light_ext','title':_t('sensor_ext_light'),'value': latest.light_ext.value if latest.light_ext else None,'suffix':'%','time': latest.light_ext.time if latest.light_ext else None,
-          'icon':'brightness-high','label':_t('sensor_ext_light')
-        }],
-        'charts':[{
-          'id':'lightExtChart','title':_t('sensor_luminosity') ~ ' (%)','sensors':['light_ext']
-        }]
-      }
-    ] %}
-      <div class="accordion-item border-0 shadow-sm mb-3">
-        <h2 class="accordion-header" id="heading-{{ section.key }}">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ section.key }}" aria-expanded="false" aria-controls="collapse-{{ section.key }}">
-            <div>
-              <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-{{ section.icon }} {{ section.color }}"></i>
-                {% if current_lang == 'fr' %}<strong>{{ _t('sensor_ind_charts') }} {{ section.title }}</strong>{% else %}<strong>{{ section.title }} {{ _t('sensor_ind_charts') }}</strong>{% endif %}
-              </div>
-              <div class="small text-muted">{{ _t('sensor_expand_hint') }}</div>
-            </div>
-          </button>
-        </h2>
-        <div id="collapse-{{ section.key }}" class="accordion-collapse collapse {% if request.args.get('open') == section.key %}show{% endif %}" aria-labelledby="heading-{{ section.key }}">
-          <div class="accordion-body">
-            <div class="row g-3 mb-4">
-              {% for indicator in section.indicators %}
-                <div class="col-sm-6 col-md-3">
-                  <div class="card border-0 shadow-sm text-center py-3 position-relative">
-                    <div style="position:absolute;left:.5rem;top:.5rem;z-index:3">
-                      <form method="post" action="{{ url_for('beehives.toggle_indicator', hive_id=hive.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="sensor_key" value="{{ indicator.key }}">
-                        <input type="hidden" name="section_key" value="{{ section.key }}">
-                        {% set selected = indicator.key in selected_indicators %}
-                        <button type="submit" class="btn btn-sm btn-outline-secondary p-0" title="{{ _t('sensor_rem_dash') if selected else _t('sensor_add_dash') }}">
-                          <i class="bi {{ 'bi-dash-lg' if selected else 'bi-plus-lg' }}"></i>
-                        </button>
-                      </form>
-                    </div>
-                    <div class="{{ section.color }} fs-4"><i class="bi bi-{{ indicator.icon }}"></i></div>
-                    <div class="fs-2 fw-bold">
-                      {% if indicator.value is not none %}{{ indicator.value }}{{ indicator.suffix }}{% else %}<span class="text-muted">—</span>{% endif %}
-                    </div>
-                    <small class="text-muted">{{ indicator.label }}</small>
-                    {% if indicator.time %}
-                      <small class="text-muted d-block" style="font-size:.7rem">{{ indicator.time }}</small>
-                    {% endif %}
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-            <div class="row g-3">
-              {% for chart in section.charts %}
-                <div class="col-12 col-lg-6">
-                  <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                      <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-title fw-semibold mb-0">{{ chart.title }}</h6>
-                        <div class="d-flex align-items-center gap-2">
-                          <div class="btn-group btn-group-sm" role="group" aria-label="Range selector">
-                            {% for r in range_options %}
-                              <button type="button" class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}" data-chart-id="{{ chart.id }}" data-sensor-keys="{{ chart.sensors|join(',') }}" data-range="{{ r }}">{{ _t('range_btn_' ~ r) }}</button>
-                            {% endfor %}
-                          </div>
-                        </div>
-                      </div>
-                      <div class="mb-2">
-                        {% for s in chart.sensors %}
-                          <div class="form-check form-check-inline">
-                            <input class="form-check-input series-toggle" type="checkbox" id="{{ chart.id }}-{{ s }}" data-chart-id="{{ chart.id }}" data-sensor-key="{{ s }}" checked>
-                            <label class="form-check-label small text-muted" for="{{ chart.id }}-{{ s }}">{{ s.replace('_',' ').title() }}</label>
-                          </div>
-                        {% endfor %}
-                      </div>
-                      <canvas id="{{ chart.id }}" height="100"></canvas>
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-      </div>
+{% set chart_sections = [
+  {
+    'id': 'temperatureChart',
+    'title': _t('sensor_temperature'),
+    'icon': 'bi-thermometer-half',
+    'icon_color': '#E24B4A',
+    'sensors': [
+      {'key': 'temperature_int', 'label': 'Temperature Int'},
+      {'key': 'temperature_ext', 'label': 'Temperature Ext'}
+    ],
+    'badges': [
+      {'v': metrics[0].value, 'u': metrics[0].unit, 's': 'int.', 'bg': '#fdecea', 'fg': '#a32d2d', 'dot': '#dc3545'},
+      {'v': metrics[1].value, 'u': metrics[1].unit, 's': 'ext.', 'bg': '#fde8e4', 'fg': '#9c3a2a', 'dot': '#e46060'}
+    ]
+  },
+  {
+    'id': 'humidityChart',
+    'title': _t('sensor_humidity'),
+    'icon': 'bi-droplet-half',
+    'icon_color': '#378ADD',
+    'sensors': [
+      {'key': 'humidity_int', 'label': 'Humidity Int'},
+      {'key': 'humidity_ext', 'label': 'Humidity Ext'}
+    ],
+    'badges': [
+      {'v': metrics[2].value, 'u': metrics[2].unit, 's': 'int.', 'bg': '#e8f0fb', 'fg': '#1a4a8a', 'dot': '#0d6efd'},
+      {'v': metrics[3].value, 'u': metrics[3].unit, 's': 'ext.', 'bg': '#dde9f8', 'fg': '#3a5e8a', 'dot': '#4b8dff'}
+    ]
+  },
+  {
+    'id': 'soundFreqChart',
+    'title': _t('sensor_sound') ~ ' — Hz',
+    'icon': 'bi-music-note-beamed',
+    'icon_color': '#639922',
+    'sensors': [
+      {'key': 'sound_freq_int', 'label': 'Sound Freq Int'},
+      {'key': 'sound_freq_ext', 'label': 'Sound Freq Ext'}
+    ],
+    'badges': [
+      {'v': metrics[4].value, 'u': metrics[4].unit, 's': 'int.', 'bg': '#eef4e4', 'fg': '#3a6010', 'dot': '#6a1b9a'}
+    ]
+  },
+  {
+    'id': 'soundAmpChart',
+    'title': _t('sensor_sound') ~ ' — Amp',
+    'icon': 'bi-activity',
+    'icon_color': '#00897b',
+    'sensors': [
+      {'key': 'sound_amp_int', 'label': 'Sound Amp Int'},
+      {'key': 'sound_amp_ext', 'label': 'Sound Amp Ext'}
+    ],
+    'badges': []
+  },
+  {
+    'id': 'lightExtChart',
+    'title': _t('sensor_luminosity'),
+    'icon': 'bi-brightness-high',
+    'icon_color': '#BA7517',
+    'sensors': [
+      {'key': 'light_ext', 'label': 'Light Ext'}
+    ],
+    'badges': [
+      {'v': metrics[5].value, 'u': metrics[5].unit, 's': '', 'bg': '#fef7e4', 'fg': '#7a4800', 'dot': '#f9a825'}
+    ]
+  }
+] %}
+
+<div class="d-flex align-items-center mb-2">
+  <div class="btn-group btn-group-sm" role="group">
+    {% for r in range_options %}
+      <button type="button"
+              class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}"
+              data-range="{{ r }}">{{ _t('range_btn_' ~ r) }}</button>
     {% endfor %}
   </div>
 </div>
+
+{% for section in chart_sections %}
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <i class="bi {{ section.icon }}" style="color:{{ section.icon_color }}"></i>
+      <span class="fw-semibold me-auto" style="font-size:13px">{{ section.title }}</span>
+      {% for badge in section.badges %}
+        {% if badge.v is not none %}
+          <span class="badge" style="background:{{ badge.bg }};color:{{ badge.fg }};font-weight:400">{{ badge.v }}{{ badge.u }}{% if badge.s %} {{ badge.s }}{% endif %}</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="mb-1">
+      {% for s in section.sensors %}
+        <div class="form-check form-check-inline">
+          <input class="form-check-input series-toggle" type="checkbox"
+                 id="{{ section.id }}-{{ s.key }}"
+                 data-chart-id="{{ section.id }}"
+                 data-sensor-key="{{ s.key }}" checked>
+          <label class="form-check-label small text-muted" for="{{ section.id }}-{{ s.key }}">{{ s.label }}</label>
+        </div>
+      {% endfor %}
+    </div>
+    <canvas id="{{ section.id }}" height="90"></canvas>
+  </div>
+</div>
+{% endfor %}
