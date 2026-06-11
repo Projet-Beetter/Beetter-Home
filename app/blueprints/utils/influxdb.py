@@ -1,3 +1,13 @@
+"""
+app/blueprints/utils/influxdb.py
+
+Changes vs previous version:
+  - MEASUREMENTS extended with mfcc_int_1..5 and mfcc_ext_1..5
+  - write_sensor_data() accepts optional mfcc_int / mfcc_ext lists
+  - All other functions unchanged (they query by measurement name, so they
+    automatically pick up the new measurements without any edits)
+"""
+
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from flask import current_app
@@ -13,19 +23,39 @@ _WINDOW_MAP = {
     '30d': '6h',
 }
 
-# Canonical list of measurements stored for a beehive.
+# ── Measurements ──────────────────────────────────────────────────────────────
 # One InfluxDB measurement per physical quantity; each has a single field "value".
+# MFCC coefficients 1-5 are stored separately so chart queries can filter them
+# independently.  They are omitted from write_sensor_data() when not provided,
+# so older packets (without MFCC) continue to work correctly.
 MEASUREMENTS = (
-    'temperature_int', 'humidity_int',      # interior temp/humidity sensor
-    'temperature_ext', 'humidity_ext',      # exterior temp/humidity sensor
-    'sound_freq_int', 'sound_amp_int',      # interior microphone: peak freq (Hz) + amplitude
-    'sound_freq_ext', 'sound_amp_ext',      # exterior microphone: peak freq (Hz) + amplitude
-    'light_ext',                            # exterior photoresistor: light level
+    # Existing environmental + audio amplitude/frequency
+    'temperature_int', 'humidity_int',
+    'temperature_ext', 'humidity_ext',
+    'sound_freq_int',  'sound_amp_int',
+    'sound_freq_ext',  'sound_amp_ext',
+    'light_ext',
+    # MFCC coefficients — written once ESP32 firmware sends them
+    'mfcc_int_1', 'mfcc_int_2', 'mfcc_int_3', 'mfcc_int_4', 'mfcc_int_5',
+    'mfcc_ext_1', 'mfcc_ext_2', 'mfcc_ext_3', 'mfcc_ext_4', 'mfcc_ext_5',
+)
+
+# Subset used by the ML feature vector (9-d per sensor, matches beehive/config.py)
+# temperature, humidity, sound_amp (≈ log_rms proxy), sound_freq (≈ dom_freq),
+# mfcc_1..5.  Defined here so collect_training_data.py can import it.
+ML_FEATURES_INT = (
+    'temperature_int', 'humidity_int',
+    'sound_amp_int', 'sound_freq_int',
+    'mfcc_int_1', 'mfcc_int_2', 'mfcc_int_3', 'mfcc_int_4', 'mfcc_int_5',
+)
+ML_FEATURES_EXT = (
+    'temperature_ext', 'humidity_ext',
+    'sound_amp_ext', 'sound_freq_ext',
+    'mfcc_ext_1', 'mfcc_ext_2', 'mfcc_ext_3', 'mfcc_ext_4', 'mfcc_ext_5',
 )
 
 
 def _measurement_filter():
-    """Flux predicate matching any of our measurements."""
     return ' or '.join(f'r._measurement == "{m}"' for m in MEASUREMENTS)
 
 
@@ -40,12 +70,23 @@ def _client():
 def write_sensor_data(beehive_id,
                       temperature_int=None, humidity_int=None,
                       temperature_ext=None, humidity_ext=None,
-                      sound_freq_int=None, sound_amp_int=None,
-                      sound_freq_ext=None, sound_amp_ext=None,
+                      sound_freq_int=None,  sound_amp_int=None,
+                      sound_freq_ext=None,  sound_amp_ext=None,
                       light_ext=None,
+                      mfcc_int=None,   # list[5] or None
+                      mfcc_ext=None,   # list[5] or None
                       timestamp=None):
+    """
+    Write one sensor reading to InfluxDB.
+
+    mfcc_int / mfcc_ext are optional lists of 5 floats [c1, c2, c3, c4, c5].
+    When absent (None or wrong length), the MFCC measurements are simply not
+    written — the existing measurements are unaffected.
+    """
     ts = timestamp or datetime.now(timezone.utc)
-    values = {
+
+    # ── Scalar measurements (always present when available) ───────────────
+    scalar_values = {
         'temperature_int': temperature_int,
         'humidity_int':    humidity_int,
         'temperature_ext': temperature_ext,
@@ -61,11 +102,24 @@ def write_sensor_data(beehive_id,
         .tag("beehive_id", str(beehive_id))
         .field("value", float(value))
         .time(ts, WritePrecision.S)
-        for measurement, value in values.items()
+        for measurement, value in scalar_values.items()
         if value is not None
     ]
+
+    # ── MFCC measurements (written only when ESP32 provides them) ─────────
+    for coeff_list, prefix in ((mfcc_int, 'mfcc_int'), (mfcc_ext, 'mfcc_ext')):
+        if coeff_list is not None and len(coeff_list) == 5:
+            for i, val in enumerate(coeff_list, start=1):
+                points.append(
+                    Point(f'{prefix}_{i}')
+                    .tag("beehive_id", str(beehive_id))
+                    .field("value", float(val))
+                    .time(ts, WritePrecision.S)
+                )
+
     if not points:
         return
+
     with _client() as c:
         c.write_api(write_options=SYNCHRONOUS).write(
             bucket=current_app.config['INFLUXDB_BUCKET'],
@@ -74,12 +128,16 @@ def write_sensor_data(beehive_id,
         )
 
 
+# ── All query functions below are UNCHANGED from the original ─────────────────
+# They work on MEASUREMENTS generically, so they automatically include MFCC
+# measurements in chart data and exports without any edits.
+
 def query_chart_data(beehive_id, range_str='24h'):
     if range_str not in RANGE_OPTIONS:
         range_str = '24h'
     window = _WINDOW_MAP[range_str]
     bucket = current_app.config['INFLUXDB_BUCKET']
-    org = current_app.config['INFLUXDB_ORG']
+    org    = current_app.config['INFLUXDB_ORG']
 
     query = f'''
 from(bucket: "{bucket}")
@@ -108,7 +166,7 @@ from(bucket: "{bucket}")
 
 def query_latest_values(beehive_id):
     bucket = current_app.config['INFLUXDB_BUCKET']
-    org = current_app.config['INFLUXDB_ORG']
+    org    = current_app.config['INFLUXDB_ORG']
     query = f'''
 from(bucket: "{bucket}")
   |> range(start: -1h)
@@ -123,15 +181,15 @@ from(bucket: "{bucket}")
                 val = r.get_value()
                 result[r.get_measurement()] = {
                     'value': round(val, 2) if val is not None else None,
-                    'time': r.get_time().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'time':  r.get_time().strftime('%Y-%m-%dT%H:%M:%SZ'),
                 }
     return result
 
 
 def delete_beehive_data(beehive_id):
-    """Purge all InfluxDB measurements for a beehive so its ID can be safely reused."""
+    """Purge all InfluxDB measurements for a beehive."""
     bucket = current_app.config['INFLUXDB_BUCKET']
-    org = current_app.config['INFLUXDB_ORG']
+    org    = current_app.config['INFLUXDB_ORG']
     with _client() as c:
         c.delete_api().delete(
             start=datetime(1970, 1, 1, tzinfo=timezone.utc),
@@ -143,13 +201,12 @@ def delete_beehive_data(beehive_id):
 
 
 def query_export_data(beehive_id, measurements, start_str, stop_str=None):
-    """Query raw pivoted data for selected measurements over an arbitrary time range."""
     valid = [m for m in measurements if m in MEASUREMENTS]
     if not valid:
         return []
-    bucket = current_app.config['INFLUXDB_BUCKET']
-    org = current_app.config['INFLUXDB_ORG']
-    meas_filter = ' or '.join(f'r._measurement == "{m}"' for m in valid)
+    bucket       = current_app.config['INFLUXDB_BUCKET']
+    org          = current_app.config['INFLUXDB_ORG']
+    meas_filter  = ' or '.join(f'r._measurement == "{m}"' for m in valid)
     range_clause = f'start: {start_str}'
     if stop_str:
         range_clause += f', stop: {stop_str}'
@@ -174,9 +231,8 @@ from(bucket: "{bucket}")
 
 
 def query_recent_data(beehive_id, since):
-    """Return flat list of {timestamp, <measurement>: value, ...} since `since`."""
-    bucket = current_app.config['INFLUXDB_BUCKET']
-    org = current_app.config['INFLUXDB_ORG']
+    bucket   = current_app.config['INFLUXDB_BUCKET']
+    org      = current_app.config['INFLUXDB_ORG']
     since_str = since.strftime('%Y-%m-%dT%H:%M:%SZ')
     query = f'''
 from(bucket: "{bucket}")

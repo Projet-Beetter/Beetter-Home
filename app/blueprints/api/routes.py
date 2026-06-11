@@ -1,5 +1,14 @@
+"""
+app/blueprints/api/routes.py
+
+Changes vs previous version:
+  - ingest() now extracts mfcc_int / mfcc_ext from the POST body
+    and passes them to write_sensor_data()
+  - Everything else unchanged
+"""
+
 from flask import request, jsonify
-from flask_login import login_required, current_user
+from flask_login import login_required
 from datetime import datetime, timezone
 from ...models import Beehive
 from ..utils.influxdb import write_sensor_data, query_chart_data, RANGE_OPTIONS
@@ -28,6 +37,16 @@ def ingest():
         except ValueError:
             pass
 
+    # ── MFCC: validate list[5] if present, silently drop otherwise ────────
+    def _mfcc_or_none(key):
+        val = data.get(key)
+        if val is not None and isinstance(val, list) and len(val) == 5:
+            try:
+                return [float(v) for v in val]
+            except (TypeError, ValueError):
+                pass
+        return None
+
     try:
         write_sensor_data(
             beehive_id=beehive_id,
@@ -40,6 +59,8 @@ def ingest():
             sound_freq_ext=data.get('sound_freq_ext'),
             sound_amp_ext=data.get('sound_amp_ext'),
             light_ext=data.get('light_ext'),
+            mfcc_int=_mfcc_or_none('mfcc_int'),   # list[5] or None
+            mfcc_ext=_mfcc_or_none('mfcc_ext'),   # list[5] or None
             timestamp=ts,
         )
     except Exception as e:
