@@ -989,3 +989,159 @@ body.dark-mode .fc-list-day-cushion { background: #2d2d2b; }
 body.dark-mode .fc-theme-standard td,
 body.dark-mode .fc-theme-standard th,
 body.dark-mode .fc-theme-standard .fc-scrollgrid { border-color: #3a3a38; }
+
+/* ── Hive card grid ────────────────────────────── */
+.hive-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.hive-card {
+  background: #fff;
+  border: 0.5px solid rgba(0,0,0,.1);
+  border-left: 4px solid #ccc;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.hive-card:hover {
+  transform: translateY(-3px);
+}
+
+.hive-card--ok:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,.10);
+  border-left-color: #aaa !important;
+}
+
+.hive-card--warn:hover {
+  box-shadow: 0 0 0 1px rgba(186,117,23,.25), 0 6px 28px rgba(186,117,23,.35);
+  border-left-color: #BA7517 !important;
+}
+
+.hive-card--crit:hover {
+  box-shadow: 0 0 0 1px rgba(226,75,74,.35), 0 6px 32px rgba(226,75,74,.55);
+  border-left-color: #E24B4A !important;
+}
+
+.hive-card--no_data:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+}
+.hive-card--ok {
+  border-left-color: #d0d0d0 !important;
+  box-shadow: none !important;
+}
+body.dark-mode .hive-card--ok {
+  border-left-color: #3a3a3a !important;
+}
+.hive-card--warn {
+  border-left-color: #BA7517 !important;
+  box-shadow: 0 0 0 1px rgba(186,117,23,.10), 0 4px 18px rgba(186,117,23,.16);
+}
+.hive-card--crit {
+  border-left-color: #E24B4A !important;
+  box-shadow: 0 0 0 1px rgba(226,75,74,.15), 0 4px 20px rgba(226,75,74,.25);
+  animation: hive-pulse 2.4s ease-in-out infinite;
+}
+@keyframes hive-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(226,75,74,.15), 0 4px 20px rgba(226,75,74,.25); }
+  50%       { box-shadow: 0 0 0 1px rgba(226,75,74,.22), 0 4px 28px rgba(226,75,74,.38); }
+}
+.hive-card--no_data {
+  border-left: 4px dashed #aaa !important;
+  box-shadow: none !important;
+  animation: none !important;
+  opacity: .60;
+  filter: grayscale(30%);
+}
+
+.hive-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.hive-card__name a {
+  font-size: 15px;
+  font-weight: 600;
+  color: #242423;
+  text-decoration: none;
+}
+.hive-card__name a:hover { text-decoration: underline; }
+
+.hive-card__loc {
+  font-size: 11px;
+  color: #6c757d;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.hive-card__offline {
+  font-size: 10px;
+  color: #aaa;
+}
+
+.hive-card__metrics { display: flex; flex-direction: column; gap: 5px; }
+
+.hive-metric {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.hive-metric__icon  { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+.hive-metric__label { font-size: 11px; color: #6c757d; width: 58px; flex-shrink: 0; }
+
+.hive-metric__track {
+  flex: 1;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.hive-metric__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .4s ease;
+  background: #ccc;
+}
+.hive-metric__fill--ok      { background: #639922; }
+.hive-metric__fill--warn    { background: #BA7517; }
+.hive-metric__fill--crit    { background: #E24B4A; }
+.hive-metric__fill--no_data { background: #ddd; }
+
+.hive-metric__val {
+  font-size: 11px;
+  font-weight: 500;
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.hive-metric__val--ok      { color: #639922; }
+.hive-metric__val--warn    { color: #BA7517; }
+.hive-metric__val--crit    { color: #E24B4A; }
+.hive-metric__val--no_data { color: #aaa; }
+
+.hive-card__footer  { border-top: 0.5px solid rgba(0,0,0,.07); padding-top: 8px; }
+.hive-card__actions { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+
+body.dark-mode .hive-card {
+  background: #333533;
+  border-color: rgba(255,255,255,.08);
+  color: #E8EDDF;
+}
+body.dark-mode .hive-card__name a { color: #E8EDDF; }
+body.dark-mode .hive-metric__label { color: #CFDBD5; }
+body.dark-mode .hive-metric__track { background: #444; }
+body.dark-mode .hive-card__footer  { border-top-color: rgba(255,255,255,.08); }
+
+@media (max-width: 576px) {
+  .hive-cards-grid { grid-template-columns: 1fr; }
+}

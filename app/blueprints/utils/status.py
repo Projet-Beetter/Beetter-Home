@@ -19,7 +19,7 @@ STATUS_CONFIG = {
     'queenless':    {'label': 'Queenless',    'family': 'critical', 'badge': 'bg-danger',    'icon': ''},
     'predator':     {'label': 'Predator',     'family': 'critical', 'badge': 'bg-danger',    'icon': ''},
     # No family
-    'silent':       {'label': 'Silent',       'family': None,       'badge': 'bg-secondary', 'icon': ''},
+    'silent':       {'label': 'Silent',       'family': None,       'badge': 'bg-success', 'icon': ''},
     'no_data':      {'label': 'No data',      'family': None,       'badge': 'bg-dark',      'icon': ''},
 }
 
