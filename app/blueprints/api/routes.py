@@ -7,12 +7,16 @@ Changes vs previous version:
   - Everything else unchanged
 """
 
+import logging
 from flask import request, jsonify
 from flask_login import login_required
 from datetime import datetime, timezone
-from ...models import Beehive
+from ...models import db, Beehive, Alert
 from ..utils.influxdb import write_sensor_data, query_chart_data, RANGE_OPTIONS
+from ..utils.thresholds import check_any_crit, check_any_warn, all_ok, THRESHOLDS
 from . import api_bp
+
+logger = logging.getLogger(__name__)
 
 
 @api_bp.route('/data', methods=['POST'])
@@ -65,6 +69,69 @@ def ingest():
         )
     except Exception as e:
         return jsonify({'error': f'InfluxDB write failed: {e}'}), 500
+
+    # ── Threshold check → auto status update ─────────────────────────────
+    try:
+        sensor_values = {
+            "temperature_int": data.get('temperature_int'),
+            "temperature_ext": data.get('temperature_ext'),
+            "humidity_int":    data.get('humidity_int'),
+            "humidity_ext":    data.get('humidity_ext'),
+            "sound_freq_int":  data.get('sound_freq_int'),
+            "sound_amp_int":   data.get('sound_amp_int'),
+            "light_ext":       data.get('light_ext'),
+        }
+        clean = {k: v for k, v in sensor_values.items() if v is not None}
+
+        crit_keys = check_any_crit(clean)
+        warn_keys = check_any_warn(clean) if not crit_keys else []
+
+        if crit_keys:
+            target_status   = 'critical'
+            triggered_keys  = crit_keys
+        elif warn_keys and hive.status not in ('critical', 'swarming', 'queenless', 'predator'):
+            target_status   = 'agitated'
+            triggered_keys  = warn_keys
+        else:
+            target_status   = None
+            triggered_keys  = []
+
+        if target_status and hive.status != target_status:
+            old_status = hive.status
+            hive.status = target_status
+            note_parts = []
+            for key in triggered_keys:
+                val = sensor_values[key]
+                ok_min, ok_max, warn_min, warn_max = THRESHOLDS[key]
+                note_parts.append(f"{key}={val} (ok: {ok_min}–{ok_max})")
+            db.session.add(Alert(
+                hive_id=hive.id,
+                old_status=old_status,
+                new_status=target_status,
+                source='threshold',
+                note="Auto threshold breach: " + ", ".join(note_parts),
+            ))
+            db.session.commit()
+
+        elif all_ok(clean) and hive.status in ('critical', 'agitated',
+                                                'stressed', 'virgin_queen'):
+            last_alert = (Alert.query
+                          .filter_by(hive_id=hive.id)
+                          .order_by(Alert.created_at.desc())
+                          .first())
+            if last_alert and last_alert.source == 'threshold':
+                old_status = hive.status
+                hive.status = 'calm'
+                db.session.add(Alert(
+                    hive_id=hive.id,
+                    old_status=old_status,
+                    new_status='calm',
+                    source='threshold',
+                    note='Auto recovery: all sensor values returned to normal range.',
+                ))
+                db.session.commit()
+    except Exception as e:
+        logger.warning("Threshold check failed for hive %s: %s", beehive_id, e)
 
     return jsonify({'status': 'ok'}), 201
 

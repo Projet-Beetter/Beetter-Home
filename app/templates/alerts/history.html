@@ -71,7 +71,13 @@
             <span class="badge {{ old.badge }} text-nowrap">{% if old.icon %}<i class="bi {{ old.icon }} me-1"></i>{% endif %}{{ _t('status_' + alert.old_status) }}</span>
             <i class="bi bi-arrow-right text-muted small"></i>
             <span class="badge {{ new.badge }} text-nowrap">{% if new.icon %}<i class="bi {{ new.icon }} me-1"></i>{% endif %}{{ _t('status_' + alert.new_status) }}</span>
-            <span class="text-muted small"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
+            {% if alert.source == 'threshold' %}
+              <span class="badge bg-warning text-dark"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
+            {% elif alert.source == 'ml' %}
+              <span class="badge bg-info"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
+            {% else %}
+              <span class="badge bg-secondary"><i class="bi {{ src.icon }} me-1"></i>{{ src.label }}</span>
+            {% endif %}
           </div>
           {% if alert.note %}
           <div class="alert-note text-muted mt-1">"{{ alert.note }}"</div>

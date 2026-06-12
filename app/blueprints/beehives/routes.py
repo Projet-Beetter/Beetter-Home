@@ -5,35 +5,11 @@ from ...models import db, Beehive, Alert, UserHiveIndicator
 from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS, delete_beehive_data
 from ..utils.decorators import editor_required
 from ..utils.status import STATUS_CONFIG, ALERTING_STATUSES, get_dot_color
+from ..utils.thresholds import THRESHOLDS, get_threshold_status
 from .forms import BeehiveForm
 from . import beehives_bp
 from ..utils.geocode import geocode
 
-# ── Sensor thresholds ───────────────────────────────────────
-# Each key maps to (ok_min, ok_max, warn_min, warn_max)
-# Green  : value is within ok range
-# Orange : value is within warn range but outside ok
-# Red    : value is outside warn range entirely
-THRESHOLDS = {
-    "temperature_int":  (32, 38,  28, 42),
-    "temperature_ext":  (5,  35,  0,  40),
-    "humidity_int":     (50, 75,  40, 85),
-    "humidity_ext":     (30, 90,  20, 95),
-    "sound_freq_int":   (180, 320, 150, 400),
-    "sound_amp_int":    (0.3, 1.5, 0.1, 2.0),
-    "light_ext":        (0, 20, 0, 60),
-}
-
-def get_threshold_status(key, value):
-    """Return 'ok', 'warn', or 'crit' based on THRESHOLDS."""
-    if value is None or key not in THRESHOLDS:
-        return "no_data"
-    ok_min, ok_max, warn_min, warn_max = THRESHOLDS[key]
-    if ok_min <= value <= ok_max:
-        return "ok"
-    if warn_min <= value <= warn_max:
-        return "warn"
-    return "crit"
 
 _SEVERITY = {
     "swarming": "crit", "queenless": "crit", "predator": "crit", "critical": "crit",

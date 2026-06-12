@@ -1,6 +1,6 @@
 STATUS_FAMILIES = {
     'calm':     {'label': 'Calm',     'color': '#22c55e', 'alerting': False},
-    'agitated': {'label': 'Agitated', 'color': '#f97316', 'alerting': True},
+    'agitated': {'label': 'Warning',  'color': '#f97316', 'alerting': True},
     'critical': {'label': 'Critical', 'color': '#ef4444', 'alerting': True},
 }
 
