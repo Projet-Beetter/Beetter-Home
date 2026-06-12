@@ -3,13 +3,45 @@
 {% block page_title %}{{ _t('page_beehives') }}{% endblock %}
 {% block content %}
 
-{% if current_user.can_edit_data %}
-<div class="d-flex justify-content-end mb-3 mt-1">
-  <a href="{{ url_for('beehives.new') }}" class="btn btn-warning">
-    <i class="bi bi-plus-lg me-1"></i>{{ _t('hive_add') }}
-  </a>
+{# ── Toolbar ── #}
+<div class="d-flex align-items-center gap-2 mb-3 mt-1 flex-wrap">
+
+  <div class="hive-search-box">
+    <i class="bi bi-search"></i>
+    <input type="text" id="hiveSearch"
+           placeholder="{{ _t('hive_search') if _t('hive_search') else 'Rechercher une ruche...' }}" />
+  </div>
+
+  <div class="hive-filter-btns">
+    <button class="hive-f-btn active" data-filter="all">{{ _t('filter_all') if _t('filter_all') else 'Toutes' }}</button>
+    <button class="hive-f-btn hive-f-crit" data-filter="crit">{{ _t('filter_critical') if _t('filter_critical') else 'Critique' }}</button>
+    <button class="hive-f-btn hive-f-warn" data-filter="warn">{{ _t('filter_alert') if _t('filter_alert') else 'Alerte' }}</button>
+    <button class="hive-f-btn hive-f-ok"   data-filter="ok">{{ _t('filter_calm') if _t('filter_calm') else 'Calme' }}</button>
+    <button class="hive-f-btn"             data-filter="offline">{{ _t('filter_offline') if _t('filter_offline') else 'Hors ligne' }}</button>
+  </div>
+
+  <div class="ms-auto d-flex align-items-center gap-2">
+    {% if current_user.is_admin %}
+    <div class="hive-tech-toggle" id="techToggleBtn" title="{{ _t('toggle_tech_view') if _t('toggle_tech_view') else 'Vue technique' }}">
+      <i class="bi bi-cpu"></i>
+      <span>{{ _t('toggle_tech_view') if _t('toggle_tech_view') else 'Vue technique' }}</span>
+      <div class="hive-toggle-track" id="techToggleTrack">
+        <div class="hive-toggle-thumb"></div>
+      </div>
+    </div>
+    {% endif %}
+    <button id="refreshBtn" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-clockwise me-1" id="refreshIcon"></i>
+      {{ _t('btn_refresh') if _t('btn_refresh') else 'Rafraîchir' }}
+    </button>
+    {% if current_user.can_edit_data %}
+    <a href="{{ url_for('beehives.new') }}" class="btn btn-sm btn-warning">
+      <i class="bi bi-plus-lg me-1"></i>{{ _t('hive_add') }}
+    </a>
+    {% endif %}
+  </div>
+
 </div>
-{% endif %}
 
 {% if not beehives %}
   <div class="card border-0 shadow-sm text-center py-5">
@@ -19,109 +51,170 @@
     </div>
   </div>
 {% else %}
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>{{ _t('hive_col_name') }}</th>
-            <th>{{ _t('hive_col_owner') }}</th>
-            <th>{{ _t('hive_col_location') }}</th>
-            <th>{{ _t('hive_col_eui') }}</th>
-            <th>{{ _t('hive_col_freq') }}</th>
-            <th>{{ _t('hive_col_sfbw') }}</th>
-            <th>{{ _t('hive_col_status') }}</th>
-            <th class="text-end">{{ _t('hive_col_actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for hive in beehives %}
-          <tr class="position-relative">
-            <td class="fw-semibold">
-              {{ hive.name }}
-              <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="stretched-link" aria-label="Open {{ hive.name }} details"></a>
-            </td>
-            <td class="text-muted">{{hive.owner.username}}</td>
-            <td class="text-muted">
-              {% if hive.street or hive.city %}
-               {% if hive.street %}{{ hive.street }}, {% endif %}
-                {{ hive.postal_code or '' }} {{ hive.city or '' }}
-              {% else %}—{% endif %}
-            </td>
-            <td><code>{{ hive.device_eui or '—' }}</code></td>
-            <td>{{ hive.lora_frequency }}</td>
-            <td>SF{{ hive.spreading_factor }} / {{ hive.bandwidth }}kHz</td>
-            <td>
-            {% set s = status_config.get(hive.status, status_config['no_data']) %}
-            <span class="badge {{ s.badge }}">
-             {% if s.icon %}<i class="bi {{ s.icon }} me-1"></i>{% endif %}{{ _t('status_' + hive.status) }}
-            </span>
-            </td>
-            <td class="text-end" style="position: relative; z-index: 2">
+
+{# ── Table ── #}
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" id="hiveTable">
+      <thead class="table-light">
+        <tr>
+          <th class="hive-bar-col"></th>
+          <th>{{ _t('hive_col_name') }}</th>
+          <th>{{ _t('hive_col_location') }}</th>
+          <th>{{ _t('hive_col_status') }}</th>
+          <th>{{ _t('hive_col_connection') if _t('hive_col_connection') else 'Connexion' }}</th>
+          <th class="hive-tech-col">{{ _t('hive_col_eui') }}</th>
+          <th class="hive-tech-col">{{ _t('hive_col_sfbw') }}</th>
+          <th class="hive-tech-col">{{ _t('hive_col_freq') }}</th>
+          <th class="text-end">{{ _t('hive_col_actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hive in beehives %}
+        {% set hm = hive_metrics[hive.id] %}
+        <tr class="hive-table-row"
+            data-status="{{ hm.overall }}"
+            data-online="{{ 'true' if hm.online else 'false' }}"
+            data-name="{{ hive.name | lower }}">
+
+          <td class="hive-row-bar hive-row-bar--{{ hm.overall }}"></td>
+
+          <td>
+            <div class="fw-semibold">
               <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}"
-                 class="btn btn-sm btn-outline-secondary" title="{{ _t('hive_view') }}">
-                <i class="bi bi-bar-chart-line"></i>
-              </a>
-              {% if current_user.can_edit_data%}
-              <a href="{{ url_for('beehives.edit', hive_id=hive.id) }}"
-                 class="btn btn-sm btn-outline-warning" title="{{ _t('hive_edit') }}">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <form method="post" action="{{ url_for('beehives.toggle', hive_id=hive.id) }}" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-sm {{ 'btn-outline-secondary' if hive.enabled else 'btn-outline-success' }}"
-                        title="{{ _t('hive_disable') if hive.enabled else _t('hive_enable') }}">
-                  <i class="bi {{ 'bi-pause' if hive.enabled else 'bi-play' }}"></i>
-                </button>
-              </form>
-              <form method="post" action="{{ url_for('beehives.delete', hive_id=hive.id) }}" class="d-inline" id="deleteForm{{ hive.id }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="button" class="btn btn-sm btn-outline-danger" title="{{ _t('hive_delete') }}"
-                        data-bs-toggle="modal" data-bs-target="#deleteHiveModal"
-                        data-hive-id="{{ hive.id }}" data-hive-name="{{ hive.name }}">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
-              {% if current_user.is_admin %}
-              <form method="post" action="{{ url_for('beehives.set_status', hive_id=hive.id) }}" class="d-inline-flex flex-column gap-1 align-items-end">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="d-flex gap-1 align-items-center">
-                  <select name="status" class="form-select form-select-sm w-auto" title="Set status"
-                          onchange="var t=this.closest('form').querySelector('textarea');t.classList.toggle('d-none',this.value==='{{ hive.status }}')">
-                    <optgroup label="Calm">
-                      <option value="calm" {{ 'selected' if hive.status == 'calm' }}>Calm</option>
-                      <option value="foraging" {{ 'selected' if hive.status == 'foraging' }}>Foraging</option>
-                      <option value="ventilating" {{ 'selected' if hive.status == 'ventilating' }}>Ventilating</option>
-                    </optgroup>
-                    <optgroup label="Agitated">
-                      <option value="agitated" {{ 'selected' if hive.status == 'agitated' }}>Agitated</option>
-                      <option value="stressed" {{ 'selected' if hive.status == 'stressed' }}>Stressed</option>
-                      <option value="virgin_queen" {{ 'selected' if hive.status == 'virgin_queen' }}>Virgin queen</option>
-                    </optgroup>
-                    <optgroup label="Critical">
-                      <option value="critical" {{ 'selected' if hive.status == 'critical' }}>Critical</option>
-                      <option value="swarming" {{ 'selected' if hive.status == 'swarming' }}>Swarming</option>
-                      <option value="queenless" {{ 'selected' if hive.status == 'queenless' }}>Queenless</option>
-                      <option value="predator" {{ 'selected' if hive.status == 'predator' }}>Predator</option>
-                    </optgroup>
-                    <optgroup label="Other">
-                      <option value="silent" {{ 'selected' if hive.status == 'silent' }}>Silent</option>
-                      <option value="no_data" {{ 'selected' if hive.status == 'no_data' }}>No data</option>
-                    </optgroup>
-                  </select>
-                  <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ _t('hive_apply') }}"><i class="bi bi-check-lg"></i></button>
-                </div>
-                <textarea name="note" rows="1" placeholder="{{ _t('hive_note_placeholder') }}" class="form-control form-control-sm d-none" style="min-width:160px;resize:none;"></textarea>
-              </form>
-              {% endif %}
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+                 class="text-decoration-none text-body">{{ hive.name }}</a>
+            </div>
+            <div class="small text-muted">{{ hive.owner.username }}</div>
+          </td>
+
+          <td class="text-muted small">
+            {% if hive.street or hive.city %}
+              <i class="bi bi-geo-alt me-1"></i>
+              {% if hive.street %}{{ hive.street }}, {% endif %}
+              {{ hive.postal_code or '' }} {{ hive.city or '' }}
+            {% else %}—{% endif %}
+          </td>
+
+          <td>
+            {% if hm.online %}
+              {% set s = status_config.get(hive.status, status_config['no_data']) %}
+              <span class="badge {{ s.badge }}">
+                {% if s.icon %}<i class="bi {{ s.icon }} me-1"></i>{% endif %}
+                {{ _t('status_' + hive.status) }}
+              </span>
+            {% else %}
+              <span class="badge bg-secondary">
+                <i class="bi bi-wifi-off me-1"></i>
+                {{ _t('hive_offline') if _t('hive_offline') else 'Hors ligne' }}
+              </span>
+            {% endif %}
+          </td>
+
+          <td>
+            <span class="hive-online-dot {{ 'hive-dot-on' if hm.online else 'hive-dot-off' }}"></span>
+            <span class="small text-muted ms-1">
+              {{ _t('hive_online') if hm.online else _t('hive_offline') }}
+            </span>
+          </td>
+
+          <td class="hive-tech-col small text-muted">
+            <code>{{ hive.device_eui or '—' }}</code>
+          </td>
+          <td class="hive-tech-col small text-muted">
+            SF{{ hive.spreading_factor }} / {{ hive.bandwidth }}kHz
+          </td>
+          <td class="hive-tech-col small text-muted">
+            {{ hive.lora_frequency }}
+          </td>
+
+          <td class="text-end">
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary"
+                      type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-three-dots"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('beehives.detail', hive_id=hive.id) }}">
+                    <i class="bi bi-bar-chart-line me-2"></i>{{ _t('hive_view') }}
+                  </a>
+                </li>
+                {% if current_user.can_edit_data %}
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('beehives.edit', hive_id=hive.id) }}">
+                    <i class="bi bi-pencil me-2"></i>{{ _t('hive_edit') }}
+                  </a>
+                </li>
+                <li>
+                  <form method="post" action="{{ url_for('beehives.toggle', hive_id=hive.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="dropdown-item">
+                      <i class="bi {{ 'bi-pause' if hive.enabled else 'bi-play' }} me-2"></i>
+                      {{ _t('hive_disable') if hive.enabled else _t('hive_enable') }}
+                    </button>
+                  </form>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <button type="button" class="dropdown-item text-danger"
+                          data-bs-toggle="modal" data-bs-target="#deleteHiveModal"
+                          data-hive-id="{{ hive.id }}" data-hive-name="{{ hive.name }}">
+                    <i class="bi bi-trash me-2"></i>{{ _t('btn_delete') }}
+                  </button>
+                </li>
+                {% endif %}
+                {% if current_user.is_admin %}
+                <li><hr class="dropdown-divider"></li>
+                <li class="px-2 py-1">
+                  <form method="post" action="{{ url_for('beehives.set_status', hive_id=hive.id) }}"
+                        class="d-flex flex-column gap-1">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="status" class="form-select form-select-sm">
+                      <optgroup label="Calm">
+                        <option value="calm"        {{ 'selected' if hive.status == 'calm' }}>Calm</option>
+                        <option value="foraging"    {{ 'selected' if hive.status == 'foraging' }}>Foraging</option>
+                        <option value="ventilating" {{ 'selected' if hive.status == 'ventilating' }}>Ventilating</option>
+                      </optgroup>
+                      <optgroup label="Agitated">
+                        <option value="agitated"    {{ 'selected' if hive.status == 'agitated' }}>Agitated</option>
+                        <option value="stressed"    {{ 'selected' if hive.status == 'stressed' }}>Stressed</option>
+                        <option value="virgin_queen"{{ 'selected' if hive.status == 'virgin_queen' }}>Virgin queen</option>
+                      </optgroup>
+                      <optgroup label="Critical">
+                        <option value="critical"    {{ 'selected' if hive.status == 'critical' }}>Critical</option>
+                        <option value="swarming"    {{ 'selected' if hive.status == 'swarming' }}>Swarming</option>
+                        <option value="queenless"   {{ 'selected' if hive.status == 'queenless' }}>Queenless</option>
+                        <option value="predator"    {{ 'selected' if hive.status == 'predator' }}>Predator</option>
+                      </optgroup>
+                      <optgroup label="Other">
+                        <option value="silent"      {{ 'selected' if hive.status == 'silent' }}>Silent</option>
+                        <option value="no_data"     {{ 'selected' if hive.status == 'no_data' }}>No data</option>
+                      </optgroup>
+                    </select>
+                    <textarea name="note" rows="1"
+                              placeholder="{{ _t('hive_note_placeholder') }}"
+                              class="form-control form-control-sm" style="resize:none"></textarea>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                      <i class="bi bi-check-lg me-1"></i>{{ _t('hive_apply') }}
+                    </button>
+                  </form>
+                </li>
+                {% endif %}
+              </ul>
+            </div>
+            {# Hidden form so delete modal JS can find and submit it #}
+            <form method="post" action="{{ url_for('beehives.delete', hive_id=hive.id) }}"
+                  id="deleteForm{{ hive.id }}" class="d-none">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
+</div>
+
 {% endif %}
 
 <!-- Delete confirmation modal -->
@@ -166,5 +259,75 @@
       document.getElementById(pendingDeleteFormId).submit();
     }
   });
+
+// ── Search + filter ──────────────────────────
+const searchInput = document.getElementById('hiveSearch');
+const filterBtns  = document.querySelectorAll('.hive-f-btn');
+const rows        = document.querySelectorAll('.hive-table-row');
+let activeFilter  = 'all';
+
+function applyFilters() {
+  const q = (searchInput.value || '').toLowerCase().trim();
+  rows.forEach(row => {
+    const nameMatch  = row.dataset.name.includes(q);
+    const status     = row.dataset.status;
+    const online     = row.dataset.online === 'true';
+    let filterMatch  = false;
+    if      (activeFilter === 'all')     filterMatch = true;
+    else if (activeFilter === 'crit')    filterMatch = status === 'crit';
+    else if (activeFilter === 'warn')    filterMatch = status === 'warn';
+    else if (activeFilter === 'ok')      filterMatch = status === 'ok';
+    else if (activeFilter === 'offline') filterMatch = !online;
+    row.classList.toggle('d-none', !(nameMatch && filterMatch));
+  });
+}
+
+if (searchInput) searchInput.addEventListener('input', applyFilters);
+
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    applyFilters();
+  });
+});
+
+// ── Tech view toggle (admin only) ────────────
+const techBtn   = document.getElementById('techToggleBtn');
+const techTrack = document.getElementById('techToggleTrack');
+const table     = document.getElementById('hiveTable');
+
+if (techBtn) {
+  techBtn.addEventListener('click', () => {
+    const on = table.classList.toggle('hive-table--tech-view');
+    techTrack.classList.toggle('active', on);
+  });
+}
+
+// ── Auto-sort: online rows first ─────────────
+(function sortRows() {
+  const tbody = document.querySelector('#hiveTable tbody');
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('.hive-table-row'));
+  rows.sort((a, b) => {
+    const aOn = a.dataset.online === 'true' ? 0 : 1;
+    const bOn = b.dataset.online === 'true' ? 0 : 1;
+    return aOn - bOn;
+  });
+  rows.forEach(r => tbody.appendChild(r));
+})();
+
+// ── Refresh button ───────────────────────────
+const refreshBtn = document.getElementById('refreshBtn');
+if (refreshBtn) {
+  refreshBtn.addEventListener('click', function() {
+    const icon = document.getElementById('refreshIcon');
+    icon.style.transition = 'transform .6s ease';
+    icon.style.transform  = 'rotate(360deg)';
+    setTimeout(() => { icon.style.transition = 'none'; icon.style.transform = 'rotate(0deg)'; }, 600);
+    setTimeout(() => location.reload(), 300);
+  });
+}
 </script>
 {% endblock %}

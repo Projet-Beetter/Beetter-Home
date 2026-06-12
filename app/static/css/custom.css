@@ -1145,3 +1145,167 @@ body.dark-mode .hive-card__footer  { border-top-color: rgba(255,255,255,.08); }
 @media (max-width: 576px) {
   .hive-cards-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Beehive list table ─────────────────────── */
+.hive-bar-col { display: none !important; }
+
+.hive-row-bar { display: none !important; }
+
+.hive-table-row { position: relative; }
+
+.hive-table-row[data-status="crit"]    td:nth-child(2),
+.hive-table-row[data-status="warn"]    td:nth-child(2),
+.hive-table-row[data-status="ok"]      td:nth-child(2),
+.hive-table-row[data-status="no_data"] td:nth-child(2) { position: relative; }
+
+.hive-table-row[data-status="crit"]    td:nth-child(2)::before,
+.hive-table-row[data-status="warn"]    td:nth-child(2)::before,
+.hive-table-row[data-status="ok"]      td:nth-child(2)::before,
+.hive-table-row[data-status="no_data"] td:nth-child(2)::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+}
+.hive-table-row[data-status="crit"]    td:nth-child(2)::before { background: #EF4444; }
+.hive-table-row[data-status="warn"]    td:nth-child(2)::before { background: #F97316; }
+.hive-table-row[data-status="ok"]      td:nth-child(2)::before { background: #22C55E; }
+.hive-table-row[data-status="no_data"] td:nth-child(2)::before { background: #9CA3AF; }
+
+body.dark-mode .hive-table-row[data-status="ok"]      td:nth-child(2)::before { background: #22C55E; }
+body.dark-mode .hive-table-row[data-status="no_data"] td:nth-child(2)::before { background: #4B5563; }
+
+/* Offline rows — dim cells, keep dropdown fully visible */
+.hive-table-row[data-online="false"] { opacity: 1; }
+.hive-table-row[data-online="false"] td:not(:last-child) { opacity: .5; }
+.hive-table-row[data-online="false"] td:last-child,
+.hive-table-row[data-online="false"] td:nth-last-child(2) { opacity: 1 !important; }
+
+/* Hidden tech columns by default */
+.hive-tech-col { display: none !important; }
+.hive-table--tech-view .hive-tech-col { display: table-cell !important; }
+
+/* Admin tech toggle */
+.hive-tech-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  background: var(--bs-body-bg) !important;
+  border: 1px solid var(--bs-border-color) !important;
+  color: var(--bs-body-color) !important;
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.hive-toggle-track {
+  width: 28px; height: 15px;
+  background: #ddd;
+  border-radius: 8px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.hive-toggle-track.active { background: #F5CB5C; }
+.hive-toggle-thumb {
+  width: 11px; height: 11px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px; left: 2px;
+  transition: left .2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+.hive-toggle-track.active .hive-toggle-thumb { left: 15px; }
+
+/* Online dot */
+.hive-online-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+}
+.hive-dot-on  { background: #639922; }
+.hive-dot-off { background: #ccc; }
+
+/* Search box */
+.hive-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bs-body-bg) !important;
+  border: 1px solid var(--bs-border-color) !important;
+  color: var(--bs-body-color) !important;
+  border-radius: 6px;
+  padding: 5px 10px;
+  min-width: 200px;
+}
+.hive-search-box input {
+  border: none; outline: none;
+  font-size: 13px;
+  color: var(--bs-body-color) !important;
+  background: transparent !important;
+  width: 100%;
+}
+
+/* Filter buttons */
+.hive-filter-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.hive-f-btn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(0,0,0,.2) !important;
+  background: transparent;
+  color: #242423 !important;
+  cursor: pointer;
+  transition: all .15s;
+}
+.hive-f-btn:hover  { background: var(--bs-secondary-bg); }
+.hive-f-btn.active { background: #242423 !important; color: #F5CB5C !important; border-color: #242423 !important; }
+
+.hive-f-crit        { color: #dc3545 !important; border-color: rgba(220,53,69,.35) !important; }
+.hive-f-crit.active { background: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; }
+
+.hive-f-warn        { color: #fd7e14 !important; border-color: rgba(253,126,20,.35) !important; }
+.hive-f-warn.active { background: #fd7e14 !important; color: #fff !important; border-color: #fd7e14 !important; }
+
+.hive-f-ok          { color: #639922 !important; border-color: rgba(99,153,34,.35) !important; }
+.hive-f-ok.active   { background: #639922 !important; color: #fff !important; border-color: #639922 !important; }
+
+
+/* Action menu button — borderless, hover only */
+.hive-table-row .dropdown > .btn {
+  border: none !important;
+  background: transparent !important;
+  color: var(--bs-secondary-color);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background .15s;
+}
+.hive-table-row .dropdown > .btn:hover {
+  background: var(--bs-secondary-bg) !important;
+  color: var(--bs-body-color);
+}
+.hive-table-row .dropdown > .btn::after { display: none; }
+
+body.dark-mode .hive-table-row .dropdown > .btn { color: rgba(255,255,255,.6) !important; }
+body.dark-mode .hive-table-row .dropdown > .btn:hover { color: #fff !important; background: rgba(255,255,255,.1) !important; }
+
+/* Dark mode: hive name */
+body.dark-mode .hive-table-row td a,
+body.dark-mode .hive-table-row .fw-semibold { color: #fff !important; }
+
+/* Dark mode: filter buttons */
+body.dark-mode .hive-f-btn {
+  border-color: rgba(255,255,255,.2) !important;
+  color: rgba(255,255,255,.6) !important;
+}
+body.dark-mode .hive-f-btn:hover { background: rgba(255,255,255,.08) !important; }
+body.dark-mode .hive-f-crit { color: #f87171 !important; border-color: rgba(248,113,113,.3) !important; }
+body.dark-mode .hive-f-warn { color: #fb923c !important; border-color: rgba(251,146,60,.3) !important; }
+body.dark-mode .hive-f-ok   { color: #86efac !important; border-color: rgba(134,239,172,.3) !important; }
+
+.hive-table-row.d-none { display: none !important; }

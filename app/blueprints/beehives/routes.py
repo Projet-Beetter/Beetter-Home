@@ -35,11 +35,35 @@ def get_threshold_status(key, value):
         return "warn"
     return "crit"
 
+_SEVERITY = {
+    "swarming": "crit", "queenless": "crit", "predator": "crit", "critical": "crit",
+    "stressed": "warn", "agitated": "warn", "virgin_queen": "warn", "silent": "warn",
+    "foraging": "ok",   "calm": "ok",        "ventilating": "ok",
+    "no_data":  "no_data",
+}
+
 @beehives_bp.route('/')
 @login_required
 def index():
     beehives = Beehive.query.order_by(Beehive.created_at).all()
-    return render_template('beehives/index.html', beehives=beehives, status_config=STATUS_CONFIG)
+    hive_metrics = {}
+    for hive in beehives:
+        latest = {}
+        if hive.enabled:
+            try:
+                latest = query_latest_values(str(hive.id))
+            except Exception:
+                pass
+        online = hive.enabled and bool(latest)
+        hive_metrics[hive.id] = {
+            "online":  online,
+            "overall": _SEVERITY.get(hive.status, "no_data") if online else "no_data",
+        }
+    return render_template('beehives/index.html',
+        beehives=beehives,
+        status_config=STATUS_CONFIG,
+        hive_metrics=hive_metrics,
+    )
 
 
 @beehives_bp.route('/new', methods=['GET', 'POST'])
