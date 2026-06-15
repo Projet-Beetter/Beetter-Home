@@ -23,8 +23,8 @@ JSON packet format (sent by ESP32, all optional except "id"):
 
     "l_ext":  <float>,         exterior light level
 
-    "mc_int": [c1,c2,c3,c4,c5],  MFCC coefficients 1-5, interior  ← NEW
-    "mc_ext": [c1,c2,c3,c4,c5],  MFCC coefficients 1-5, exterior  ← NEW
+    "mc_int": [c0,c1,...,c12],  MFCC coefficients 0-12, interior  ← NEW
+    "mc_ext": [c0,c1,...,c12],  MFCC coefficients 0-12, exterior  ← NEW
   }
 
 The "mc_int" / "mc_ext" fields are optional — the receiver works without them
@@ -97,9 +97,9 @@ def receive_packet(radio):
         "t_ext": 18.3, "h_ext": 55.0,
         "sf_int": 245.0, "sa_int": 0.42,
         "sf_ext": 120.0, "sa_ext": 0.11,
-        "l_ext": 760.0,
-        "mc_int": [-24.5,  7.2, -3.1,  1.4, -0.7],
-        "mc_ext": [-18.3,  5.1, -2.2,  0.9, -0.3],
+        "l_ext": 7.3,
+        "mc_int": [-42.5, 8.8, 6.2, 0.6, -0.4, 0.9, 1.4, 1.6, -1.6, 0.2, 1.4, -0.3, 0.1],
+        "mc_ext": [-27.4, -3.8, 11.2, 1.8, -2.8, 2.9, -0.5, -2.7, -0.4, -1.5, 0.7, 0.2, 0.5],
     }).encode()
     log.debug('STUB: returning simulated packet')
     return sample
@@ -138,18 +138,18 @@ def parse_packet(raw: bytes) -> dict | None:
     }
 
     # ── MFCC (optional, added when ESP32 firmware is ready) ───────────────
-    # mc_int / mc_ext are lists of 5 floats: [c1, c2, c3, c4, c5]
+    # mc_int / mc_ext are lists of 13 floats: [c0, c1, ..., c12]
     # Validate shape if present; silently drop malformed values.
     for key, field in (('mc_int', 'mfcc_int'), ('mc_ext', 'mfcc_ext')):
         raw_list = data.get(key)
         if raw_list is not None:
-            if isinstance(raw_list, list) and len(raw_list) == 5:
+            if isinstance(raw_list, list) and len(raw_list) == 13:
                 try:
                     payload[field] = [float(v) for v in raw_list]
                 except (TypeError, ValueError):
                     log.warning('Invalid MFCC values in "%s": %s', key, raw_list)
             else:
-                log.warning('"%s" must be a list of 5 floats, got: %s', key, raw_list)
+                log.warning('"%s" must be a list of 13 floats, got: %s', key, raw_list)
 
     return payload
 

@@ -41,10 +41,10 @@ def ingest():
         except ValueError:
             pass
 
-    # ── MFCC: validate list[5] if present, silently drop otherwise ────────
+    # ── MFCC: validate list[13] if present, silently drop otherwise ───────
     def _mfcc_or_none(key):
         val = data.get(key)
-        if val is not None and isinstance(val, list) and len(val) == 5:
+        if val is not None and isinstance(val, list) and len(val) == 13:
             try:
                 return [float(v) for v in val]
             except (TypeError, ValueError):

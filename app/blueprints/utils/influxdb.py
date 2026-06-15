@@ -2,7 +2,7 @@
 app/blueprints/utils/influxdb.py
 
 Changes vs previous version:
-  - MEASUREMENTS extended with mfcc_int_1..5 and mfcc_ext_1..5
+  - MEASUREMENTS extended with mfcc_int_0..12 and mfcc_ext_0..12
   - write_sensor_data() accepts optional mfcc_int / mfcc_ext lists
   - All other functions unchanged (they query by measurement name, so they
     automatically pick up the new measurements without any edits)
@@ -29,29 +29,29 @@ _WINDOW_MAP = {
 # independently.  They are omitted from write_sensor_data() when not provided,
 # so older packets (without MFCC) continue to work correctly.
 MEASUREMENTS = (
-    # Existing environmental + audio amplitude/frequency
+    # Environmental + audio amplitude/frequency
     'temperature_int', 'humidity_int',
     'temperature_ext', 'humidity_ext',
     'sound_freq_int',  'sound_amp_int',
     'sound_freq_ext',  'sound_amp_ext',
     'light_ext',
-    # MFCC coefficients — written once ESP32 firmware sends them
-    'mfcc_int_1', 'mfcc_int_2', 'mfcc_int_3', 'mfcc_int_4', 'mfcc_int_5',
-    'mfcc_ext_1', 'mfcc_ext_2', 'mfcc_ext_3', 'mfcc_ext_4', 'mfcc_ext_5',
+    # MFCC coefficients 0-12 — written once ESP32 firmware sends them
+    *[f'mfcc_int_{i}' for i in range(13)],
+    *[f'mfcc_ext_{i}' for i in range(13)],
 )
 
-# Subset used by the ML feature vector (9-d per sensor, matches beehive/config.py)
-# temperature, humidity, sound_amp (≈ log_rms proxy), sound_freq (≈ dom_freq),
-# mfcc_1..5.  Defined here so collect_training_data.py can import it.
+# Subset used by the ML feature vector (17-d per sensor, matches beehive/config.py)
+# temperature, humidity, sound_freq (≈ dom_freq), sound_amp (≈ log_rms proxy),
+# mfcc_0..12.  Defined here so collect_training_data.py can import it.
 ML_FEATURES_INT = (
     'temperature_int', 'humidity_int',
-    'sound_amp_int', 'sound_freq_int',
-    'mfcc_int_1', 'mfcc_int_2', 'mfcc_int_3', 'mfcc_int_4', 'mfcc_int_5',
+    'sound_freq_int', 'sound_amp_int',
+    *[f'mfcc_int_{i}' for i in range(13)],
 )
 ML_FEATURES_EXT = (
     'temperature_ext', 'humidity_ext',
-    'sound_amp_ext', 'sound_freq_ext',
-    'mfcc_ext_1', 'mfcc_ext_2', 'mfcc_ext_3', 'mfcc_ext_4', 'mfcc_ext_5',
+    'sound_freq_ext', 'sound_amp_ext',
+    *[f'mfcc_ext_{i}' for i in range(13)],
 )
 
 
@@ -73,13 +73,13 @@ def write_sensor_data(beehive_id,
                       sound_freq_int=None,  sound_amp_int=None,
                       sound_freq_ext=None,  sound_amp_ext=None,
                       light_ext=None,
-                      mfcc_int=None,   # list[5] or None
-                      mfcc_ext=None,   # list[5] or None
+                      mfcc_int=None,   # list[13] or None
+                      mfcc_ext=None,   # list[13] or None
                       timestamp=None):
     """
     Write one sensor reading to InfluxDB.
 
-    mfcc_int / mfcc_ext are optional lists of 5 floats [c1, c2, c3, c4, c5].
+    mfcc_int / mfcc_ext are optional lists of 13 floats [c0, c1, ..., c12].
     When absent (None or wrong length), the MFCC measurements are simply not
     written — the existing measurements are unaffected.
     """
@@ -108,8 +108,8 @@ def write_sensor_data(beehive_id,
 
     # ── MFCC measurements (written only when ESP32 provides them) ─────────
     for coeff_list, prefix in ((mfcc_int, 'mfcc_int'), (mfcc_ext, 'mfcc_ext')):
-        if coeff_list is not None and len(coeff_list) == 5:
-            for i, val in enumerate(coeff_list, start=1):
+        if coeff_list is not None and len(coeff_list) == 13:
+            for i, val in enumerate(coeff_list, start=0):
                 points.append(
                     Point(f'{prefix}_{i}')
                     .tag("beehive_id", str(beehive_id))
