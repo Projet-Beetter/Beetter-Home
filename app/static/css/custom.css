@@ -1375,3 +1375,11 @@ canvas { min-height: 80px; }
 
 /* Hide Bootstrap dropdown caret on avatar button */
 .topbar-avatar-btn::after { display: none; }
+
+/* Prevent black rectangle on empty content areas */
+.detail-layout,
+.main-content,
+#main-content {
+  background: transparent;
+  min-height: 0;
+}
