@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beetter — Setup Complete</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f8f9fa; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .setup-card { width: 100%; max-width: 420px; }
+    .btn-amber { background: #F5CB5C; border-color: #F5CB5C; color: #1a1a1a; font-weight: 600; }
+    .btn-amber:hover { background: #e8b840; border-color: #e8b840; color: #1a1a1a; }
+    .logo { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+    .check-icon { font-size: 2.5rem; color: #639922; }
+  </style>
+</head>
+<body>
+  <div class="setup-card">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4 text-center">
+
+        <div class="logo mb-4 text-start">🐝 Beetter</div>
+
+        <div class="check-icon mb-2">✓</div>
+        <h5 class="fw-bold mb-1">Account created!</h5>
+        <p class="text-muted mb-4" style="font-size:.9rem">
+          You're logged in as admin.<br>
+          Add your first beehive to get started.
+        </p>
+
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('dashboard.index') }}" class="btn btn-amber">
+            Go to dashboard
+          </a>
+          <a href="{{ url_for('beehives.new') }}" class="btn btn-outline-secondary">
+            Add first beehive
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</body>
+</html>

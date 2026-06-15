@@ -48,6 +48,7 @@ def create_app():
     from .blueprints.export import export_bp
     from .blueprints.admin import admin_bp
     from .blueprints.calendar import calendar_bp
+    from .blueprints.setup import setup_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -59,7 +60,17 @@ def create_app():
     app.register_blueprint(export_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(calendar_bp)
+    app.register_blueprint(setup_bp)
     csrf.exempt(api_bp)
+
+    SETUP_EXEMPT = {'setup.index', 'setup.create', 'setup.done', 'static'}
+
+    @app.before_request
+    def check_setup():
+        if request.endpoint in SETUP_EXEMPT:
+            return
+        if User.query.count() == 0:
+            return redirect(url_for('setup.index'))
 
     from .models import Alert, user_alert_reads
 
