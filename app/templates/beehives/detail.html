@@ -46,4 +46,19 @@
 {% block scripts %}
 {% include 'beehives/_charts_js.html' %}
 {% include 'beehives/_location_js.html' %}
+<script>
+// ── Keyboard arrow navigation between hives ──────────────────────────
+document.addEventListener('keydown', function(e) {
+  const tag = document.activeElement.tagName.toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  if (e.key === 'ArrowLeft') {
+    const btn = document.getElementById('prevHiveBtn');
+    if (btn) window.location.href = btn.href;
+  }
+  if (e.key === 'ArrowRight') {
+    const btn = document.getElementById('nextHiveBtn');
+    if (btn) window.location.href = btn.href;
+  }
+});
+</script>
 {% endblock %}

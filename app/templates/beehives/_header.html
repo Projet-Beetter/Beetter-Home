@@ -1,7 +1,7 @@
 <div class="d-flex flex-wrap align-items-center gap-2 mb-4 mt-1">
- {% set s = status_config.get(hive.status, status_config['no_data']) %}
+ {% set s = status_config.get(effective_status, status_config['no_data']) %}
 <span class="badge {{ s.badge }} fs-6">
-  {% if s.icon %}<i class="bi {{ s.icon }} me-1"></i>{% endif %}{{ _t('status_' + hive.status) }}
+  {% if s.icon %}<i class="bi {{ s.icon }} me-1"></i>{% endif %}{{ _t('status_' + effective_status) }}
 </span>
 {% if hive.street or hive.city %}
   <span class="text-muted">
@@ -54,4 +54,34 @@
     <textarea name="note" rows="1" placeholder="{{ _t('hive_note_placeholder') }}" class="form-control form-control-sm d-none" style="min-width:200px;resize:none;"></textarea>
   </form>
   {% endif %}
+
+  <div class="hive-nav-arrows ms-auto d-flex align-items-center gap-1">
+    <span class="hive-nav-pos">{{ hive_position }}</span>
+
+    {% if prev_hive %}
+    <a href="{{ url_for('beehives.detail', hive_id=prev_hive.id) }}"
+       id="prevHiveBtn"
+       class="btn btn-sm btn-outline-secondary hive-nav-btn"
+       title="{{ prev_hive.name }} (←)">
+      <i class="bi bi-chevron-left"></i>
+    </a>
+    {% else %}
+    <button class="btn btn-sm btn-outline-secondary hive-nav-btn" disabled>
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    {% endif %}
+
+    {% if next_hive %}
+    <a href="{{ url_for('beehives.detail', hive_id=next_hive.id) }}"
+       id="nextHiveBtn"
+       class="btn btn-sm btn-outline-secondary hive-nav-btn"
+       title="{{ next_hive.name }} (→)">
+      <i class="bi bi-chevron-right"></i>
+    </a>
+    {% else %}
+    <button class="btn btn-sm btn-outline-secondary hive-nav-btn" disabled>
+      <i class="bi bi-chevron-right"></i>
+    </button>
+    {% endif %}
+  </div>
 </div>

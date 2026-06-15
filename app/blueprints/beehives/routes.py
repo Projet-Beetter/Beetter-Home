@@ -119,6 +119,13 @@ def toggle(hive_id):
 @login_required
 def detail(hive_id):
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
+
+    all_hives   = Beehive.query.order_by(Beehive.id).all()
+    hive_ids    = [h.id for h in all_hives]
+    current_idx = hive_ids.index(hive.id) if hive.id in hive_ids else 0
+    prev_hive   = all_hives[current_idx - 1] if current_idx > 0 else None
+    next_hive   = all_hives[current_idx + 1] if current_idx < len(all_hives) - 1 else None
+
     range_str = request.args.get('range', '24h')
     if range_str not in RANGE_OPTIONS:
         range_str = '24h'
@@ -131,6 +138,9 @@ def detail(hive_id):
             latest = query_latest_values(str(hive.id))
         except Exception:
             flash('Could not reach InfluxDB. Check your connection.', 'warning')
+
+    online = hive.enabled and bool(latest)
+    effective_status = hive.status if online else 'no_data'
     def _v(key):
         obj = latest.get(key)
         return obj['value'] if obj is not None else None
@@ -156,6 +166,10 @@ def detail(hive_id):
     range_options=RANGE_OPTIONS,
     status_config=STATUS_CONFIG,
     selected_indicators = UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first().indicators.split(',') if UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first() else ['temperature_int','humidity_int'],
+    prev_hive=prev_hive,
+    next_hive=next_hive,
+    hive_position=f"{current_idx + 1}/{len(all_hives)}",
+    effective_status=effective_status,
     )
 
 
