@@ -1,14 +1,18 @@
-from flask import render_template, redirect, url_for, flash, request, abort
+from flask import render_template, redirect, url_for, flash, request, abort, session
 from flask_login import login_required, current_user
 from sqlalchemy import text
 from ...models import db, Beehive, Alert, UserHiveIndicator
+from ...i18n import get_text
 from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS, delete_beehive_data
 from ..utils.decorators import editor_required
-from ..utils.status import STATUS_CONFIG, ALERTING_STATUSES, get_dot_color
+from ..utils.status import STATUS_CONFIG
 from ..utils.thresholds import THRESHOLDS, get_threshold_status
 from .forms import BeehiveForm
 from . import beehives_bp
 from ..utils.geocode import geocode
+
+def _t(key):
+    return get_text(key, session.get('lang', 'en'))
 
 
 _SEVERITY = {
@@ -62,10 +66,16 @@ def new():
             bandwidth=form.bandwidth.data or 125,
             user_id=current_user.id,
         )
-        hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
+        try:
+            hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
+        except Exception:
+            pass
         db.session.add(hive)
         db.session.flush()
-        db.session.execute(text("SELECT setval('beehives_id_seq', (SELECT MAX(id) FROM beehives))"))
+        try:
+            db.session.execute(text("SELECT setval('beehives_id_seq', (SELECT MAX(id) FROM beehives))"))
+        except Exception:
+            pass
         db.session.commit()
         flash(f'Beehive "{hive.name}" added.', 'success')
         return redirect(url_for('beehives.index'))
@@ -96,7 +106,7 @@ def delete(hive_id):
     try:
         delete_beehive_data(str(hive_id))
     except Exception:
-        flash('Could not purge InfluxDB data — beehive removed from DB anyway.', 'warning')
+        flash(_t('flash_influxdb_purge_failed'), 'warning')
     db.session.delete(hive)
     db.session.commit()
     flash(f'Beehive "{name}" deleted.', 'info')
@@ -124,16 +134,8 @@ def detail(hive_id):
     all_hives = Beehive.query.order_by(Beehive.created_at).all()
 
     if len(all_hives) > 1:
-        def _is_online(h):
-            if not h.enabled:
-                return False
-            try:
-                return bool(query_latest_values(str(h.id)))
-            except Exception:
-                return False
-
-        online_hives  = [h for h in all_hives if _is_online(h)]
-        offline_hives = [h for h in all_hives if not _is_online(h)]
+        online_hives  = [h for h in all_hives if h.enabled and h.status != 'no_data']
+        offline_hives = [h for h in all_hives if not (h.enabled and h.status != 'no_data')]
         ordered_hives = online_hives + offline_hives
     else:
         ordered_hives = all_hives
@@ -154,7 +156,7 @@ def detail(hive_id):
             chart_data = query_chart_data(str(hive.id), range_str)
             latest = query_latest_values(str(hive.id))
         except Exception:
-            flash('Could not reach InfluxDB. Check your connection.', 'warning')
+            flash(_t('flash_influxdb_unreachable'), 'warning')
 
     online = hive.enabled and bool(latest)
     effective_status = hive.status if online else 'no_data'
@@ -182,7 +184,7 @@ def detail(hive_id):
     range_str=range_str,
     range_options=RANGE_OPTIONS,
     status_config=STATUS_CONFIG,
-    selected_indicators = UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first().indicators.split(',') if UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first() else ['temperature_int','humidity_int'],
+    selected_indicators = (lambda u: u.indicators.split(',') if u else ['temperature_int', 'humidity_int'])(UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first()),
     prev_hive=prev_hive,
     next_hive=next_hive,
     hive_position=f"{current_idx + 1}/{len(ordered_hives)}",
@@ -212,12 +214,12 @@ def toggle_indicator(hive_id):
         if len(current) > 1:
             current.remove(sensor)
         else:
-            flash('You must keep at least one indicator.', 'warning')
+            flash(_t('flash_indicator_min'), 'warning')
             return redirect(request.referrer or url_for('beehives.detail', hive_id=hive.id))
     else:
         # add, enforce maximum 6
         if len(current) >= 6:
-            flash('You can select up to 6 indicators.', 'warning')
+            flash(_t('flash_indicator_max'), 'warning')
             return redirect(request.referrer or url_for('beehives.detail', hive_id=hive.id))
         current.append(sensor)
 

@@ -170,25 +170,25 @@
                         class="d-flex flex-column gap-1">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <select name="status" class="form-select form-select-sm">
-                      <optgroup label="Calm">
-                        <option value="calm"        {{ 'selected' if hive.status == 'calm' }}>Calm</option>
-                        <option value="foraging"    {{ 'selected' if hive.status == 'foraging' }}>Foraging</option>
-                        <option value="ventilating" {{ 'selected' if hive.status == 'ventilating' }}>Ventilating</option>
+                      <optgroup label="{{ _t('status_family_calm') }}">
+                        <option value="calm"        {{ 'selected' if hive.status == 'calm' }}>{{ _t('status_calm') }}</option>
+                        <option value="foraging"    {{ 'selected' if hive.status == 'foraging' }}>{{ _t('status_foraging') }}</option>
+                        <option value="ventilating" {{ 'selected' if hive.status == 'ventilating' }}>{{ _t('status_ventilating') }}</option>
                       </optgroup>
-                      <optgroup label="Agitated">
-                        <option value="agitated"    {{ 'selected' if hive.status == 'agitated' }}>Agitated</option>
-                        <option value="stressed"    {{ 'selected' if hive.status == 'stressed' }}>Stressed</option>
-                        <option value="virgin_queen"{{ 'selected' if hive.status == 'virgin_queen' }}>Virgin queen</option>
+                      <optgroup label="{{ _t('status_family_agitated') }}">
+                        <option value="agitated"    {{ 'selected' if hive.status == 'agitated' }}>{{ _t('status_agitated') }}</option>
+                        <option value="stressed"    {{ 'selected' if hive.status == 'stressed' }}>{{ _t('status_stressed') }}</option>
+                        <option value="virgin_queen"{{ 'selected' if hive.status == 'virgin_queen' }}>{{ _t('status_virgin_queen') }}</option>
                       </optgroup>
-                      <optgroup label="Critical">
-                        <option value="critical"    {{ 'selected' if hive.status == 'critical' }}>Critical</option>
-                        <option value="swarming"    {{ 'selected' if hive.status == 'swarming' }}>Swarming</option>
-                        <option value="queenless"   {{ 'selected' if hive.status == 'queenless' }}>Queenless</option>
-                        <option value="predator"    {{ 'selected' if hive.status == 'predator' }}>Predator</option>
+                      <optgroup label="{{ _t('status_family_critical') }}">
+                        <option value="critical"    {{ 'selected' if hive.status == 'critical' }}>{{ _t('status_critical') }}</option>
+                        <option value="swarming"    {{ 'selected' if hive.status == 'swarming' }}>{{ _t('status_swarming') }}</option>
+                        <option value="queenless"   {{ 'selected' if hive.status == 'queenless' }}>{{ _t('status_queenless') }}</option>
+                        <option value="predator"    {{ 'selected' if hive.status == 'predator' }}>{{ _t('status_predator') }}</option>
                       </optgroup>
-                      <optgroup label="Other">
-                        <option value="silent"      {{ 'selected' if hive.status == 'silent' }}>Silent</option>
-                        <option value="no_data"     {{ 'selected' if hive.status == 'no_data' }}>No data</option>
+                      <optgroup label="{{ _t('status_family_other') }}">
+                        <option value="silent"      {{ 'selected' if hive.status == 'silent' }}>{{ _t('status_silent') }}</option>
+                        <option value="no_data"     {{ 'selected' if hive.status == 'no_data' }}>{{ _t('status_no_data') }}</option>
                       </optgroup>
                     </select>
                     <textarea name="note" rows="1"

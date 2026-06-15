@@ -46,12 +46,24 @@ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${hiveLat}&longitude=${hi
   });
 
 
+    const timeFormat = {{ current_user.prefs.time_format | tojson }};
+
+    function formatTime(timeStr) {
+      const [h, m] = timeStr.split(':').map(Number);
+      if (timeFormat === '12h') {
+        const period = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+      }
+      return timeStr;
+    }
+
     fetch(`https://timeapi.io/api/time/current/coordinate?latitude=${hiveLat}&longitude=${hiveLon}`)
       .then(r => r.json())
       .then(d => {
         document.getElementById('time-loading').style.display = 'none';
         document.getElementById('time-content').innerHTML = `
-          <div class="fs-3 fw-bold">${d.time}</div>
+          <div class="fs-3 fw-bold">${formatTime(d.time)}</div>
           <div class="text-muted small">${d.timeZone}</div>`;
         document.getElementById('time-content').style.display = 'block';
       })

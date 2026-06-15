@@ -19,15 +19,12 @@ STATUS_CONFIG = {
     'queenless':    {'label': 'Queenless',    'family': 'critical', 'badge': 'bg-danger',    'icon': ''},
     'predator':     {'label': 'Predator',     'family': 'critical', 'badge': 'bg-danger',    'icon': ''},
     # No family
-    'silent':       {'label': 'Silent',       'family': None,       'badge': 'bg-success', 'icon': ''},
+    'silent':       {'label': 'Silent',       'family': None,       'badge': 'bg-secondary', 'icon': ''},
     'no_data':      {'label': 'No data',      'family': None,       'badge': 'bg-dark',      'icon': ''},
 }
 
 ALERTING_STATUSES = tuple(k for k, v in STATUS_CONFIG.items() if v.get('family') in ('agitated', 'critical'))
 CALM_STATUSES     = tuple(k for k, v in STATUS_CONFIG.items() if v.get('family') == 'calm')
-
-def get_status_config(status):
-    return STATUS_CONFIG.get(status, STATUS_CONFIG['no_data'])
 
 def get_dot_color(status):
     family = STATUS_CONFIG.get(status, {}).get('family')

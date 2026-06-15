@@ -1,8 +1,12 @@
 from flask import render_template, redirect, url_for, flash, request, session, abort
 from flask_login import login_required, current_user
 from ...models import db, RemoteServerConfig, UserPreferences
+from ...i18n import get_text
 from .forms import RemoteServerForm
 from . import settings_bp
+
+def _t(key):
+    return get_text(key, session.get('lang', 'en'))
 
 
 @settings_bp.route('/settings', methods=['GET', 'POST'])
@@ -10,10 +14,14 @@ from . import settings_bp
 def index():
     prefs = current_user.prefs
     if request.method == 'POST':
-        prefs.language    = request.form.get('language', 'en')
-        prefs.time_format = request.form.get('time_format', '24h')
-        prefs.week_start  = request.form.get('week_start', 'monday')
-        prefs.temp_unit   = request.form.get('temp_unit', 'C')
+        lang = request.form.get('language', 'en')
+        prefs.language    = lang if lang in ('en', 'fr') else 'en'
+        tf = request.form.get('time_format', '24h')
+        prefs.time_format = tf if tf in ('24h', '12h') else '24h'
+        ws = request.form.get('week_start', 'monday')
+        prefs.week_start  = ws if ws in ('monday', 'sunday') else 'monday'
+        tu = request.form.get('temp_unit', 'C')
+        prefs.temp_unit   = tu if tu in ('C', 'F') else 'C'
 
         prefs.email_alerts      = 'email_alerts'      in request.form
         prefs.alert_temperature = 'alert_temperature' in request.form
@@ -30,7 +38,7 @@ def index():
         session['lang']      = prefs.language
         session['temp_unit'] = prefs.temp_unit
 
-        flash('Preferences saved.', 'success')
+        flash(_t('flash_prefs_saved'), 'success')
         return redirect(url_for('settings.index'))
 
     return render_template('settings/index.html', prefs=prefs)

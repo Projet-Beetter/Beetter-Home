@@ -1,7 +1,10 @@
+import logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import UserMixin
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -56,6 +59,7 @@ class User(UserMixin, db.Model):
                 db.session.commit()
             return self.preferences
         except Exception:
+            logger.exception("Failed to load/create UserPreferences for user %s", self.id)
             return UserPreferences()
 
 

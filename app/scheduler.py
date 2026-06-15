@@ -3,14 +3,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 scheduler = BackgroundScheduler()
 
 
-def _make_push_job(app, config_id):
-    def job():
-        with app.app_context():
-            from .blueprints.utils.push import push_to_remote
-            push_to_remote(config_id)
-    return job
-
-
 def _check_and_push(app):
     """Runs every minute; pushes any config whose interval has elapsed."""
     with app.app_context():
@@ -40,4 +32,5 @@ def init_scheduler(app):
         id='check_and_push',
         replace_existing=True,
     )
-    scheduler.start()
+    if not scheduler.running:
+        scheduler.start()

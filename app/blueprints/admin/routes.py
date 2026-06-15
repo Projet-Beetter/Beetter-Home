@@ -1,8 +1,12 @@
-from flask import render_template, redirect, url_for, flash, request, abort
+from flask import render_template, redirect, url_for, flash, request, abort, session
 from flask_login import login_required, current_user
 from ...models import db, User, UserHiveIndicator, Alert, user_alert_reads, RemoteServerConfig
+from ...i18n import get_text
 from .forms import AdminUserActionForm
 from . import admin_bp
+
+def _t(key):
+    return get_text(key, session.get('lang', 'en'))
 
 
 @admin_bp.route('/', methods=['GET', 'POST'])
@@ -19,7 +23,7 @@ def index():
     configs = RemoteServerConfig.query.order_by(RemoteServerConfig.created_at).all()
 
     if admin_action_form.validate_on_submit():
-        target_user = User.query.get(int(admin_action_form.user_id.data or 0))
+        target_user = db.session.get(User, int(admin_action_form.user_id.data or 0))
         if not target_user or target_user.id == current_user.id or target_user.is_admin:
             abort(403)
 
@@ -30,9 +34,9 @@ def index():
                     target_user.role = new_role
                     flash(f"{target_user.username} role updated to {new_role}.", 'success')
                 else:
-                    flash('No role change detected.', 'info')
+                    flash(_t('flash_admin_no_change'), 'info')
             else:
-                flash('Invalid role selected.', 'danger')
+                flash(_t('flash_admin_invalid_role'), 'danger')
         elif admin_action_form.action.data == 'delete_user':
             db.session.execute(
                 user_alert_reads.delete().where(user_alert_reads.c.user_id == target_user.id)
@@ -48,7 +52,7 @@ def index():
             db.session.delete(target_user)
             flash(f"{target_user.username} has been removed.", 'success')
         else:
-            flash('Unknown admin action.', 'danger')
+            flash(_t('flash_admin_unknown_action'), 'danger')
 
         db.session.commit()
         return redirect(url_for('admin.index'))

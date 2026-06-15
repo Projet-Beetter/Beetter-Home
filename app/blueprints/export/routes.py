@@ -1,9 +1,13 @@
 import csv
 import io
 from datetime import datetime
-from flask import render_template, request, Response, flash, redirect, url_for
+from flask import render_template, request, Response, flash, redirect, url_for, session
 from flask_login import login_required
-from ...models import Beehive
+from ...models import db, Beehive
+from ...i18n import get_text
+
+def _t(key):
+    return get_text(key, session.get('lang', 'en'))
 from ..utils.influxdb import query_export_data, MEASUREMENTS, RANGE_OPTIONS
 from . import export_bp
 
@@ -49,15 +53,15 @@ def index():
         use_custom        = request.form.get('use_custom')
 
         if not selected_hive_ids:
-            flash('Please select at least one beehive.', 'warning')
+            flash(_t('flash_export_no_hive'), 'warning')
             return redirect(url_for('export.index'))
         if not selected_fields:
-            flash('Please select at least one data field.', 'warning')
+            flash(_t('flash_export_no_field'), 'warning')
             return redirect(url_for('export.index'))
 
         valid_fields = [f for f in selected_fields if f in MEASUREMENTS]
         if not valid_fields:
-            flash('Invalid field selection.', 'warning')
+            flash(_t('flash_export_invalid_fields'), 'warning')
             return redirect(url_for('export.index'))
 
         if use_custom:
@@ -67,7 +71,7 @@ def index():
                 start_str = date_from.strftime('%Y-%m-%dT%H:%M:%SZ')
                 stop_str  = date_to.strftime('%Y-%m-%dT%H:%M:%SZ')
             except ValueError:
-                flash('Invalid custom date range.', 'warning')
+                flash(_t('flash_export_invalid_dates'), 'warning')
                 return redirect(url_for('export.index'))
         else:
             preset = request.form.get('range_preset', '24h')
@@ -85,7 +89,7 @@ def index():
                 hive_id = int(hive_id_str)
             except ValueError:
                 continue
-            hive = Beehive.query.get(hive_id)
+            hive = db.session.get(Beehive, hive_id)
             if not hive:
                 continue
             try:
@@ -103,7 +107,7 @@ def index():
         return Response(
             output.getvalue(),
             mimetype='text/csv',
-            headers={'Content-Disposition': f'attachment; filename={filename}'},
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'},
         )
 
     return render_template(

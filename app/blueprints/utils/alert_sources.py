@@ -1,7 +1,8 @@
 ALERT_SOURCES = {
     'manual':      {'label': 'Manual change',    'icon': 'bi-person-fill'},
     'no_signal':   {'label': 'No signal',        'icon': 'bi-wifi-off'},
-    'threshold':   {'label': 'Seuil capteur',    'icon': 'bi-graph-up-arrow'},
+    'threshold':   {'label': 'Sensor threshold', 'icon': 'bi-graph-up-arrow'},
+    'ml':          {'label': 'AI detection',     'icon': 'bi-cpu'},
 }
 
 def get_source_config(source):

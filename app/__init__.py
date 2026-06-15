@@ -1,7 +1,10 @@
 import os
+import logging
 from datetime import datetime
 from flask import Flask, session, redirect, request, url_for
 from flask_login import LoginManager, current_user
+
+logger = logging.getLogger(__name__)
 from flask_wtf.csrf import CSRFProtect
 from .models import db, bcrypt, User
 from .blueprints.utils.status import CALM_STATUSES
@@ -12,7 +15,10 @@ from .i18n import get_text
 def create_app():
     app = Flask(__name__)
 
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-me-in-production')
+    secret_key = os.environ.get('SECRET_KEY', 'change-me-in-production')
+    if secret_key == 'change-me-in-production':
+        logger.warning("SECRET_KEY is using the insecure default. Set the SECRET_KEY environment variable in production.")
+    app.config['SECRET_KEY'] = secret_key
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
         'DATABASE_URL', 'postgresql://beetter:beetter@db:5432/beetter'
     )
@@ -20,6 +26,7 @@ def create_app():
     app.config['SESSION_COOKIE_NAME'] = 'beetter_app'
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = not app.debug
 
     app.config['INFLUXDB_URL'] = os.environ.get('INFLUXDB_URL', 'http://influxdb:8086')
     app.config['INFLUXDB_TOKEN'] = os.environ.get('INFLUXDB_TOKEN', '')
@@ -73,7 +80,7 @@ def create_app():
         if User.query.count() == 0:
             return redirect(url_for('setup.index'))
 
-    from .models import Alert, user_alert_reads
+    from .models import Alert, Beehive as _Beehive, user_alert_reads
 
     @app.route('/')
     def index():
@@ -85,7 +92,13 @@ def create_app():
     def set_lang(lang):
         if lang in ('en', 'fr'):
             session['lang'] = lang
-        return redirect(request.referrer or '/')
+        referrer = request.referrer
+        if referrer:
+            from urllib.parse import urlparse
+            parsed = urlparse(referrer)
+            if parsed.netloc == request.host:
+                return redirect(referrer)
+        return redirect('/')
 
     @app.context_processor
     def inject_globals():
@@ -96,8 +109,10 @@ def create_app():
             read_ids = db.session.query(user_alert_reads.c.alert_id).filter(
                 user_alert_reads.c.user_id == current_user.id
             ).subquery()
+            user_hive_ids = db.session.query(_Beehive.id).filter_by(user_id=current_user.id).subquery()
             alerts_count = Alert.query.filter(
                 Alert.created_at >= today,
+                Alert.hive_id.in_(user_hive_ids),
                 ~Alert.id.in_(read_ids),
                 ~Alert.new_status.in_(CALM_STATUSES)
             ).count()

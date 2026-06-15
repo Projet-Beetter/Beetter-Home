@@ -3,7 +3,7 @@ from flask_login import login_required
 from ...models import Beehive
 from ..utils.influxdb import query_latest_values
 from ..utils.status import STATUS_CONFIG, STATUS_FAMILIES
-from ..beehives.routes import get_threshold_status
+from ..utils.thresholds import get_threshold_status
 from . import dashboard_bp
 
 CARD_METRICS = [
@@ -36,7 +36,7 @@ STATUS_SEVERITY = {
     "stressed":     "warn",
     "agitated":     "warn",
     "virgin_queen": "warn",
-    "ventilating":  "warn",
+    "ventilating":  "ok",
     "silent":       "warn",
     "foraging":     "ok",
     "calm":         "ok",

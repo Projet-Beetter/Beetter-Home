@@ -67,7 +67,7 @@ def index():
 @calendar_bp.route('/hive/<int:hive_id>')
 @login_required
 def hive_calendar(hive_id):
-    hive = Beehive.query.get_or_404(hive_id)
+    hive = db.get_or_404(Beehive, hive_id)
     hives = Beehive.query.order_by(Beehive.name).all()
     return render_template(
         'calendar/index.html',
@@ -92,7 +92,7 @@ def events_feed():
 @login_required
 def hive_events_feed(hive_id):
     events = HiveEvent.query.filter(
-        (HiveEvent.hive_id == hive_id) | (HiveEvent.hive_id == None)
+        (HiveEvent.hive_id == hive_id) | (HiveEvent.hive_id.is_(None))
     ).order_by(HiveEvent.start_date).all()
     return jsonify([_event_to_fc(e) for e in events])
 
@@ -148,7 +148,7 @@ def create_event():
 def edit_event(event_id):
     if not can_write(current_user):
         abort(403)
-    event = HiveEvent.query.get_or_404(event_id)
+    event = db.get_or_404(HiveEvent, event_id)
     data = request.get_json(silent=True) or {}
 
     if 'title' in data:
@@ -178,7 +178,7 @@ def edit_event(event_id):
 def delete_event(event_id):
     if not can_write(current_user):
         abort(403)
-    event = HiveEvent.query.get_or_404(event_id)
+    event = db.get_or_404(HiveEvent, event_id)
     db.session.delete(event)
     db.session.commit()
     return jsonify({'status': 'deleted'})

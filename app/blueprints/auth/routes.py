@@ -1,8 +1,12 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
 from ...models import db, User
+from ...i18n import get_text
 from .forms import LoginForm, RegisterForm
 from . import auth_bp
+
+def _t(key):
+    return get_text(key, session.get('lang', 'en'))
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -15,8 +19,10 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard.index'))
-        flash('Invalid username or password.', 'danger')
+            if next_page and (next_page.startswith('/') and not next_page.startswith('//')):
+                return redirect(next_page)
+            return redirect(url_for('dashboard.index'))
+        flash(_t('flash_invalid_credentials'), 'danger')
     return render_template('auth/login.html', form=form)
 
 
@@ -35,7 +41,7 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Welcome! You can now sign in.', 'success')
+        flash(_t('flash_registered'), 'success')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
 

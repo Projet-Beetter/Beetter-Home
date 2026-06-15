@@ -7,7 +7,7 @@ def geocode(street, city, postal_code):
     try:
         params = urllib.parse.urlencode({'q': ', '.join(parts), 'format': 'json', 'limit': 1})
         url = f'https://nominatim.openstreetmap.org/search?{params}'
-        req = urllib.request.Request(url, headers={'User-Agent': 'Beetter/1.0'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'Beetter/1.0 (mel.tsma@gmail.com)'})
         with urllib.request.urlopen(req, timeout=5) as r:
             data = json.loads(r.read())
         if data:
