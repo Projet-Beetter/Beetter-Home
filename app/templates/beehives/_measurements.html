@@ -5,8 +5,8 @@
     'icon': 'bi-thermometer-half',
     'icon_color': '#E24B4A',
     'sensors': [
-      {'key': 'temperature_int', 'label': 'Temperature Int'},
-      {'key': 'temperature_ext', 'label': 'Temperature Ext'}
+      {'key': 'temperature_int', 'label': _t('sensor_label_temp_int')},
+      {'key': 'temperature_ext', 'label': _t('sensor_label_temp_ext')}
     ],
     'show_thresholds': true
   },
@@ -16,8 +16,8 @@
     'icon': 'bi-droplet-half',
     'icon_color': '#378ADD',
     'sensors': [
-      {'key': 'humidity_int', 'label': 'Humidity Int'},
-      {'key': 'humidity_ext', 'label': 'Humidity Ext'}
+      {'key': 'humidity_int', 'label': _t('sensor_label_hum_int')},
+      {'key': 'humidity_ext', 'label': _t('sensor_label_hum_ext')}
     ],
     'show_thresholds': true
   },
@@ -27,8 +27,8 @@
     'icon': 'bi-music-note-beamed',
     'icon_color': '#639922',
     'sensors': [
-      {'key': 'sound_freq_int', 'label': 'Sound Freq Int'},
-      {'key': 'sound_freq_ext', 'label': 'Sound Freq Ext'}
+      {'key': 'sound_freq_int', 'label': _t('sensor_label_freq_int')},
+      {'key': 'sound_freq_ext', 'label': _t('sensor_label_freq_ext')}
     ],
     'show_thresholds': true
   },
@@ -38,8 +38,8 @@
     'icon': 'bi-activity',
     'icon_color': '#00897b',
     'sensors': [
-      {'key': 'sound_amp_int', 'label': 'Sound Amp Int'},
-      {'key': 'sound_amp_ext', 'label': 'Sound Amp Ext'}
+      {'key': 'sound_amp_int', 'label': _t('sensor_label_amp_int')},
+      {'key': 'sound_amp_ext', 'label': _t('sensor_label_amp_ext')}
     ],
     'show_thresholds': false
   },
@@ -49,7 +49,7 @@
     'icon': 'bi-brightness-high',
     'icon_color': '#BA7517',
     'sensors': [
-      {'key': 'light_ext', 'label': 'Light Ext'}
+      {'key': 'light_ext', 'label': _t('sensor_label_light_ext')}
     ],
     'show_thresholds': true
   }
@@ -89,7 +89,7 @@
                data-chart-id="{{ section.id }}"
                data-active="false">
         <label class="form-check-label small text-muted" for="{{ section.id }}-thresh-toggle">
-          <i class="bi bi-graph-up-arrow me-1"></i>Seuils
+          <i class="bi bi-graph-up-arrow me-1"></i>{{ _t('sensor_thresholds') }}
         </label>
       </div>
       {% endif %}

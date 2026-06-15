@@ -11,7 +11,7 @@
   {% if current_user.is_authenticated %}<meta name="csrf-token" content="{{ csrf_token() }}">{% endif %}
   {% block head %}{% endblock %}
 </head>
-<body class="sidebar-loading">
+<body class="sidebar-loading{% if current_user.is_authenticated %}{% if current_user.prefs.high_contrast %} a11y-high-contrast{% endif %}{% if current_user.prefs.large_text %} a11y-large-text{% endif %}{% if current_user.prefs.reduce_motion %} a11y-reduce-motion{% endif %}{% endif %}">
 
 <script>
   if (localStorage.getItem('sidebarCollapsed') !== 'false') {
@@ -127,15 +127,34 @@
           <i class="bi bi-moon" id="darkModeIcon" style="font-size:1rem;"></i>
         </button>
         <div class="vr opacity-25 mx-1" style="height:22px;"></div>
-        <a href="{{ url_for('account.index') }}" class="d-flex align-items-center gap-2 text-decoration-none topbar-account-link"
-           title="{{ _t('nav_account_title') }}"
-           {% if request.endpoint and request.endpoint.startswith('account') %}aria-current="page"{% endif %}>
-          <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
-          <div style="line-height:1.25">
-            <div class="fw-semibold" style="font-size:.85rem">{{ current_user.username }}</div>
-            <div style="font-size:.75rem; color:#6c757d;">{{ _t('role_' ~ current_user.role) }}</div>
-          </div>
-        </a>
+        <div class="dropdown">
+          <button class="btn topbar-account-link topbar-avatar-btn d-flex align-items-center gap-2"
+                  type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
+            <div style="line-height:1.25">
+              <div class="fw-semibold" style="font-size:.85rem">{{ current_user.username }}</div>
+              <div style="font-size:.75rem; color:#6c757d;">{{ _t('role_' ~ current_user.role) }}</div>
+            </div>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li>
+              <a class="dropdown-item" href="{{ url_for('account.index') }}">
+                <i class="bi bi-person me-2"></i>{{ _t('nav_account_title') }}
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{{ url_for('settings.index') }}">
+                <i class="bi bi-sliders me-2"></i>{{ _t('nav_preferences') }}
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-left me-2"></i>{{ _t('nav_signout') }}
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </header>
 

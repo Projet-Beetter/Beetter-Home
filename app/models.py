@@ -47,6 +47,17 @@ class User(UserMixin, db.Model):
     def can_edit_data(self):
         return self.role in ('editor', 'admin')
 
+    @property
+    def prefs(self):
+        try:
+            if self.preferences is None:
+                p = UserPreferences(user_id=self.id)
+                db.session.add(p)
+                db.session.commit()
+            return self.preferences
+        except Exception:
+            return UserPreferences()
+
 
 class Beehive(db.Model):
     __tablename__ = 'beehives'
@@ -125,3 +136,32 @@ class UserHiveIndicator(db.Model):
 
     user = db.relationship('User', backref=db.backref('hive_indicators', lazy='dynamic'))
     hive = db.relationship('Beehive', backref=db.backref('user_indicators', cascade='all, delete-orphan', lazy='dynamic'))
+
+
+class UserPreferences(db.Model):
+    __tablename__ = 'user_preferences'
+
+    id       = db.Column(db.Integer, primary_key=True)
+    user_id  = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+
+    # General
+    language    = db.Column(db.String(10), default='en')
+    time_format = db.Column(db.String(5),  default='24h')    # '24h' or '12h'
+    week_start  = db.Column(db.String(10), default='monday') # 'monday' or 'sunday'
+    temp_unit   = db.Column(db.String(2),  default='C')      # 'C' or 'F'
+
+    # Notifications
+    email_alerts      = db.Column(db.Boolean, default=True)
+    alert_temperature = db.Column(db.Boolean, default=True)
+    alert_humidity    = db.Column(db.Boolean, default=True)
+    alert_sound       = db.Column(db.Boolean, default=True)
+    alert_offline     = db.Column(db.Boolean, default=True)
+
+    # Accessibility
+    high_contrast = db.Column(db.Boolean, default=False)
+    large_text    = db.Column(db.Boolean, default=False)
+    reduce_motion = db.Column(db.Boolean, default=False)
+
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('preferences', uselist=False, lazy=True))

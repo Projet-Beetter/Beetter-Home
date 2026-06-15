@@ -1354,3 +1354,24 @@ body.dark-mode .hive-sticky-header {
 }
 
 canvas { min-height: 80px; }
+
+/* ── Accessibility ──────────────────────────── */
+.a11y-high-contrast {
+  filter: contrast(1.25);
+}
+.a11y-large-text {
+  font-size: 1.1rem !important;
+}
+.a11y-large-text .small,
+.a11y-large-text small { font-size: 1rem !important; }
+
+.a11y-reduce-motion *,
+.a11y-reduce-motion *::before,
+.a11y-reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Hide Bootstrap dropdown caret on avatar button */
+.topbar-avatar-btn::after { display: none; }

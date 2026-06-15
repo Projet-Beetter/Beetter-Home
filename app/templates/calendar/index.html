@@ -145,6 +145,7 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.global.min.js"></script>
 <script>
   const csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content;
   const canWrite   = {{ can_write | tojson }};
@@ -163,6 +164,12 @@
       left:   'prev,next today',
       center: 'title',
       right:  'dayGridMonth,timeGridWeek,listWeek'
+    },
+    buttonText: {
+      today: {{ _t("cal_btn_today") | tojson }},
+      month: {{ _t("cal_btn_month") | tojson }},
+      week:  {{ _t("cal_btn_week") | tojson }},
+      list:  {{ _t("cal_btn_list") | tojson }},
     },
     height: 'auto',
     events: eventsUrl,
@@ -333,10 +340,10 @@
         calendar.refetchEvents();
       } else {
         const err = await resp.json().catch(() => ({}));
-        alert(err.error || 'Error saving event.');
+        alert(err.error || '{{ _t("cal_err_save") }}');
       }
     } catch (e) {
-      alert('Network error.');
+      alert('{{ _t("cal_err_network") }}');
     }
   }
 
@@ -352,10 +359,10 @@
         detailModal.hide();
         calendar.refetchEvents();
       } else {
-        alert('Error deleting event.');
+        alert('{{ _t("cal_err_delete") }}');
       }
     } catch (e) {
-      alert('Network error.');
+      alert('{{ _t("cal_err_network") }}');
     }
   }
 
