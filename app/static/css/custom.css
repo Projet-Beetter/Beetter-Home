@@ -1334,4 +1334,23 @@ body.dark-mode .hive-f-ok   { color: #86efac !important; border-color: rgba(134,
   transform: scale(1.08);
 }
 
+/* ── Hive detail sticky header ──────────────────────────────── */
+.hive-sticky-header {
+  position: sticky;
+  top: 52px;
+  z-index: 100;
+  background: var(--bs-body-bg);
+  /* Pull slightly outside main's px-4 padding, leaving a small visual gap at edges */
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding: 8px 1rem 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+}
+
+body.dark-mode .hive-sticky-header {
+  background: #242423;
+  border-bottom-color: #3a3a38;
+}
+
 canvas { min-height: 80px; }

@@ -42,10 +42,23 @@
 
   // ── Chart helpers ──
   function getTimeOptions(range) {
-    if (range === '7d' || range === '30d') {
-      return { unit: 'day', displayFormats: { day: 'dd MMM' }, tooltipFormat: 'dd MMM yyyy' };
-    }
-    return { unit: 'hour', displayFormats: { hour: 'HH:mm' }, tooltipFormat: 'dd MMM HH:mm' };
+    const timeOpts = (range === '7d' || range === '30d')
+      ? { unit: 'day',  displayFormats: { day: 'dd MMM' },  tooltipFormat: 'dd MMM yyyy' }
+      : { unit: 'hour', displayFormats: { hour: 'HH:mm' },  tooltipFormat: 'dd MMM HH:mm' };
+
+    return {
+      ...timeOpts,
+      ticks: {
+        maxTicksLimit: 8,
+        callback: function(value) {
+          const label = this.getLabelForValue(value);
+          if (typeof label === 'string' && label.length > 0) {
+            return label.charAt(0).toUpperCase() + label.slice(1);
+          }
+          return label;
+        }
+      }
+    };
   }
 
   function boundaryTickHook(scale) {
@@ -186,12 +199,10 @@
           annotation: { annotations: {} },
         },
         scales: {
-          x: {
-            type: 'time',
-            time: getTimeOptions(range),
-            ticks: { maxTicksLimit: 8 },
-            afterBuildTicks: boundaryTickHook,
-          },
+          x: (() => {
+            const { ticks: xTicks, ...timeOpts } = getTimeOptions(range);
+            return { type: 'time', time: timeOpts, ticks: xTicks, afterBuildTicks: boundaryTickHook };
+          })(),
           y: { beginAtZero: false, ...yOptions, grace: '5%' }
         }
       }
@@ -220,7 +231,7 @@
       if (!response.ok) { console.error('Unable to load chart data:', response.statusText); return; }
       const data = await response.json();
       const chart = charts[chartId];
-      if (chart) chart.options.scales.x.time = getTimeOptions(range);
+      if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; }
       updateMultiChart(chartId, data);
     } catch (error) { console.error('Chart loading error:', error); }
   }
@@ -246,7 +257,7 @@
           const data = await response.json();
           Object.keys(charts).forEach(chartId => {
             const chart = charts[chartId];
-            if (chart) chart.options.scales.x.time = getTimeOptions(range);
+            if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; }
             updateMultiChart(chartId, data);
             const cb = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
             if (cb && cb.checked) applyThresholdView(chart);
@@ -301,6 +312,12 @@
   document.addEventListener('DOMContentLoaded', () => {
     // Restore before chart init so opened sections have correct canvas dimensions
     restoreAccordionState();
+
+    Chart.defaults.plugins.tooltip.callbacks.title = function(items) {
+      if (!items.length) return '';
+      const raw = items[0].label || '';
+      return raw.charAt(0).toUpperCase() + raw.slice(1);
+    };
 
     const defaultColorSets = {
       temperatureChart: ['#dc3545','#e46060'],

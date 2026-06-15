@@ -1,4 +1,5 @@
-<div class="d-flex flex-wrap align-items-center gap-2 mb-4 mt-1">
+<div class="hive-sticky-header">
+<div class="d-flex flex-wrap align-items-center gap-2 mb-0 mt-0">
  {% set s = status_config.get(effective_status, status_config['no_data']) %}
 <span class="badge {{ s.badge }} fs-6">
   {% if s.icon %}<i class="bi {{ s.icon }} me-1"></i>{% endif %}{{ _t('status_' + effective_status) }}
@@ -84,4 +85,5 @@
     </button>
     {% endif %}
   </div>
+</div>
 </div>

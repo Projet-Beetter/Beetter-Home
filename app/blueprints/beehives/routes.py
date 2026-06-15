@@ -120,11 +120,28 @@ def toggle(hive_id):
 def detail(hive_id):
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
 
-    all_hives   = Beehive.query.order_by(Beehive.id).all()
-    hive_ids    = [h.id for h in all_hives]
+    # ── Prev / next navigation — same order as dashboard ─────────────
+    all_hives = Beehive.query.order_by(Beehive.created_at).all()
+
+    if len(all_hives) > 1:
+        def _is_online(h):
+            if not h.enabled:
+                return False
+            try:
+                return bool(query_latest_values(str(h.id)))
+            except Exception:
+                return False
+
+        online_hives  = [h for h in all_hives if _is_online(h)]
+        offline_hives = [h for h in all_hives if not _is_online(h)]
+        ordered_hives = online_hives + offline_hives
+    else:
+        ordered_hives = all_hives
+
+    hive_ids    = [h.id for h in ordered_hives]
     current_idx = hive_ids.index(hive.id) if hive.id in hive_ids else 0
-    prev_hive   = all_hives[current_idx - 1] if current_idx > 0 else None
-    next_hive   = all_hives[current_idx + 1] if current_idx < len(all_hives) - 1 else None
+    prev_hive   = ordered_hives[current_idx - 1] if current_idx > 0 else None
+    next_hive   = ordered_hives[current_idx + 1] if current_idx < len(ordered_hives) - 1 else None
 
     range_str = request.args.get('range', '24h')
     if range_str not in RANGE_OPTIONS:
@@ -168,7 +185,7 @@ def detail(hive_id):
     selected_indicators = UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first().indicators.split(',') if UserHiveIndicator.query.filter_by(user_id=current_user.id, hive_id=hive.id).first() else ['temperature_int','humidity_int'],
     prev_hive=prev_hive,
     next_hive=next_hive,
-    hive_position=f"{current_idx + 1}/{len(all_hives)}",
+    hive_position=f"{current_idx + 1}/{len(ordered_hives)}",
     effective_status=effective_status,
     thresholds=THRESHOLDS,
     )

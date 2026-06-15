@@ -16,11 +16,11 @@ from datetime import datetime, timezone
 RANGE_OPTIONS = ['1h', '6h', '24h', '7d', '30d']
 
 _WINDOW_MAP = {
-    '1h': '1m',
-    '6h': '5m',
+    '1h':  '1m',
+    '6h':  '5m',
     '24h': '15m',
-    '7d': '1h',
-    '30d': '6h',
+    '7d':  '2h',
+    '30d': '12h',
 }
 
 # ── Measurements ──────────────────────────────────────────────────────────────
@@ -55,8 +55,22 @@ ML_FEATURES_EXT = (
 )
 
 
+# Measurements shown in charts — excludes MFCC (never charted)
+CHART_MEASUREMENTS = (
+    'temperature_int', 'humidity_int',
+    'temperature_ext', 'humidity_ext',
+    'sound_freq_int',  'sound_amp_int',
+    'sound_freq_ext',  'sound_amp_ext',
+    'light_ext',
+)
+
+
 def _measurement_filter():
     return ' or '.join(f'r._measurement == "{m}"' for m in MEASUREMENTS)
+
+
+def _chart_measurement_filter():
+    return ' or '.join(f'r._measurement == "{m}"' for m in CHART_MEASUREMENTS)
 
 
 def _client():
@@ -143,11 +157,11 @@ def query_chart_data(beehive_id, range_str='24h'):
 from(bucket: "{bucket}")
   |> range(start: -{range_str})
   |> filter(fn: (r) => r["beehive_id"] == "{beehive_id}")
-  |> filter(fn: (r) => {_measurement_filter()})
+  |> filter(fn: (r) => {_chart_measurement_filter()})
   |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
   |> yield(name: "mean")
 '''
-    result = {m: {'labels': [], 'data': []} for m in MEASUREMENTS}
+    result = {m: {'labels': [], 'data': []} for m in CHART_MEASUREMENTS}
     with _client() as c:
         for table in c.query_api().query(query, org=org):
             if not table.records:
@@ -171,7 +185,7 @@ def query_latest_values(beehive_id):
 from(bucket: "{bucket}")
   |> range(start: -1h)
   |> filter(fn: (r) => r["beehive_id"] == "{beehive_id}")
-  |> filter(fn: (r) => {_measurement_filter()})
+  |> filter(fn: (r) => {_chart_measurement_filter()})
   |> last()
 '''
     result = {}
