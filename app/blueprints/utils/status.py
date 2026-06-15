@@ -24,6 +24,7 @@ STATUS_CONFIG = {
 }
 
 ALERTING_STATUSES = tuple(k for k, v in STATUS_CONFIG.items() if v.get('family') in ('agitated', 'critical'))
+CALM_STATUSES     = tuple(k for k, v in STATUS_CONFIG.items() if v.get('family') == 'calm')
 
 def get_status_config(status):
     return STATUS_CONFIG.get(status, STATUS_CONFIG['no_data'])

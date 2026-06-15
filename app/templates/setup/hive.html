@@ -22,8 +22,8 @@
         <p class="text-muted mb-4" style="font-size:.9rem">Welcome — first-time setup</p>
 
         <div class="mb-3 d-flex align-items-center gap-2">
-          <span class="badge rounded-pill bg-warning text-dark">Step 1 of 2</span>
-          <span class="fw-semibold" style="font-size:.95rem">Create your admin account</span>
+          <span class="badge rounded-pill bg-warning text-dark">Step 2 of 2</span>
+          <span class="fw-semibold" style="font-size:.95rem">Add your first hive</span>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -34,33 +34,36 @@
           {% endif %}
         {% endwith %}
 
-        <form method="post" action="{{ url_for('setup.create') }}">
+        <form method="post" action="{{ url_for('setup.create_hive') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <div class="mb-3">
-            <label for="username" class="form-label">Username</label>
-            <input type="text" class="form-control" id="username" name="username"
-                   value="{{ username|default('') }}" autocomplete="username" required>
+            <label for="hive_id" class="form-label">Hive ID</label>
+            <input type="number" min="1" class="form-control" id="hive_id" name="hive_id"
+                   value="{{ hive_id|default('') }}" required>
+            <div class="form-text">
+              Must match the <code>beehive_id</code> your sensor sends.
+            </div>
           </div>
           <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email"
-                   value="{{ email|default('') }}" autocomplete="email" required>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password" name="password"
-                   autocomplete="new-password" required>
+            <label for="hive_name" class="form-label">Hive name</label>
+            <input type="text" class="form-control" id="hive_name" name="hive_name"
+                   value="{{ hive_name|default('') }}" required>
           </div>
           <div class="mb-4">
-            <label for="confirm" class="form-label">Confirm password</label>
-            <input type="password" class="form-control" id="confirm" name="confirm"
-                   autocomplete="new-password" required>
+            <label for="city" class="form-label">City <span class="text-muted fw-normal">(optional)</span></label>
+            <input type="text" class="form-control" id="city" name="city"
+                   value="{{ city|default('') }}">
           </div>
 
           <button type="submit" class="btn btn-amber w-100">
-            Create account &amp; get started
+            Create hive &amp; finish
           </button>
+          <div class="text-center">
+            <button type="submit" name="skip" class="btn btn-link btn-sm text-muted mt-2">
+              Skip for now →
+            </button>
+          </div>
         </form>
 
       </div>

@@ -1,6 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request
-from flask_login import login_user
-from ...models import db, User
+from flask_login import login_user, current_user
+from ...models import db, User, Beehive
+from ..utils.geocode import geocode
 from . import setup_bp
 
 
@@ -42,7 +43,58 @@ def create():
     db.session.commit()
     login_user(user)
     flash('Welcome to Beetter! Your admin account has been created.', 'success')
-    return redirect(url_for('setup.done'))
+    return redirect(url_for('setup.create_hive'))
+
+
+@setup_bp.route('/hive', methods=['GET', 'POST'])
+def create_hive():
+    if User.query.count() == 0:
+        return redirect(url_for('setup.index'))
+    if request.method == 'POST':
+        if 'skip' in request.form:
+            return redirect(url_for('setup.done'))
+
+        hive_id   = request.form.get('hive_id', '').strip()
+        hive_name = request.form.get('hive_name', '').strip()
+        city      = request.form.get('city', '').strip()
+
+        errors = []
+        if not hive_id or not hive_id.isdigit() or int(hive_id) < 1:
+            errors.append('Hive ID must be a positive integer.')
+        elif Beehive.query.get(int(hive_id)):
+            errors.append(f'A hive with ID {hive_id} already exists.')
+        if not hive_name:
+            errors.append('Hive name is required.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'danger')
+            return render_template('setup/hive.html',
+                                   hive_id=hive_id,
+                                   hive_name=hive_name,
+                                   city=city)
+
+        lat, lng = None, None
+        if city:
+            try:
+                lat, lng = geocode(None, city, None)
+            except Exception:
+                pass
+
+        hive = Beehive(
+            id=int(hive_id),
+            name=hive_name,
+            city=city or None,
+            latitude=lat,
+            longitude=lng,
+            user_id=current_user.id,
+        )
+        db.session.add(hive)
+        db.session.commit()
+        flash(f'Hive "{hive_name}" created with ID {hive_id}.', 'success')
+        return redirect(url_for('setup.done'))
+
+    return render_template('setup/hive.html')
 
 
 @setup_bp.route('/done')

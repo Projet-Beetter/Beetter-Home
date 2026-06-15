@@ -4,6 +4,7 @@ from flask import Flask, session, redirect, request, url_for
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 from .models import db, bcrypt, User
+from .blueprints.utils.status import CALM_STATUSES
 from .scheduler import init_scheduler
 from .i18n import get_text
 
@@ -63,7 +64,7 @@ def create_app():
     app.register_blueprint(setup_bp)
     csrf.exempt(api_bp)
 
-    SETUP_EXEMPT = {'setup.index', 'setup.create', 'setup.done', 'static'}
+    SETUP_EXEMPT = {'setup.index', 'setup.create', 'setup.create_hive', 'setup.done', 'static'}
 
     @app.before_request
     def check_setup():
@@ -97,7 +98,8 @@ def create_app():
             ).subquery()
             alerts_count = Alert.query.filter(
                 Alert.created_at >= today,
-                ~Alert.id.in_(read_ids)
+                ~Alert.id.in_(read_ids),
+                ~Alert.new_status.in_(CALM_STATUSES)
             ).count()
         return {
             'alerts_count': alerts_count,
