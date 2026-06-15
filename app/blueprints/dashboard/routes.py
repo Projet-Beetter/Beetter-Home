@@ -55,12 +55,6 @@ def card_overall_status(metric_list, hive_status="no_data"):
 def index():
     beehives = Beehive.query.order_by(Beehive.created_at).all()
 
-    total = len(beehives)
-    alerts_count   = sum(1 for h in beehives if STATUS_CONFIG.get(h.status, {}).get('family') == 'critical')
-    agitated_count = sum(1 for h in beehives if STATUS_CONFIG.get(h.status, {}).get('family') == 'agitated')
-    calm_count     = sum(1 for h in beehives if STATUS_CONFIG.get(h.status, {}).get('family') == 'calm')
-    silent_count   = sum(1 for h in beehives if STATUS_CONFIG.get(h.status, {}).get('family') is None)
-
     hive_metrics = {}
     for hive in beehives:
         latest = {}
@@ -86,11 +80,19 @@ def index():
             })
 
         has_data = bool(latest)
+        online   = hive.enabled and has_data
         hive_metrics[hive.id] = {
             "metrics": metrics,
-            "overall": card_overall_status(metrics, hive.status) if (hive.enabled and has_data) else "no_data",
-            "online":  hive.enabled and has_data,
+            "overall": card_overall_status(metrics, hive.status) if online else "no_data",
+            "online":  online,
+            "family":  STATUS_CONFIG.get(hive.status, STATUS_CONFIG.get('no_data', {})).get('family') if online else None,
         }
+
+    total          = len(beehives)
+    alerts_count   = sum(1 for h in beehives if hive_metrics[h.id]['online'] and STATUS_CONFIG.get(h.status, {}).get('family') == 'critical')
+    agitated_count = sum(1 for h in beehives if hive_metrics[h.id]['online'] and STATUS_CONFIG.get(h.status, {}).get('family') == 'agitated')
+    calm_count     = sum(1 for h in beehives if hive_metrics[h.id]['online'] and STATUS_CONFIG.get(h.status, {}).get('family') == 'calm')
+    silent_count   = sum(1 for h in beehives if not hive_metrics[h.id]['online'] or STATUS_CONFIG.get(h.status, {}).get('family') is None)
 
     return render_template('dashboard/index.html',
         beehives=beehives,

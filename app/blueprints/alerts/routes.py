@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from ...models import db, Alert, Beehive
 from ..utils.status import STATUS_CONFIG, STATUS_FAMILIES, ALERTING_STATUSES, get_dot_color
 from ..utils.alert_sources import ALERT_SOURCES
+from ..utils.influxdb import query_latest_values
 from . import alerts_bp
 
 @alerts_bp.route('/')
@@ -25,6 +26,12 @@ def index():
 
     active_alerts = []
     for hive in active_hives:
+        try:
+            latest = query_latest_values(str(hive.id)) if hive.enabled else {}
+        except Exception:
+            latest = {}
+        if not latest:
+            continue  # hive is offline — don't surface as active alert
         last_alert = Alert.query.filter_by(hive_id=hive.id).order_by(Alert.created_at.desc()).first()
         active_alerts.append({'hive': hive, 'alert': last_alert})
 

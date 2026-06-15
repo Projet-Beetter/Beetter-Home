@@ -57,7 +57,7 @@
   {% for family in family_order %}
     {% set section_hives = [] %}
     {% for hive in beehives %}
-      {% if status_config.get(hive.status, status_config['no_data']).get('family') == family %}
+      {% if hive_metrics[hive.id].family == family %}
         {% set _ = section_hives.append(hive) %}
       {% endif %}
     {% endfor %}
@@ -71,9 +71,8 @@
       </div>
       {% for hive in section_hives %}
       {% set hm = hive_metrics[hive.id] %}
-      {% set family_val = status_config.get(hive.status, status_config['no_data']).get('family') %}
       <div class="hive-card hive-card--{{ hm.overall }} position-relative{% if not hive.enabled %} opacity-50{% endif %}"
-           data-family="{{ 'silent' if family_val is none else family_val }}">
+           data-family="{{ 'silent' if hm.family is none else hm.family }}">
         <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="stretched-link" aria-label="{{ hive.name }}"></a>
 
         {# Header #}
