@@ -3,6 +3,19 @@
   const chartApiUrl = "{{ url_for('api.chart_data', hive_id=hive.id) }}";
   const charts = {};
   const currentRange = {{ range_str | tojson }};
+  const SENSOR_THRESHOLDS = {{ thresholds | tojson }};
+
+  function zoneColor(value, okMin, okMax, warnMin, warnMax) {
+    if (value >= okMin && value <= okMax)     return '#639922';
+    if (value >= warnMin && value <= warnMax) return '#BA7517';
+    return '#E24B4A';
+  }
+
+  function zonePointColor(value, okMin, okMax, warnMin, warnMax) {
+    if (value >= okMin && value <= okMax)     return 'rgba(99,153,34,.7)';
+    if (value >= warnMin && value <= warnMax) return 'rgba(186,117,23,.7)';
+    return 'rgba(226,75,74,.8)';
+  }
 
   // ── Accordion state persistence (survives language switch) ──
   const accordionStateKey = 'btr_accordion_' + window.location.pathname;
@@ -55,6 +68,94 @@
     return dataset.labels.map((t, i) => ({ x: t, y: dataset.data[i] }));
   }
 
+  function buildAnnotations(seriesConfigs) {
+    const annotations = {};
+    const threshSensors = seriesConfigs.filter(sc => SENSOR_THRESHOLDS[sc.sensorKey]);
+    const multi = threshSensors.length > 1;
+    threshSensors.forEach(sc => {
+      const [ok_min, ok_max] = SENSOR_THRESHOLDS[sc.sensorKey];
+      const isInt = sc.sensorKey.includes('_int');
+      const pos   = (multi && !isInt) ? 'end' : 'start';
+      const sfx   = multi ? (isInt ? ' int' : ' ext') : '';
+      const line = y => ({
+        type: 'line',
+        yMin: y, yMax: y,
+        borderColor: 'rgba(99,153,34,.5)',
+        borderWidth: 1.5,
+        borderDash: [5, 4],
+        label: {
+          display: true,
+          content: String(y) + sfx,
+          color: 'rgba(99,153,34,.85)',
+          backgroundColor: 'transparent',
+          font: { size: 10 },
+          padding: { x: 3, y: 1 },
+          position: pos,
+        }
+      });
+      annotations[sc.sensorKey + '_ok_min'] = line(ok_min);
+      annotations[sc.sensorKey + '_ok_max'] = line(ok_max);
+    });
+    return annotations;
+  }
+
+  function getActiveAnnotations(chart) {
+    const visibleKeys = chart.data.datasets
+      .filter(ds => !ds.hidden)
+      .map(ds => ds.sensorKey);
+    const filtered = {};
+    Object.entries(chart._threshAnnotations || {}).forEach(([key, val]) => {
+      const sensorKey = key.replace('_ok_min', '').replace('_ok_max', '');
+      if (visibleKeys.includes(sensorKey)) filtered[key] = val;
+    });
+    return filtered;
+  }
+
+  function applyThresholdView(chart) {
+    chart.data.datasets.forEach(ds => {
+      const key = ds.sensorKey;
+      const thresh = SENSOR_THRESHOLDS[key];
+      if (!thresh) return;
+      const [okMin, okMax, warnMin, warnMax] = thresh;
+      ds.segment = {
+        borderColor: ctx => {
+          const mid = (ctx.p0.parsed.y + ctx.p1.parsed.y) / 2;
+          return zoneColor(mid, okMin, okMax, warnMin, warnMax);
+        }
+      };
+      ds.pointBackgroundColor = ds.data.map(pt =>
+        zonePointColor(pt.y ?? pt, okMin, okMax, warnMin, warnMax)
+      );
+      ds.pointBorderColor = 'transparent';
+      ds.pointRadius = ds.data.map(pt => {
+        const v = pt.y ?? pt;
+        return (v < okMin || v > okMax) ? 4 : 2;
+      });
+      ds.backgroundColor = 'transparent';
+    });
+    chart.options.plugins.annotation.annotations = getActiveAnnotations(chart);
+    chart.update();
+  }
+
+  function resetNormalView(chart) {
+    chart.data.datasets.forEach((ds, idx) => {
+      delete ds.segment;
+      const orig = chart._originalColors[idx];
+      if (orig) {
+        ds.borderColor = orig.borderColor;
+        ds.backgroundColor = orig.backgroundColor;
+        ds.pointRadius = orig.pointRadius ?? (ds.data.length > 200 ? 0 : 2);
+      } else {
+        ds.pointRadius = ds.data.length > 200 ? 0 : 2;
+      }
+      delete ds.pointBackgroundColor;
+      delete ds.pointBorderColor;
+    });
+    chart.options.plugins.annotation.annotations = {};
+    chart.update('none');
+    chart.update();
+  }
+
   function makeMultiSeriesChart(id, title, seriesConfigs, yOptions = {}, range = '24h') {
     const ctx = document.getElementById(id);
     if (!ctx) return;
@@ -80,7 +181,10 @@
       data: { datasets },
       options: {
         responsive: true,
-        plugins: { legend: { display: true } },
+        plugins: {
+          legend: { display: true },
+          annotation: { annotations: {} },
+        },
         scales: {
           x: {
             type: 'time',
@@ -88,10 +192,16 @@
             ticks: { maxTicksLimit: 8 },
             afterBuildTicks: boundaryTickHook,
           },
-          y: { beginAtZero: false, ...yOptions }
+          y: { beginAtZero: false, ...yOptions, grace: '5%' }
         }
       }
     });
+    chart._threshAnnotations = buildAnnotations(seriesConfigs);
+    chart._originalColors = datasets.map(ds => ({
+      borderColor: ds.borderColor,
+      backgroundColor: ds.backgroundColor,
+      pointRadius: ds.pointRadius,
+    }));
     charts[id] = chart;
   }
 
@@ -138,8 +248,24 @@
             const chart = charts[chartId];
             if (chart) chart.options.scales.x.time = getTimeOptions(range);
             updateMultiChart(chartId, data);
+            const cb = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
+            if (cb && cb.checked) applyThresholdView(chart);
           });
         } catch (error) { console.error('Chart loading error:', error); }
+      });
+    });
+  }
+
+  function initializeThresholdToggles() {
+    document.querySelectorAll('.threshold-toggle-btn').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const chart = charts[cb.dataset.chartId];
+        if (!chart) return;
+        if (cb.checked) {
+          applyThresholdView(chart);
+        } else {
+          resetNormalView(chart);
+        }
       });
     });
   }
@@ -152,7 +278,21 @@
         if (!chart) return;
         const dsIndex = chart.data.datasets.findIndex(d => d.sensorKey === cb.dataset.sensorKey);
         if (dsIndex === -1) return;
+
+        // Prevent hiding the last visible series
+        if (!cb.checked) {
+          const otherVisible = chart.data.datasets.some((ds, i) => i !== dsIndex && !ds.hidden);
+          if (!otherVisible) {
+            cb.checked = true;
+            return;
+          }
+        }
+
         chart.data.datasets[dsIndex].hidden = !cb.checked;
+        const threshBtn = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
+        if (threshBtn && threshBtn.checked) {
+          chart.options.plugins.annotation.annotations = getActiveAnnotations(chart);
+        }
         chart.update();
       });
     });
@@ -190,6 +330,7 @@
 
     initializeRangeSelectors();
     initializeSeriesToggles();
+    initializeThresholdToggles();
 
     document.querySelectorAll('.accordion-collapse').forEach(c => {
       c.addEventListener('shown.bs.collapse', (e) => {

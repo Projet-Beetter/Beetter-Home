@@ -170,6 +170,7 @@ def detail(hive_id):
     next_hive=next_hive,
     hive_position=f"{current_idx + 1}/{len(all_hives)}",
     effective_status=effective_status,
+    thresholds=THRESHOLDS,
     )
 
 

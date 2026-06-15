@@ -1333,3 +1333,5 @@ body.dark-mode .hive-f-ok   { color: #86efac !important; border-color: rgba(134,
 .hive-nav-btn:hover:not(:disabled) {
   transform: scale(1.08);
 }
+
+canvas { min-height: 80px; }

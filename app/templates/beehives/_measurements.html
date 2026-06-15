@@ -8,10 +8,7 @@
       {'key': 'temperature_int', 'label': 'Temperature Int'},
       {'key': 'temperature_ext', 'label': 'Temperature Ext'}
     ],
-    'badges': [
-      {'v': metrics[0].value, 'u': metrics[0].unit, 's': 'int.', 'bg': '#fdecea', 'fg': '#a32d2d', 'dot': '#dc3545'},
-      {'v': metrics[1].value, 'u': metrics[1].unit, 's': 'ext.', 'bg': '#fde8e4', 'fg': '#9c3a2a', 'dot': '#e46060'}
-    ]
+    'show_thresholds': true
   },
   {
     'id': 'humidityChart',
@@ -22,10 +19,7 @@
       {'key': 'humidity_int', 'label': 'Humidity Int'},
       {'key': 'humidity_ext', 'label': 'Humidity Ext'}
     ],
-    'badges': [
-      {'v': metrics[2].value, 'u': metrics[2].unit, 's': 'int.', 'bg': '#e8f0fb', 'fg': '#1a4a8a', 'dot': '#0d6efd'},
-      {'v': metrics[3].value, 'u': metrics[3].unit, 's': 'ext.', 'bg': '#dde9f8', 'fg': '#3a5e8a', 'dot': '#4b8dff'}
-    ]
+    'show_thresholds': true
   },
   {
     'id': 'soundFreqChart',
@@ -36,9 +30,7 @@
       {'key': 'sound_freq_int', 'label': 'Sound Freq Int'},
       {'key': 'sound_freq_ext', 'label': 'Sound Freq Ext'}
     ],
-    'badges': [
-      {'v': metrics[4].value, 'u': metrics[4].unit, 's': 'int.', 'bg': '#eef4e4', 'fg': '#3a6010', 'dot': '#6a1b9a'}
-    ]
+    'show_thresholds': true
   },
   {
     'id': 'soundAmpChart',
@@ -49,7 +41,7 @@
       {'key': 'sound_amp_int', 'label': 'Sound Amp Int'},
       {'key': 'sound_amp_ext', 'label': 'Sound Amp Ext'}
     ],
-    'badges': []
+    'show_thresholds': false
   },
   {
     'id': 'lightExtChart',
@@ -59,9 +51,7 @@
     'sensors': [
       {'key': 'light_ext', 'label': 'Light Ext'}
     ],
-    'badges': [
-      {'v': metrics[5].value, 'u': metrics[5].unit, 's': '', 'bg': '#fef7e4', 'fg': '#7a4800', 'dot': '#f9a825'}
-    ]
+    'show_thresholds': true
   }
 ] %}
 
@@ -80,16 +70,11 @@
   <div class="card-body">
     <div class="d-flex align-items-center gap-2 mb-2">
       <i class="bi {{ section.icon }}" style="color:{{ section.icon_color }}"></i>
-      <span class="fw-semibold me-auto" style="font-size:13px">{{ section.title }}</span>
-      {% for badge in section.badges %}
-        {% if badge.v is not none %}
-          <span class="badge" style="background:{{ badge.bg }};color:{{ badge.fg }};font-weight:400">{{ badge.v }}{{ badge.u }}{% if badge.s %} {{ badge.s }}{% endif %}</span>
-        {% endif %}
-      {% endfor %}
+      <span class="fw-semibold" style="font-size:13px">{{ section.title }}</span>
     </div>
-    <div class="mb-1">
+    <div class="mb-1 d-flex flex-wrap align-items-center">
       {% for s in section.sensors %}
-        <div class="form-check form-check-inline">
+        <div class="form-check form-check-inline mb-0">
           <input class="form-check-input series-toggle" type="checkbox"
                  id="{{ section.id }}-{{ s.key }}"
                  data-chart-id="{{ section.id }}"
@@ -97,6 +82,17 @@
           <label class="form-check-label small text-muted" for="{{ section.id }}-{{ s.key }}">{{ s.label }}</label>
         </div>
       {% endfor %}
+      {% if section.show_thresholds %}
+      <div class="form-check form-check-inline mb-0 ms-2">
+        <input class="form-check-input threshold-toggle-btn" type="checkbox"
+               id="{{ section.id }}-thresh-toggle"
+               data-chart-id="{{ section.id }}"
+               data-active="false">
+        <label class="form-check-label small text-muted" for="{{ section.id }}-thresh-toggle">
+          <i class="bi bi-graph-up-arrow me-1"></i>Seuils
+        </label>
+      </div>
+      {% endif %}
     </div>
     <canvas id="{{ section.id }}" height="90"></canvas>
   </div>
