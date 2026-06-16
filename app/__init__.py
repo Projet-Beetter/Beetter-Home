@@ -71,7 +71,7 @@ def create_app():
     app.register_blueprint(setup_bp)
     csrf.exempt(api_bp)
 
-    SETUP_EXEMPT = {'setup.index', 'setup.create', 'setup.create_hive', 'setup.done', 'static'}
+    SETUP_EXEMPT = {'setup.index', 'setup.create', 'setup.create_hive', 'setup.done', 'static', 'api.ingest'}
 
     @app.before_request
     def check_setup():
