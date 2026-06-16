@@ -195,7 +195,28 @@
       options: {
         responsive: true,
         plugins: {
-          legend: { display: true },
+          legend: {
+            display: true,
+            onClick(e, legendItem, legend) {
+              const chart = legend.chart;
+              const dsIndex = legendItem.datasetIndex;
+              const ds = chart.data.datasets[dsIndex];
+              // Prevent hiding the last visible series
+              if (!ds.hidden) {
+                const otherVisible = chart.data.datasets.some((d, i) => i !== dsIndex && !d.hidden);
+                if (!otherVisible) return;
+              }
+              ds.hidden = !ds.hidden;
+              const threshBtn = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chart.canvas.id}"]`);
+              if (threshBtn && threshBtn.checked) {
+                chart.options.plugins.annotation.annotations = getActiveAnnotations(chart);
+              }
+              chart.update();
+              // Sync checkbox
+              const cb = document.querySelector(`.series-toggle[data-chart-id="${chart.canvas.id}"][data-sensor-key="${ds.sensorKey}"]`);
+              if (cb) cb.checked = !ds.hidden;
+            }
+          },
           annotation: { annotations: {} },
         },
         scales: {
