@@ -30,7 +30,6 @@ import math
 import time
 import os
 import sys
-import re
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -62,9 +61,6 @@ FMT_AUD = "<BH4sIHHHH13h13hH"
 API_ENABLE  = os.getenv("API_ENABLE", "0") == "1"
 API_URL     = os.getenv("BEETTER_API_URL", "http://localhost:5000")
 API_TIMEOUT = float(os.getenv("BEETTER_API_TIMEOUT", "5"))
-
-# Repli si beehive_id ASCII ("B001") ne contient aucun chiffre exploitable
-BEEHIVE_ID_FALLBACK = int(os.getenv("BEEHIVE_ID_FALLBACK", "1"))
 
 # ─── Logging ─────────────────────────────────────────────────
 logging.basicConfig(
@@ -114,7 +110,7 @@ def decoder_env(data: bytes) -> dict | None:
 
     v = struct.unpack(FMT_ENV, bloc)
     # v : magic, seq, hive_id, ts, t_int×100, h_int×10,
-    #          t_ext×100, h_ext×10, lum, crc
+    #          t_ext×100, h_ext×10, lum×10, crc
 
     t_int = v[4] / 100.0
     h_int = v[5] / 10.0
@@ -135,7 +131,7 @@ def decoder_env(data: bytes) -> dict | None:
         "humidity_int"   : h_int,
         "temperature_ext": t_ext,
         "humidity_ext"   : h_ext,
-        "light_ext"      : float(v[8]),
+        "light_ext"      : v[8] / 10.0,
 
         # Humidité absolue (calculée, non stockée dans InfluxDB directement
         # mais utile pour l'affichage console)
@@ -222,7 +218,7 @@ def afficher_env(d: dict, rssi) -> None:
     print(f"│  temperature_ext : {d['temperature_ext']:>7.2f} °C    "
           f"humidity_ext : {d['humidity_ext']:>6.1f} %RH  "
           f"(abs: {d['hum_abs_ext']:.2f} g/m³)")
-    print(f"│  light_ext       : {d['light_ext']:>7.0f} ADC")
+    print(f"│  light_ext       : {d['light_ext']:>5.1f} / 10")
     print(f"└{'─'*60}")
 
 
@@ -241,23 +237,6 @@ def afficher_aud(d: dict, rssi) -> None:
 
 
 # ═══════════════════════════════════════════════════════════
-#  beehive_id : ASCII trame ("B001") → entier attendu par l'API
-# ═══════════════════════════════════════════════════════════
-def beehive_id_to_int(raw: str) -> int:
-    """
-    Les trames LoRa portent un beehive_id ASCII 4 chars (ex. "B001"),
-    alors que l'API Flask / PostgreSQL attendent un entier (cf. README,
-    section "Point ouvert"). On extrait les chiffres de la chaîne.
-    "B001" -> 1, "B012" -> 12, "1" -> 1. Si rien n'est trouvé, on
-    retombe sur BEEHIVE_ID_FALLBACK (configurable par .env).
-    """
-    digits = re.sub(r"\D", "", raw)
-    if digits:
-        return int(digits)
-    return BEEHIVE_ID_FALLBACK
-
-
-# ═══════════════════════════════════════════════════════════
 #  Envoi vers l'API Flask (POST /api/data) — même approche
 #  que tools/simulate.py (fonction send()).
 # ═══════════════════════════════════════════════════════════
@@ -266,13 +245,17 @@ def construire_payload(blocs: list) -> dict | None:
     Agrège les blocs ENV + AUD reçus dans ce cycle en un seul payload
     JSON, avec exactement les mêmes noms de champs que simulate.py /
     POST /api/data.
+
+    beehive_id reste tel que décodé depuis la trame (ASCII, ex. "B001") :
+    la base de données stocke désormais l'ID de ruche en string, donc
+    plus besoin de conversion vers un entier.
     """
     payload: dict = {}
     beehive_id = None
     ts_iso = None
 
     for d in blocs:
-        beehive_id = beehive_id_to_int(d["beehive_id"])
+        beehive_id = d["beehive_id"]
         ts_iso = d["ts_iso"]
 
         if d["type"] == "ENV":
