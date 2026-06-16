@@ -1,4 +1,6 @@
 requests==2.31.0
-# Uncomment the library that matches your LoRa hardware:
-# adafruit-circuitpython-rfm9x   # SX127x via CircuitPython/Blinka (recommended for RPi)
-# pyserial                       # For AT-command modules (RAK811, Dragino, etc.)
+python-dotenv==1.0.1
+pyserial
+# Le récepteur envoie désormais les relevés à l'API Flask (POST /api/data)
+# via requests, exactement comme tools/simulate.py. InfluxDB n'est plus
+# écrit directement depuis lora/ — c'est Flask (app/) qui s'en charge.

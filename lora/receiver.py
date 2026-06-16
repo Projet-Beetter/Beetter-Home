@@ -3,24 +3,26 @@
 receiver.py  –  Récepteur LoRa Beetter Home
 ============================================
 Reçoit les trames Beetter (blocs ENV et/ou AUD) via le module
-Grove LoRa 868MHz branché sur le Raspberry Pi, et écrit dans InfluxDB
-via la fonction write_sensor_data() de influxdb.py.
+Grove LoRa 868MHz branché sur le Raspberry Pi, et envoie les relevés
+décodés à l'API Flask locale (POST /api/data) — exactement comme le
+fait tools/simulate.py. C'est Flask qui écrit ensuite dans InfluxDB,
+vérifie les seuils et déclenche les alertes.
 
-Nomenclature des champs : identique à influxdb.py (beetter.fr)
+Nomenclature des champs : identique à l'API Flask (POST /api/data)
   temperature_int / humidity_int
   temperature_ext / humidity_ext
   sound_freq_int  / sound_amp_int
   sound_freq_ext  / sound_amp_ext
   light_ext
-  mfcc_int_0..12  / mfcc_ext_0..12
+  mfcc_int[0..12] / mfcc_ext[0..12]
 
 Basé sur grove_lora.py (doit être dans le même dossier).
 
 Lancement :
   python3 receiver.py
 
-Avec écriture InfluxDB :
-  INFLUX_ENABLE=1 python3 receiver.py
+Avec envoi vers l'API Flask :
+  API_ENABLE=1 python3 receiver.py
 """
 
 import struct
@@ -28,9 +30,17 @@ import math
 import time
 import os
 import sys
+import re
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
+from dotenv import load_dotenv
+import requests
 from grove_lora import GroveLoRa
+
+# ─── Load .env from parent directory ─────────────────────────
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(env_path)
 
 # ─── Configuration ───────────────────────────────────────────
 PORT      = "/dev/serial0"   # Adapter si USB : "/dev/ttyUSB0"
@@ -45,12 +55,16 @@ SIZE_AUD   = 73
 FMT_ENV = "<BH4sIhHhHHH"
 FMT_AUD = "<BH4sIHHHH13h13hH"
 
-# ─── InfluxDB ────────────────────────────────────────────────
-INFLUX_ENABLE = os.getenv("INFLUX_ENABLE", "0") == "1"
-INFLUX_URL    = os.getenv("INFLUX_URL",    "http://localhost:8086")
-INFLUX_TOKEN  = os.getenv("INFLUX_TOKEN",  "votre_token_ici")
-INFLUX_ORG    = os.getenv("INFLUX_ORG",    "beetter")
-INFLUX_BUCKET = os.getenv("INFLUX_BUCKET", "beetter")
+# ─── API Flask (POST /api/data) ───────────────────────────────
+# Même approche que tools/simulate.py : on pousse du JSON à l'app
+# Flask locale, qui se charge elle-même d'écrire dans InfluxDB,
+# de vérifier les seuils et de créer les alertes si besoin.
+API_ENABLE  = os.getenv("API_ENABLE", "0") == "1"
+API_URL     = os.getenv("BEETTER_API_URL", "http://localhost:5000")
+API_TIMEOUT = float(os.getenv("BEETTER_API_TIMEOUT", "5"))
+
+# Repli si beehive_id ASCII ("B001") ne contient aucun chiffre exploitable
+BEEHIVE_ID_FALLBACK = int(os.getenv("BEEHIVE_ID_FALLBACK", "1"))
 
 # ─── Logging ─────────────────────────────────────────────────
 logging.basicConfig(
@@ -227,102 +241,82 @@ def afficher_aud(d: dict, rssi) -> None:
 
 
 # ═══════════════════════════════════════════════════════════
-#  Écriture InfluxDB via write_sensor_data() de influxdb.py
+#  beehive_id : ASCII trame ("B001") → entier attendu par l'API
 # ═══════════════════════════════════════════════════════════
-def ecrire_influxdb(blocs: list) -> None:
+def beehive_id_to_int(raw: str) -> int:
     """
-    Appelle write_sensor_data() avec les champs issus des blocs décodés.
-    Les noms de champs sont identiques à ceux de influxdb.py :
-      temperature_int, humidity_int, temperature_ext, humidity_ext,
-      sound_freq_int, sound_amp_int, sound_freq_ext, sound_amp_ext,
-      light_ext, mfcc_int (list[13]), mfcc_ext (list[13])
+    Les trames LoRa portent un beehive_id ASCII 4 chars (ex. "B001"),
+    alors que l'API Flask / PostgreSQL attendent un entier (cf. README,
+    section "Point ouvert"). On extrait les chiffres de la chaîne.
+    "B001" -> 1, "B012" -> 12, "1" -> 1. Si rien n'est trouvé, on
+    retombe sur BEEHIVE_ID_FALLBACK (configurable par .env).
     """
+    digits = re.sub(r"\D", "", raw)
+    if digits:
+        return int(digits)
+    return BEEHIVE_ID_FALLBACK
+
+
+# ═══════════════════════════════════════════════════════════
+#  Envoi vers l'API Flask (POST /api/data) — même approche
+#  que tools/simulate.py (fonction send()).
+# ═══════════════════════════════════════════════════════════
+def construire_payload(blocs: list) -> dict | None:
+    """
+    Agrège les blocs ENV + AUD reçus dans ce cycle en un seul payload
+    JSON, avec exactement les mêmes noms de champs que simulate.py /
+    POST /api/data.
+    """
+    payload: dict = {}
+    beehive_id = None
+    ts_iso = None
+
+    for d in blocs:
+        beehive_id = beehive_id_to_int(d["beehive_id"])
+        ts_iso = d["ts_iso"]
+
+        if d["type"] == "ENV":
+            payload["temperature_int"] = d["temperature_int"]
+            payload["humidity_int"]    = d["humidity_int"]
+            payload["temperature_ext"] = d["temperature_ext"]
+            payload["humidity_ext"]    = d["humidity_ext"]
+            payload["light_ext"]       = d["light_ext"]
+
+        elif d["type"] == "AUD":
+            payload["sound_freq_int"] = d["sound_freq_int"]
+            payload["sound_amp_int"]  = d["sound_amp_int"]
+            payload["sound_freq_ext"] = d["sound_freq_ext"]
+            payload["sound_amp_ext"]  = d["sound_amp_ext"]
+            payload["mfcc_int"]       = d["mfcc_int"]
+            payload["mfcc_ext"]       = d["mfcc_ext"]
+
+    if not payload or beehive_id is None:
+        return None
+
+    payload["beehive_id"] = beehive_id
+    payload["timestamp"]  = ts_iso
+    return payload
+
+
+def envoyer_api(blocs: list) -> None:
+    """
+    Construit le payload JSON et le POST sur {API_URL}/api/data,
+    exactement comme send() dans tools/simulate.py.
+    """
+    payload = construire_payload(blocs)
+    if payload is None:
+        return
+
     try:
-        from influxdb_client import InfluxDBClient, Point, WritePrecision
-        from influxdb_client.client.write_api import SYNCHRONOUS
-        from datetime import datetime, timezone
-
-        client = InfluxDBClient(
-            url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG
-        )
-        write = client.write_api(write_options=SYNCHRONOUS)
-
-        # Agréger les données de tous les blocs reçus dans ce cycle
-        kwargs: dict = {}
-        ts = None
-
-        for d in blocs:
-            ts = datetime.fromtimestamp(d["ts"], tz=timezone.utc)
-            beehive_id = d["beehive_id"]
-
-            if d["type"] == "ENV":
-                kwargs["temperature_int"] = d["temperature_int"]
-                kwargs["humidity_int"]    = d["humidity_int"]
-                kwargs["temperature_ext"] = d["temperature_ext"]
-                kwargs["humidity_ext"]    = d["humidity_ext"]
-                kwargs["light_ext"]       = d["light_ext"]
-
-            elif d["type"] == "AUD":
-                kwargs["sound_freq_int"]  = d["sound_freq_int"]
-                kwargs["sound_amp_int"]   = d["sound_amp_int"]
-                kwargs["sound_freq_ext"]  = d["sound_freq_ext"]
-                kwargs["sound_amp_ext"]   = d["sound_amp_ext"]
-                kwargs["mfcc_int"]        = d["mfcc_int"]
-                kwargs["mfcc_ext"]        = d["mfcc_ext"]
-
-        if not kwargs or ts is None:
-            return
-
-        # Construction des points InfluxDB
-        # Scalaires
-        scalar_map = {
-            "temperature_int": kwargs.get("temperature_int"),
-            "humidity_int"   : kwargs.get("humidity_int"),
-            "temperature_ext": kwargs.get("temperature_ext"),
-            "humidity_ext"   : kwargs.get("humidity_ext"),
-            "sound_freq_int" : kwargs.get("sound_freq_int"),
-            "sound_amp_int"  : kwargs.get("sound_amp_int"),
-            "sound_freq_ext" : kwargs.get("sound_freq_ext"),
-            "sound_amp_ext"  : kwargs.get("sound_amp_ext"),
-            "light_ext"      : kwargs.get("light_ext"),
-        }
-
-        points = [
-            Point(measurement)
-            .tag("beehive_id", str(beehive_id))
-            .field("value", float(value))
-            .time(ts, WritePrecision.S)
-            for measurement, value in scalar_map.items()
-            if value is not None
-        ]
-
-        # MFCC : mfcc_int_0..12 et mfcc_ext_0..12
-        for coeff_list, prefix in (
-            (kwargs.get("mfcc_int"), "mfcc_int"),
-            (kwargs.get("mfcc_ext"), "mfcc_ext"),
-        ):
-            if coeff_list and len(coeff_list) == 13:
-                for i, val in enumerate(coeff_list):
-                    points.append(
-                        Point(f"{prefix}_{i}")
-                        .tag("beehive_id", str(beehive_id))
-                        .field("value", float(val))
-                        .time(ts, WritePrecision.S)
-                    )
-
-        write.write(
-            bucket=INFLUX_BUCKET,
-            org=INFLUX_ORG,
-            record=points,
-        )
-        client.close()
-        log.info(f"InfluxDB : {len(points)} points écrits "
-                 f"(ruche {beehive_id}, ts {ts.isoformat()})")
-
-    except ImportError:
-        log.warning("influxdb-client non installé : pip3 install influxdb-client")
-    except Exception as e:
-        log.error(f"InfluxDB erreur : {e}")
+        r = requests.post(f"{API_URL}/api/data", json=payload, timeout=API_TIMEOUT)
+        if r.ok:
+            mfcc_tag = " +MFCC" if "mfcc_int" in payload else ""
+            log.info(f"API : relevé envoyé (ruche {payload['beehive_id']}, "
+                      f"{payload['timestamp']}){mfcc_tag}")
+        else:
+            log.error(f"API erreur HTTP {r.status_code} : {r.text}")
+    except requests.RequestException as e:
+        log.error(f"API injoignable ({API_URL}) : {e}")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -332,7 +326,7 @@ def main():
     log.info("=== Beetter Home – Receiver LoRa ===")
     log.info(f"Port       : {PORT} @ 57600 bauds")
     log.info(f"Fréquence  : {FREQUENCE} MHz")
-    log.info(f"InfluxDB   : {'activé' if INFLUX_ENABLE else 'désactivé'}")
+    log.info(f"API Flask  : {'activé (' + API_URL + ')' if API_ENABLE else 'désactivé'}")
     log.info(f"Blocs      : ENV={SIZE_ENV}B (0xE0)  AUD={SIZE_AUD}B (0xA0)")
 
     lora = GroveLoRa(port=PORT, baudrate=57600)
@@ -391,9 +385,9 @@ def main():
                     afficher_aud(d, rssi)
                     nb_aud += 1
 
-            # Écriture InfluxDB (regroupe ENV + AUD du même cycle)
-            if INFLUX_ENABLE:
-                ecrire_influxdb(blocs)
+            # Envoi vers l'API Flask (regroupe ENV + AUD du même cycle)
+            if API_ENABLE:
+                envoyer_api(blocs)
 
             log.info(f"Stats : {nb_recus} reçues | {nb_env} ENV | "
                      f"{nb_aud} AUD | {nb_erreurs} erreurs")
