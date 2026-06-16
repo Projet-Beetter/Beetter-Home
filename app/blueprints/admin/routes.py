@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, abort, session
 from flask_login import login_required, current_user, logout_user
-from ...models import db, User, UserHiveIndicator, Alert, user_alert_reads, RemoteServerConfig
+from ...models import db, User, UserHiveIndicator, Alert, user_alert_reads, RemoteServerConfig, HiveEvent, UserPreferences
 from ...i18n import get_text
 from .forms import AdminUserActionForm
 from . import admin_bp
@@ -42,6 +42,7 @@ def index():
                 user_alert_reads.delete().where(user_alert_reads.c.user_id == target_user.id)
             )
             UserHiveIndicator.query.filter_by(user_id=target_user.id).delete()
+            HiveEvent.query.filter_by(created_by=target_user.id).delete()
             for hive in target_user.beehives:
                 UserHiveIndicator.query.filter_by(hive_id=hive.id).delete()
                 for alert in hive.alerts:
@@ -49,6 +50,7 @@ def index():
                         user_alert_reads.delete().where(user_alert_reads.c.alert_id == alert.id)
                     )
                 Alert.query.filter_by(hive_id=hive.id).delete()
+            UserPreferences.query.filter_by(user_id=target_user.id).delete()
             db.session.delete(target_user)
             flash(f"{target_user.username} has been removed.", 'success')
         else:
@@ -80,6 +82,7 @@ def delete_self():
         user_alert_reads.delete().where(user_alert_reads.c.user_id == user.id)
     )
     UserHiveIndicator.query.filter_by(user_id=user.id).delete()
+    HiveEvent.query.filter_by(created_by=user.id).delete()
     for hive in user.beehives:
         UserHiveIndicator.query.filter_by(hive_id=hive.id).delete()
         for alert in hive.alerts:
@@ -87,6 +90,7 @@ def delete_self():
                 user_alert_reads.delete().where(user_alert_reads.c.alert_id == alert.id)
             )
         Alert.query.filter_by(hive_id=hive.id).delete()
+    UserPreferences.query.filter_by(user_id=user.id).delete()
     db.session.delete(user)
     db.session.commit()
     logout_user()
