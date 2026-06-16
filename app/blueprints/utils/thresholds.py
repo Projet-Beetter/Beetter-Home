@@ -8,7 +8,7 @@ THRESHOLDS = {
     "humidity_int":     (50,  75,   40,   85  ),  # %
     "humidity_ext":     (30,  90,   20,   95  ),  # %
     "sound_freq_int":   (180, 320,  150,  400 ),  # Hz
-    "light_ext":        (0,   5,   0,    20  ),  # %
+    "light_ext":        (0,   5,   0,    10  ),  # 0–10 scale
 }
 
 

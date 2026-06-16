@@ -170,7 +170,7 @@ def detail(hive_id):
         {"key": "humidity_int",    "label": "Hum. int.",   "value": _v('humidity_int'),    "unit": "%",   "icon": "bi-droplet-half",      "color": "#378ADD"},
         {"key": "humidity_ext",    "label": "Hum. ext.",   "value": _v('humidity_ext'),    "unit": "%",   "icon": "bi-droplet-half",      "color": "#85B7EB"},
         {"key": "sound_freq_int",  "label": "Frequency",   "value": _v('sound_freq_int'),  "unit": " Hz", "icon": "bi-music-note-beamed", "color": "#639922"},
-        {"key": "light_ext",       "label": "Light",       "value": _v('light_ext'),       "unit": "%",   "icon": "bi-brightness-high",   "color": "#BA7517"},
+        {"key": "light_ext",       "label": "Light",       "value": _v('light_ext'),       "unit": "/10", "icon": "bi-brightness-high",   "color": "#BA7517"},
     ]
     for m in metrics:
         m["status"] = get_threshold_status(m["key"], m["value"])
