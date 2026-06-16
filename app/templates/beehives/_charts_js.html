@@ -169,7 +169,7 @@
     chart.update();
   }
 
-  function makeMultiSeriesChart(id, title, seriesConfigs, yOptions = {}, range = '24h') {
+  function makeMultiSeriesChart(id, title, seriesConfigs, yOptions = {}, range = '24h', decimals = null) {
     const ctx = document.getElementById(id);
     if (!ctx) return;
     const datasets = seriesConfigs.map((sc, idx) => {
@@ -195,6 +195,11 @@
       options: {
         responsive: true,
         plugins: {
+          tooltip: decimals !== null ? {
+            callbacks: {
+              label: item => `${item.dataset.label}: ${Number(item.parsed.y).toFixed(decimals)}`
+            }
+          } : {},
           legend: {
             display: true,
             onClick(e, legendItem, legend) {
@@ -224,7 +229,8 @@
             const { ticks: xTicks, ...timeOpts } = getTimeOptions(range);
             return { type: 'time', time: timeOpts, ticks: xTicks, afterBuildTicks: boundaryTickHook };
           })(),
-          y: { beginAtZero: false, ...yOptions, grace: '5%' }
+          y: { beginAtZero: false, ...yOptions, grace: '5%',
+               ...(decimals !== null ? { ticks: { callback: v => Number(v).toFixed(decimals) } } : {}) }
         }
       }
     });
@@ -353,6 +359,11 @@
       lightExtChart: { min: 0, max: 10 },
     };
 
+    const chartDecimals = {
+      tempIntChart: 1,
+      tempExtChart: 1,
+    };
+
     document.querySelectorAll('canvas').forEach(canvas => {
       const id = canvas.id;
       const seriesInputs = Array.from(document.querySelectorAll(`.series-toggle[data-chart-id="${id}"]`));
@@ -363,7 +374,7 @@
         visible: cb.checked,
         color: (defaultColorSets[id] || ['#0d6efd'])[idx % 5]
       }));
-      makeMultiSeriesChart(id, '', seriesConfigs, chartScales[id] || {}, currentRange);
+      makeMultiSeriesChart(id, '', seriesConfigs, chartScales[id] || {}, currentRange, chartDecimals[id] ?? null);
     });
 
     initializeRangeSelectors();
