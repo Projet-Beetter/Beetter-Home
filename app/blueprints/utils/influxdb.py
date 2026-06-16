@@ -212,8 +212,6 @@ def delete_beehive_data(beehive_id):
             bucket=bucket,
             org=org,
         )
-
-
 def delete_all_influx_data():
     """Purge every measurement in the bucket (all beehives, all time)."""
     bucket = current_app.config['INFLUXDB_BUCKET']
@@ -230,7 +228,6 @@ def delete_all_influx_data():
                 bucket=bucket,
                 org=org,
             )
-
 
 def query_export_data(beehive_id, measurements, start_str, stop_str=None):
     valid = [m for m in measurements if m in MEASUREMENTS]
@@ -284,3 +281,39 @@ from(bucket: "{bucket}")
                         row[field] = round(v, 2)
                 data.append(row)
     return data
+
+def write_ia_prediction(beehive_id, etat_detecte, probabilite_f, probabilite_r, timestamp=None):
+    """
+    Écrit le résultat de l'Intelligence Artificielle dans un bucket séparé.
+    
+    Args:
+        beehive_id (str/int): L'identifiant de la ruche.
+        etat_detecte (str): Le nom de l'état (ex: "normal", "frelon", "essaimage").
+        probabilite (float): Le pourcentage de certitude du modèle (ex: 0.95).
+        timestamp (datetime, optional): L'heure exacte de l'analyse.
+    """
+    ts = timestamp or datetime.now(timezone.utc)
+    point = (
+        Point("prediction_ia")
+        .tag("beehive_id", str(beehive_id))
+        .tag("etat_detecte", etat_detecte)
+        .field("probabilite_f", float(proba_f))
+        .field("probabilite_r", float(proba_r))
+        .time(ts, WritePrecision.S)
+    )
+    # Attention : On écrit dans le DEUXIÈME bucket (celui de l'IA)
+    # Vérifiez que INFLUXDB_BUCKET_IA est bien chargé dans votre app.config !
+    # Sinon, on utilise une valeur par défaut "data_ia" ou on le force manuellement ici
+    bucket_ia = current_app.config.get('INFLUXDB_BUCKET_IA', 'data_ia')
+
+    try:
+        with _client() as c:
+            c.write_api(write_options=SYNCHRONOUS).write(
+                bucket=bucket_ia,
+                org=current_app.config['INFLUXDB_ORG'],
+                record=point,
+            )
+    except Exception as e:
+        # On attrape l'erreur au cas où le bucket 'data_ia' n'aurait pas été créé manuellement
+        print(f"⚠️ Erreur lors de l'écriture IA dans InfluxDB : {e}")
+        print(f"Vérifiez que le bucket '{bucket_ia}' existe bien dans l'interface InfluxDB.")
