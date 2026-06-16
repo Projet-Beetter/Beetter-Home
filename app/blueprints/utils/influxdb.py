@@ -1,11 +1,13 @@
 """
 app/blueprints/utils/influxdb.py
 
-Changes vs previous version:
-  - MEASUREMENTS extended with mfcc_int_0..12 and mfcc_ext_0..12
-  - write_sensor_data() accepts optional mfcc_int / mfcc_ext lists
-  - All other functions unchanged (they query by measurement name, so they
-    automatically pick up the new measurements without any edits)
+InfluxDB read/write helpers for sensor data.
+
+Stores one InfluxDB measurement per physical quantity (temperature, humidity,
+sound frequency/amplitude, light, and 13 MFCC coefficients 0-12 per microphone).
+Provides write_sensor_data() for ingest, query_chart_data() for the dashboard,
+and query_latest_values() / query_export_data() / query_recent_data() for
+other consumers.
 """
 
 from influxdb_client import InfluxDBClient, Point, WritePrecision
@@ -25,9 +27,9 @@ _WINDOW_MAP = {
 
 # ── Measurements ──────────────────────────────────────────────────────────────
 # One InfluxDB measurement per physical quantity; each has a single field "value".
-# MFCC coefficients 1-5 are stored separately so chart queries can filter them
-# independently.  They are omitted from write_sensor_data() when not provided,
-# so older packets (without MFCC) continue to work correctly.
+# MFCC coefficients 0-12 (13 total) are stored separately so chart queries can
+# filter them independently.  They are omitted from write_sensor_data() when not
+# provided, so older packets (without MFCC) continue to work correctly.
 MEASUREMENTS = (
     # Environmental + audio amplitude/frequency
     'temperature_int', 'humidity_int',

@@ -32,6 +32,15 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # NOTE: the official influxdb:2.x image only auto-creates ONE bucket on first
+  # startup (DOCKER_INFLUXDB_INIT_BUCKET = 'sensors'). The 'predictions' bucket
+  # for ML state probabilities must be created manually after the first startup:
+  #   Option A — InfluxDB UI: http://localhost:8086 → Load Data → Buckets → Create Bucket
+  #   Option B — CLI (inside the container):
+  #     docker compose exec influxdb influx bucket create \
+  #       --name predictions --org beetter --retention 0
+  # Do NOT add a second DOCKER_INFLUXDB_INIT_BUCKET variable — it is not
+  # supported; the init container ignores it and only creates the first bucket.
   influxdb:
     image: influxdb:2.7-alpine
     ports:

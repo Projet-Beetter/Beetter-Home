@@ -32,6 +32,7 @@ def create_app():
     app.config['INFLUXDB_TOKEN'] = os.environ.get('INFLUXDB_TOKEN', '')
     app.config['INFLUXDB_ORG'] = os.environ.get('INFLUXDB_ORG', 'beetter')
     app.config['INFLUXDB_BUCKET'] = os.environ.get('INFLUXDB_BUCKET', 'sensors')
+    app.config['INFLUXDB_PREDICTIONS_BUCKET'] = os.environ.get('INFLUXDB_PREDICTIONS_BUCKET', 'predictions')
 
     db.init_app(app)
     bcrypt.init_app(app)

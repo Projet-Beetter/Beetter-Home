@@ -1,10 +1,10 @@
 """
 app/blueprints/api/routes.py
 
-Changes vs previous version:
-  - ingest() now extracts mfcc_int / mfcc_ext from the POST body
-    and passes them to write_sensor_data()
-  - Everything else unchanged
+Handles the sensor ingest endpoint (/api/data) and the chart-data endpoint.
+ingest() validates and stores all sensor fields including 13 MFCC coefficients
+per microphone (mfcc_int / mfcc_ext), then runs threshold-based status updates
+that auto-escalate or auto-recover the hive status and log an Alert.
 """
 
 import logging
@@ -64,8 +64,8 @@ def ingest():
             sound_freq_ext=data.get('sound_freq_ext'),
             sound_amp_ext=data.get('sound_amp_ext'),
             light_ext=data.get('light_ext'),
-            mfcc_int=_mfcc_or_none('mfcc_int'),   # list[5] or None
-            mfcc_ext=_mfcc_or_none('mfcc_ext'),   # list[5] or None
+            mfcc_int=_mfcc_or_none('mfcc_int'),   # list[13] or None
+            mfcc_ext=_mfcc_or_none('mfcc_ext'),   # list[13] or None
             timestamp=ts,
         )
     except Exception as e:
