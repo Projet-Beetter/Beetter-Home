@@ -64,7 +64,7 @@ def index():
     )
 
 
-@calendar_bp.route('/hive/<int:hive_id>')
+@calendar_bp.route('/hive/<string:hive_id>')
 @login_required
 def hive_calendar(hive_id):
     hive = db.get_or_404(Beehive, hive_id)
@@ -88,7 +88,7 @@ def events_feed():
     return jsonify([_event_to_fc(e) for e in events])
 
 
-@calendar_bp.route('/events/hive/<int:hive_id>')
+@calendar_bp.route('/events/hive/<string:hive_id>')
 @login_required
 def hive_events_feed(hive_id):
     events = HiveEvent.query.filter(
@@ -126,7 +126,7 @@ def create_event():
         return jsonify({'error': 'start_date is required'}), 400
 
     raw_hive = data.get('hive_id')
-    hive_id = int(raw_hive) if raw_hive else None
+    hive_id = str(raw_hive).upper() if raw_hive else None
 
     event = HiveEvent(
         title=title,
@@ -167,7 +167,7 @@ def edit_event(event_id):
         event.notes = data['notes']
     if 'hive_id' in data:
         raw = data['hive_id']
-        event.hive_id = int(raw) if raw else None
+        event.hive_id = str(raw).upper() if raw else None
 
     db.session.commit()
     return jsonify(_event_to_fc(event))

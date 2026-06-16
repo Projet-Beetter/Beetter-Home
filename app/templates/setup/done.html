@@ -24,16 +24,12 @@
         <div class="check-icon mb-2">✓</div>
         <h5 class="fw-bold mb-1">Account created!</h5>
         <p class="text-muted mb-4" style="font-size:.9rem">
-          You're logged in as admin.<br>
-          Add your first beehive to get started.
+          You're logged in as admin.
         </p>
 
-        <div class="d-grid gap-2">
+        <div class="d-grid">
           <a href="{{ url_for('dashboard.index') }}" class="btn btn-amber">
             Go to dashboard
-          </a>
-          <a href="{{ url_for('beehives.new') }}" class="btn btn-outline-secondary">
-            Add first beehive
           </a>
         </div>
 

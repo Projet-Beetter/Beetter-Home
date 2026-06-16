@@ -29,8 +29,9 @@ def ingest():
     beehive_id = data.get('beehive_id')
     if beehive_id is None:
         return jsonify({'error': 'beehive_id required'}), 400
+    beehive_id = str(beehive_id).upper()
 
-    hive = Beehive.query.get(beehive_id)
+    hive = db.session.get(Beehive, beehive_id)
     if not hive or not hive.enabled:
         return jsonify({'error': 'Beehive not found or disabled'}), 404
 
@@ -136,7 +137,7 @@ def ingest():
     return jsonify({'status': 'ok'}), 201
 
 
-@api_bp.route('/beehives/<int:hive_id>/chart-data')
+@api_bp.route('/beehives/<string:hive_id>/chart-data')
 @login_required
 def chart_data(hive_id):
     """Returns Chart.js-ready data for the given beehive."""

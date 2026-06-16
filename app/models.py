@@ -66,7 +66,7 @@ class User(UserMixin, db.Model):
 class Beehive(db.Model):
     __tablename__ = 'beehives'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(4), primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     street = db.Column(db.String(200), nullable=True)
     city = db.Column(db.String(100), nullable=True)
@@ -86,7 +86,7 @@ class Alert(db.Model):
     __tablename__ = 'alerts'
 
     id = db.Column(db.Integer, primary_key=True)
-    hive_id = db.Column(db.Integer, db.ForeignKey('beehives.id'), nullable=False)
+    hive_id = db.Column(db.String(4), db.ForeignKey('beehives.id'), nullable=False)
     old_status = db.Column(db.String(20), nullable=False)
     new_status = db.Column(db.String(20), nullable=False)
     source = db.Column(db.String(50), nullable=False, default='manual')
@@ -122,7 +122,7 @@ class HiveEvent(db.Model):
     end_date   = db.Column(db.DateTime, nullable=True)
     all_day    = db.Column(db.Boolean, default=True)
     notes      = db.Column(db.Text, nullable=True)
-    hive_id    = db.Column(db.Integer, db.ForeignKey("beehives.id"), nullable=True)
+    hive_id    = db.Column(db.String(4), db.ForeignKey("beehives.id"), nullable=True)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -135,7 +135,7 @@ class UserHiveIndicator(db.Model):
     __tablename__ = 'user_hive_indicators'
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    hive_id = db.Column(db.Integer, db.ForeignKey('beehives.id'), primary_key=True)
+    hive_id = db.Column(db.String(4), db.ForeignKey('beehives.id'), primary_key=True)
     indicators = db.Column(db.String(255), nullable=False, default='temperature_int,humidity_int')
 
     user = db.relationship('User', backref=db.backref('hive_indicators', lazy='dynamic'))

@@ -161,6 +161,53 @@
         {% endif %}
       </div>
 
+      <div class="account-divider"></div>
+
+      <!-- ── Danger zone ───────────────────────────────────── -->
+      <div class="account-section">
+        <div class="section-header">
+          <i class="bi bi-exclamation-triangle text-danger"></i>
+          <span class="text-danger">{{ _t('admin_danger_zone') }}</span>
+        </div>
+        <p class="text-muted small mt-2 mb-3">{{ _t('admin_del_self_desc') }}</p>
+        <button type="button" class="btn btn-sm btn-account-admin-danger"
+                data-bs-toggle="modal" data-bs-target="#deleteSelfModal">
+          <i class="bi bi-person-x me-1"></i>{{ _t('admin_del_self_btn') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Delete self confirmation modal -->
+<div class="modal fade" id="deleteSelfModal" tabindex="-1" aria-labelledby="deleteSelfModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold" id="deleteSelfModalLabel">
+          <i class="bi bi-exclamation-triangle text-danger me-2"></i>{{ _t('admin_del_self_title') }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{{ url_for('admin.delete_self') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <p class="mb-3">{{ _t('admin_del_self_confirm') }}</p>
+          <div class="mb-2">
+            <label for="selfDeletePassword" class="form-label small fw-semibold">{{ _t('admin_del_self_password_label') }}</label>
+            <input type="password" class="form-control" id="selfDeletePassword" name="password"
+                   placeholder="{{ _t('admin_del_self_password_placeholder') }}" required autocomplete="current-password">
+          </div>
+          <p class="text-muted small mb-0">{{ _t('admin_del_self_warn') }}</p>
+        </div>
+        <div class="modal-footer border-0 pt-1">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _t('btn_cancel') }}</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-person-x me-1"></i>{{ _t('admin_del_self_btn') }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

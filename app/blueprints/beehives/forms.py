@@ -1,9 +1,14 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, IntegerField, SubmitField
-from wtforms.validators import DataRequired, Length, Optional, NumberRange
+from wtforms.validators import DataRequired, Length, Optional, NumberRange, Regexp
 
 
 class BeehiveForm(FlaskForm):
+    hive_id = StringField('Hive ID', validators=[
+        DataRequired(),
+        Length(4, 4, message='ID must be exactly 4 characters.'),
+        Regexp(r'^[A-Za-z0-9]{4}$', message='ID must contain only letters and digits (A-Z, 0-9).'),
+    ])
     name = StringField('Name', validators=[DataRequired(), Length(1, 100)])
     street = StringField('Street', validators=[Optional(), Length(max=200)])
     city = StringField('City', validators=[Optional(), Length(max=100)])

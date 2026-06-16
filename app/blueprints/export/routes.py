@@ -85,11 +85,7 @@ def index():
         writer.writerow(['timestamp', 'beehive'] + valid_fields)
 
         for hive_id_str in selected_hive_ids:
-            try:
-                hive_id = int(hive_id_str)
-            except ValueError:
-                continue
-            hive = db.session.get(Beehive, hive_id)
+            hive = db.session.get(Beehive, hive_id_str.upper())
             if not hive:
                 continue
             try:

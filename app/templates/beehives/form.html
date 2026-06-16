@@ -14,6 +14,18 @@
             {{ _t('form_general') }}
           </h6>
           <div class="mb-3">
+            <label class="form-label" for="{{ form.hive_id.id }}">{{ _t('field_hive_id') }}</label>
+            {% if hive %}
+              <input type="text" class="form-control font-monospace text-uppercase" value="{{ hive.id }}" disabled>
+              <div class="form-text">{{ _t('field_hive_id_readonly') }}</div>
+            {% else %}
+              {{ form.hive_id(class="form-control font-monospace text-uppercase" + (" is-invalid" if form.hive_id.errors else ""),
+                 placeholder="e.g. A1B2", maxlength="4", style="text-transform:uppercase") }}
+              {% for e in form.hive_id.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+              <div class="form-text">{{ _t('field_hive_id_hint') }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
             <label class="form-label" for="{{ form.name.id }}">{{ _t('field_hive_name') }}</label>
             {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
             {% for e in form.name.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}

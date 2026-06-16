@@ -314,7 +314,7 @@
     const data = {
       title,
       event_type: document.getElementById('event-type').value,
-      hive_id:    document.getElementById('event-hive').value ? parseInt(document.getElementById('event-hive').value) : null,
+      hive_id:    document.getElementById('event-hive').value || null,
       all_day:    document.getElementById('event-allday').checked,
       start_date: normalizeDate(document.getElementById('event-start').value),
       end_date:   normalizeDate(document.getElementById('event-end').value),

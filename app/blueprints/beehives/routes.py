@@ -1,6 +1,5 @@
 from flask import render_template, redirect, url_for, flash, request, abort, session
 from flask_login import login_required, current_user
-from sqlalchemy import text
 from ...models import db, Beehive, Alert, UserHiveIndicator
 from ...i18n import get_text
 from ..utils.influxdb import query_chart_data, query_latest_values, RANGE_OPTIONS, delete_beehive_data
@@ -52,52 +51,59 @@ def index():
 def new():
     form = BeehiveForm()
     if form.validate_on_submit():
-        taken = {id for (id,) in db.session.query(Beehive.id).all()}
-        new_id = next(i for i in range(1, (max(taken) if taken else 0) + 2) if i not in taken)
-        hive = Beehive(
-            id=new_id,
-            name=form.name.data,
-            street=form.street.data,
-            city=form.city.data,
-            postal_code=form.postal_code.data,
-            device_eui=form.device_eui.data,
-            lora_frequency=form.lora_frequency.data or 868.0,
-            spreading_factor=form.spreading_factor.data or 7,
-            bandwidth=form.bandwidth.data or 125,
-            user_id=current_user.id,
-        )
-        try:
-            hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
-        except Exception:
-            pass
-        db.session.add(hive)
-        db.session.flush()
-        try:
-            db.session.execute(text("SELECT setval('beehives_id_seq', (SELECT MAX(id) FROM beehives))"))
-        except Exception:
-            pass
-        db.session.commit()
-        flash(f'Beehive "{hive.name}" added.', 'success')
-        return redirect(url_for('beehives.index'))
+        hive_id = form.hive_id.data.upper()
+        if db.session.get(Beehive, hive_id):
+            form.hive_id.errors.append('This ID is already taken.')
+        else:
+            hive = Beehive(
+                id=hive_id,
+                name=form.name.data,
+                street=form.street.data,
+                city=form.city.data,
+                postal_code=form.postal_code.data,
+                device_eui=form.device_eui.data,
+                lora_frequency=form.lora_frequency.data or 868.0,
+                spreading_factor=form.spreading_factor.data or 7,
+                bandwidth=form.bandwidth.data or 125,
+                user_id=current_user.id,
+            )
+            try:
+                hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
+            except Exception:
+                pass
+            db.session.add(hive)
+            db.session.commit()
+            flash(f'Beehive "{hive.name}" added.', 'success')
+            return redirect(url_for('beehives.index'))
     return render_template('beehives/form.html', form=form, title='Add beehive')
 
 
-@beehives_bp.route('/<int:hive_id>/edit', methods=['GET', 'POST'])
+@beehives_bp.route('/<string:hive_id>/edit', methods=['GET', 'POST'])
 @login_required
 @editor_required
 def edit(hive_id):
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
     form = BeehiveForm(obj=hive)
     if form.validate_on_submit():
-        form.populate_obj(hive)
-        hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
+        hive.name = form.name.data
+        hive.street = form.street.data
+        hive.city = form.city.data
+        hive.postal_code = form.postal_code.data
+        hive.device_eui = form.device_eui.data
+        hive.lora_frequency = form.lora_frequency.data or 868.0
+        hive.spreading_factor = form.spreading_factor.data or 7
+        hive.bandwidth = form.bandwidth.data or 125
+        try:
+            hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
+        except Exception:
+            pass
         db.session.commit()
         flash(f'Beehive "{hive.name}" updated.', 'success')
         return redirect(url_for('beehives.index'))
     return render_template('beehives/form.html', form=form, title='Edit beehive', hive=hive)
 
 
-@beehives_bp.route('/<int:hive_id>/delete', methods=['POST'])
+@beehives_bp.route('/<string:hive_id>/delete', methods=['POST'])
 @login_required
 @editor_required
 def delete(hive_id):
@@ -113,7 +119,7 @@ def delete(hive_id):
     return redirect(url_for('beehives.index'))
 
 
-@beehives_bp.route('/<int:hive_id>/toggle', methods=['POST'])
+@beehives_bp.route('/<string:hive_id>/toggle', methods=['POST'])
 @login_required
 @editor_required
 def toggle(hive_id):
@@ -125,7 +131,7 @@ def toggle(hive_id):
     return redirect(url_for('beehives.index'))
 
 
-@beehives_bp.route('/<int:hive_id>')
+@beehives_bp.route('/<string:hive_id>')
 @login_required
 def detail(hive_id):
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
@@ -193,7 +199,7 @@ def detail(hive_id):
     )
 
 
-@beehives_bp.route('/<int:hive_id>/indicators/toggle', methods=['POST'])
+@beehives_bp.route('/<string:hive_id>/indicators/toggle', methods=['POST'])
 @login_required
 def toggle_indicator(hive_id):
     hive = Beehive.query.filter_by(id=hive_id).first_or_404()
@@ -229,7 +235,7 @@ def toggle_indicator(hive_id):
         return redirect(url_for('beehives.detail', hive_id=hive.id, open=section_key))
     return redirect(request.referrer or url_for('beehives.detail', hive_id=hive.id))
 
-@beehives_bp.route('/<int:hive_id>/status', methods=['POST'])
+@beehives_bp.route('/<string:hive_id>/status', methods=['POST'])
 @login_required
 def set_status(hive_id):
     if not current_user.is_admin:

@@ -39,10 +39,11 @@
 
           <div class="mb-3">
             <label for="hive_id" class="form-label">Hive ID</label>
-            <input type="number" min="1" class="form-control" id="hive_id" name="hive_id"
-                   value="{{ hive_id|default('') }}" required>
+            <input type="text" class="form-control font-monospace text-uppercase" id="hive_id" name="hive_id"
+                   value="{{ hive_id|default('') }}" maxlength="4" pattern="[A-Za-z0-9]{4}"
+                   placeholder="e.g. A1B2" required style="text-transform:uppercase">
             <div class="form-text">
-              Must match the <code>beehive_id</code> your sensor sends.
+              4 letters/digits. Must match the <code>beehive_id</code> your sensor sends.
             </div>
           </div>
           <div class="mb-3">
@@ -60,7 +61,7 @@
             Create hive &amp; finish
           </button>
           <div class="text-center">
-            <button type="submit" name="skip" class="btn btn-link btn-sm text-muted mt-2">
+            <button type="submit" name="skip" formnovalidate class="btn btn-link btn-sm text-muted mt-2">
               Skip for now →
             </button>
           </div>

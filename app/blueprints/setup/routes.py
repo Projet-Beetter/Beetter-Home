@@ -1,3 +1,4 @@
+import re
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, current_user
 from ...models import db, User, Beehive
@@ -7,15 +8,15 @@ from . import setup_bp
 
 @setup_bp.route('/', methods=['GET'])
 def index():
-    if User.query.count() > 0:
-        return redirect(url_for('auth.login'))
+    # if User.query.count() > 0:
+    #     return redirect(url_for('auth.login'))
     return render_template('setup/index.html')
 
 
 @setup_bp.route('/create', methods=['POST'])
 def create():
-    if User.query.count() > 0:
-        return redirect(url_for('auth.login'))
+    # if User.query.count() > 0:
+    #     return redirect(url_for('auth.login'))
 
     username = request.form.get('username', '').strip()
     email    = request.form.get('email', '').strip()
@@ -58,10 +59,11 @@ def create_hive():
         hive_name = request.form.get('hive_name', '').strip()
         city      = request.form.get('city', '').strip()
 
+        hive_id = hive_id.upper()
         errors = []
-        if not hive_id or not hive_id.isdigit() or int(hive_id) < 1:
-            errors.append('Hive ID must be a positive integer.')
-        elif Beehive.query.get(int(hive_id)):
+        if not re.match(r'^[A-Z0-9]{4}$', hive_id):
+            errors.append('Hive ID must be exactly 4 letters/digits (e.g. A1B2).')
+        elif db.session.get(Beehive, hive_id):
             errors.append(f'A hive with ID {hive_id} already exists.')
         if not hive_name:
             errors.append('Hive name is required.')
@@ -82,7 +84,7 @@ def create_hive():
                 pass
 
         hive = Beehive(
-            id=int(hive_id),
+            id=hive_id,
             name=hive_name,
             city=city or None,
             latitude=lat,

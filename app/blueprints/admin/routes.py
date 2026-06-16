@@ -1,5 +1,5 @@
 from flask import render_template, redirect, url_for, flash, request, abort, session
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, logout_user
 from ...models import db, User, UserHiveIndicator, Alert, user_alert_reads, RemoteServerConfig
 from ...i18n import get_text
 from .forms import AdminUserActionForm
@@ -63,3 +63,32 @@ def index():
         managed_users=managed_users,
         configs=configs,
     )
+
+
+@admin_bp.route('/delete-self', methods=['POST'])
+@login_required
+def delete_self():
+    if not current_user.is_admin:
+        abort(403)
+    password = request.form.get('password', '')
+    if not current_user.check_password(password):
+        flash(_t('flash_wrong_password'), 'danger')
+        return redirect(url_for('admin.index'))
+
+    user = current_user._get_current_object()
+    db.session.execute(
+        user_alert_reads.delete().where(user_alert_reads.c.user_id == user.id)
+    )
+    UserHiveIndicator.query.filter_by(user_id=user.id).delete()
+    for hive in user.beehives:
+        UserHiveIndicator.query.filter_by(hive_id=hive.id).delete()
+        for alert in hive.alerts:
+            db.session.execute(
+                user_alert_reads.delete().where(user_alert_reads.c.alert_id == alert.id)
+            )
+        Alert.query.filter_by(hive_id=hive.id).delete()
+    db.session.delete(user)
+    db.session.commit()
+    logout_user()
+    flash(_t('flash_account_deleted'), 'info')
+    return redirect(url_for('setup.index'))
