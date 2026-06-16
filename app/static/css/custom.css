@@ -560,6 +560,16 @@ body.dark-mode .btn-warning {
 
 body.dark-mode .form-check-label { color: #CFDBD5; }
 
+body.dark-mode .form-label { color: #E8EDDF; }
+body.dark-mode .form-text  { color: #CFDBD5; }
+
+body.dark-mode .form-control:disabled,
+body.dark-mode .form-control[readonly] {
+  background-color: #1e1e1e;
+  color: #CFDBD5;
+  border-color: rgba(255,255,255,0.1);
+}
+
 /* Account page palette */
 .account-page {
   max-width: 900px;
@@ -1340,7 +1350,6 @@ body.dark-mode .hive-f-ok   { color: #86efac !important; border-color: rgba(134,
   top: 52px;
   z-index: 100;
   background: var(--bs-body-bg);
-  /* Pull slightly outside main's px-4 padding, leaving a small visual gap at edges */
   margin-left: -1rem;
   margin-right: -1rem;
   padding: 8px 1rem 4px;
