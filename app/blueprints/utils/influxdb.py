@@ -214,6 +214,24 @@ def delete_beehive_data(beehive_id):
         )
 
 
+def delete_all_influx_data():
+    """Purge every measurement in the bucket (all beehives, all time)."""
+    bucket = current_app.config['INFLUXDB_BUCKET']
+    org    = current_app.config['INFLUXDB_ORG']
+    start  = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    stop   = datetime.now(timezone.utc)
+    with _client() as c:
+        delete_api = c.delete_api()
+        for measurement in MEASUREMENTS:
+            delete_api.delete(
+                start=start,
+                stop=stop,
+                predicate=f'_measurement="{measurement}"',
+                bucket=bucket,
+                org=org,
+            )
+
+
 def query_export_data(beehive_id, measurements, start_str, stop_str=None):
     valid = [m for m in measurements if m in MEASUREMENTS]
     if not valid:
