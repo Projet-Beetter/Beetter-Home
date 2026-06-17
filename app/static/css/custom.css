@@ -1191,6 +1191,17 @@ body.dark-mode .hive-table-row[data-status="no_data"] td:nth-child(2)::before { 
 .hive-table-row[data-online="false"] td:last-child,
 .hive-table-row[data-online="false"] td:nth-last-child(2) { opacity: 1 !important; }
 
+/* Prevent table container from clipping dropdown menus */
+@media (min-width: 768px) {
+  .table-responsive {
+    overflow: visible !important;
+  }
+}
+
+.hive-table-row .dropdown-menu {
+  z-index: 1050 !important;
+}
+
 /* Hidden tech columns by default */
 .hive-tech-col { display: none !important; }
 .hive-table--tech-view .hive-tech-col { display: table-cell !important; }
