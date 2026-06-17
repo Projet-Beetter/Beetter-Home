@@ -66,6 +66,18 @@ CHART_MEASUREMENTS = (
     'light_ext',
 )
 
+CHART_AGG_FUNCTIONS = {
+    'temperature_int': 'max',
+    'temperature_ext': 'mean',
+    'humidity_int':    'mean',
+    'humidity_ext':    'mean',
+    'sound_freq_int':  'max',
+    'sound_amp_int':   'max',
+    'sound_freq_ext':  'mean',
+    'sound_amp_ext':   'mean',
+    'light_ext':       'max',
+}
+
 
 def _measurement_filter():
     return ' or '.join(f'r._measurement == "{m}"' for m in MEASUREMENTS)
@@ -156,28 +168,42 @@ def query_chart_data(beehive_id, range_str='24h'):
     bucket = current_app.config['INFLUXDB_BUCKET']
     org    = current_app.config['INFLUXDB_ORG']
 
-    query = f'''
+    max_sensors  = [m for m in CHART_MEASUREMENTS if CHART_AGG_FUNCTIONS.get(m) == 'max']
+    mean_sensors = [m for m in CHART_MEASUREMENTS if CHART_AGG_FUNCTIONS.get(m) == 'mean']
+
+    result = {m: {'labels': [], 'data': []} for m in CHART_MEASUREMENTS}
+
+    def _run_query(sensors, fn):
+        if not sensors:
+            return
+        mfilter = ' or '.join(f'r._measurement == "{m}"' for m in sensors)
+        query = f'''
 from(bucket: "{bucket}")
   |> range(start: -{range_str})
   |> filter(fn: (r) => r["beehive_id"] == "{beehive_id}")
-  |> filter(fn: (r) => {_chart_measurement_filter()})
-  |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-  |> yield(name: "mean")
+  |> filter(fn: (r) => {mfilter})
+  |> aggregateWindow(every: {window}, fn: {fn}, createEmpty: false)
+  |> yield(name: "{fn}")
 '''
-    result = {m: {'labels': [], 'data': []} for m in CHART_MEASUREMENTS}
-    with _client() as c:
-        for table in c.query_api().query(query, org=org):
-            if not table.records:
-                continue
-            measurement = table.records[0].get_measurement()
-            if measurement not in result:
-                continue
-            for r in table.records:
-                result[measurement]['labels'].append(
-                    r.get_time().strftime('%Y-%m-%dT%H:%M:%SZ')
-                )
-                val = r.get_value()
-                result[measurement]['data'].append(round(val, 2) if val is not None else None)
+        with _client() as c:
+            for table in c.query_api().query(query, org=org):
+                if not table.records:
+                    continue
+                measurement = table.records[0].get_measurement()
+                if measurement not in result:
+                    continue
+                for r in table.records:
+                    result[measurement]['labels'].append(
+                        r.get_time().strftime('%Y-%m-%dT%H:%M:%SZ')
+                    )
+                    val = r.get_value()
+                    result[measurement]['data'].append(
+                        round(val, 2) if val is not None else None
+                    )
+
+    _run_query(max_sensors, 'max')
+    _run_query(mean_sensors, 'mean')
+
     return result
 
 
