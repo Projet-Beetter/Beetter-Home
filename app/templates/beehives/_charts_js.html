@@ -76,6 +76,18 @@
     if (scale.ticks[scale.ticks.length - 1].value < maxVal) scale.ticks.push({ value: maxVal });
   }
 
+  function getXAxisBounds(range) {
+    const now = Date.now();
+    const rangeMs = {
+      '1h':  1 * 60 * 60 * 1000,
+      '6h':  6 * 60 * 60 * 1000,
+      '24h': 24 * 60 * 60 * 1000,
+      '7d':  7  * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+    };
+    return { min: now - (rangeMs[range] || rangeMs['24h']), max: now };
+  }
+
   function convertToPoints(dataset) {
     if (!dataset || !dataset.labels) return [];
     return dataset.labels.map((t, i) => ({ x: t, y: dataset.data[i] }));
@@ -227,7 +239,8 @@
         scales: {
           x: (() => {
             const { ticks: xTicks, ...timeOpts } = getTimeOptions(range);
-            return { type: 'time', time: timeOpts, ticks: xTicks, afterBuildTicks: boundaryTickHook };
+            const bounds = getXAxisBounds(range);
+            return { type: 'time', time: timeOpts, ticks: xTicks, min: bounds.min, max: bounds.max, afterBuildTicks: boundaryTickHook };
           })(),
           y: { beginAtZero: false, ...yOptions, grace: '5%',
                ...(decimals !== null ? { ticks: { callback: v => Number(v).toFixed(decimals) } } : {}) }
@@ -258,7 +271,7 @@
       if (!response.ok) { console.error('Unable to load chart data:', response.statusText); return; }
       const data = await response.json();
       const chart = charts[chartId];
-      if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; }
+      if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); const bounds = getXAxisBounds(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = bounds.min; chart.options.scales.x.max = bounds.max; }
       updateMultiChart(chartId, data);
     } catch (error) { console.error('Chart loading error:', error); }
   }
@@ -284,7 +297,7 @@
           const data = await response.json();
           Object.keys(charts).forEach(chartId => {
             const chart = charts[chartId];
-            if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; }
+            if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); const bounds = getXAxisBounds(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = bounds.min; chart.options.scales.x.max = bounds.max; }
             updateMultiChart(chartId, data);
             const cb = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
             if (cb && cb.checked) applyThresholdView(chart);

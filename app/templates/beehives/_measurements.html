@@ -55,16 +55,6 @@
   }
 ] %}
 
-<div class="d-flex align-items-center mb-2">
-  <div class="btn-group btn-group-sm" role="group">
-    {% for r in range_options %}
-      <button type="button"
-              class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}"
-              data-range="{{ r }}">{{ _t('range_btn_' ~ r) }}</button>
-    {% endfor %}
-  </div>
-</div>
-
 {% for section in chart_sections %}
 <div class="card border-0 shadow-sm mb-3">
   <div class="card-body">

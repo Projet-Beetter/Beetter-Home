@@ -56,34 +56,44 @@
   </form>
   {% endif %}
 
-  <div class="hive-nav-arrows ms-auto d-flex align-items-center gap-1">
-    <span class="hive-nav-pos">{{ hive_position }}</span>
+  <div class="ms-auto d-flex align-items-center gap-2">
+    <div class="btn-group btn-group-sm" role="group">
+      {% for r in range_options %}
+        <button type="button"
+                class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}"
+                data-range="{{ r }}">{{ _t('range_btn_' ~ r) }}</button>
+      {% endfor %}
+    </div>
 
-    {% if prev_hive %}
-    <a href="{{ url_for('beehives.detail', hive_id=prev_hive.id) }}"
-       id="prevHiveBtn"
-       class="btn btn-sm btn-outline-secondary hive-nav-btn"
-       title="{{ prev_hive.name }} (←)">
-      <i class="bi bi-chevron-left"></i>
-    </a>
-    {% else %}
-    <button class="btn btn-sm btn-outline-secondary hive-nav-btn" disabled>
-      <i class="bi bi-chevron-left"></i>
-    </button>
-    {% endif %}
+    <div class="hive-nav-arrows d-flex align-items-center gap-1">
+      <span class="hive-nav-pos">{{ hive_position }}</span>
 
-    {% if next_hive %}
-    <a href="{{ url_for('beehives.detail', hive_id=next_hive.id) }}"
-       id="nextHiveBtn"
-       class="btn btn-sm btn-outline-secondary hive-nav-btn"
-       title="{{ next_hive.name }} (→)">
-      <i class="bi bi-chevron-right"></i>
-    </a>
-    {% else %}
-    <button class="btn btn-sm btn-outline-secondary hive-nav-btn" disabled>
-      <i class="bi bi-chevron-right"></i>
-    </button>
-    {% endif %}
+      {% if prev_hive %}
+      <a href="{{ url_for('beehives.detail', hive_id=prev_hive.id) }}"
+         id="prevHiveBtn"
+         class="btn btn-sm btn-outline-secondary hive-nav-btn"
+         title="{{ prev_hive.name }} (←)">
+        <i class="bi bi-chevron-left"></i>
+      </a>
+      {% else %}
+      <button class="btn btn-sm btn-outline-secondary hive-nav-btn" disabled>
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      {% endif %}
+
+      {% if next_hive %}
+      <a href="{{ url_for('beehives.detail', hive_id=next_hive.id) }}"
+         id="nextHiveBtn"
+         class="btn btn-sm btn-outline-secondary hive-nav-btn"
+         title="{{ next_hive.name }} (→)">
+        <i class="bi bi-chevron-right"></i>
+      </a>
+      {% else %}
+      <button class="btn btn-sm btn-outline-secondary hive-nav-btn" disabled>
+        <i class="bi bi-chevron-right"></i>
+      </button>
+      {% endif %}
+    </div>
   </div>
 </div>
 </div>

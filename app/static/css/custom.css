@@ -1355,6 +1355,10 @@ body.dark-mode .hive-f-ok   { color: #86efac !important; border-color: rgba(134,
   padding: 8px 1rem 4px;
   margin-bottom: 8px;
   border-bottom: 1px solid rgba(0,0,0,.1);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 body.dark-mode .hive-sticky-header {
