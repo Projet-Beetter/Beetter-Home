@@ -18,6 +18,10 @@ Nomenclature des champs : identique à l'API Flask (POST /api/data)
 
 Basé sur grove_lora.py (doit être dans le même dossier).
 
+Firmware v4 : seq passe de uint16 à uint32 dans les blocs ENV et AUD.
+  SIZE_ENV : 23 → 25 bytes  |  SIZE_AUD : 73 → 75 bytes
+  FMT_ENV  : BH → BI        |  FMT_AUD  : BH → BI
+
 Lancement :
   python3 receiver.py
 
@@ -48,11 +52,12 @@ FREQUENCE = 868.0
 # ─── Magics et tailles ───────────────────────────────────────
 MAGIC_ENV  = 0xE0
 MAGIC_AUD  = 0xA0
-SIZE_ENV   = 23
-SIZE_AUD   = 73
+SIZE_ENV   = 25   # +2 bytes : seq uint16 → uint32 (firmware v4)
+SIZE_AUD   = 75   # +2 bytes : seq uint16 → uint32 (firmware v4)
 
-FMT_ENV = "<BH4sIhHhHHH"
-FMT_AUD = "<BH4sIHHHH13h13hH"
+# seq passe de H (uint16) à I (uint32) — firmware v4
+FMT_ENV = "<BI4sIhHhHHH"
+FMT_AUD = "<BI4sIHHHH13h13hH"
 
 # ─── API Flask (POST /api/data) ───────────────────────────────
 # Même approche que tools/simulate.py : on pousse du JSON à l'app
@@ -176,8 +181,11 @@ def decoder_aud(data: bytes) -> dict | None:
 
         # MFCC : liste de 13 floats — write_sensor_data() les éclate
         # en mfcc_int_0..mfcc_int_12 et mfcc_ext_0..mfcc_ext_12
-        "mfcc_int"      : [x / 100.0 for x in v[8:21]],
-        "mfcc_ext"      : [x / 100.0 for x in v[21:34]],
+        # Encodage différencié (firmware v2) :
+        #   MFCC0      × 10   → ÷ 10.0    (résolution 0.1)
+        #   MFCC1..12  × 1000 → ÷ 1000.0  (résolution 0.001, 10× plus précis)
+        "mfcc_int"      : [v[8]  / 10.0] + [x / 1000.0 for x in v[9:21]],
+        "mfcc_ext"      : [v[21] / 10.0] + [x / 1000.0 for x in v[22:34]],
     }
 
 
