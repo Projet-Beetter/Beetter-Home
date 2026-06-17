@@ -21,31 +21,31 @@
 <div class="row g-2 mt-1 mb-3">
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-all" onclick="setFilter('all')">
-      <div class="fw-bold fs-4">{{ metrics.total }}</div>
+      <div class="fw-bold fs-4" data-summary-value="total">{{ metrics.total }}</div>
       <small class="text-muted">{{ _t('dash_metric_all') }}</small>
     </div>
   </div>
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-critical" onclick="setFilter('critical')" style="color:#b91c1c;">
-      <div class="fw-bold fs-4 text-danger">{{ metrics.alerts }}</div>
+      <div class="fw-bold fs-4 text-danger" data-summary-value="alerts">{{ metrics.alerts }}</div>
       <small style="color:#b91c1c;">{{ _t('dash_metric_critical') }}</small>
     </div>
   </div>
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-agitated" onclick="setFilter('agitated')" style="color:#f97316;">
-      <div class="fw-bold fs-4" style="color:#f97316;">{{ metrics.agitated }}</div>
+      <div class="fw-bold fs-4" style="color:#f97316;" data-summary-value="agitated">{{ metrics.agitated }}</div>
       <small style="color:#f97316;">{{ _t('dash_metric_agitated') }}</small>
     </div>
   </div>
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-calm" onclick="setFilter('calm')" style="color:#166534;">
-      <div class="fw-bold fs-4 text-success">{{ metrics.calm }}</div>
+      <div class="fw-bold fs-4 text-success" data-summary-value="calm">{{ metrics.calm }}</div>
       <small style="color:#166534;">{{ _t('dash_metric_calm') }}</small>
     </div>
   </div>
   <div class="col">
     <div class="card border-0 shadow-sm text-center py-2 metric-card" id="metric-silent" onclick="setFilter('silent')">
-      <div class="fw-bold fs-4 text-muted">{{ metrics.silent }}</div>
+      <div class="fw-bold fs-4 text-muted" data-summary-value="silent">{{ metrics.silent }}</div>
       <small class="text-muted">{{ _t('dash_metric_silent') }}</small>
     </div>
   </div>
@@ -72,6 +72,7 @@
       {% for hive in section_hives %}
       {% set hm = hive_metrics[hive.id] %}
       <div class="hive-card hive-card--{{ hm.overall }} position-relative{% if not hive.enabled %} opacity-50{% endif %}"
+           data-hive-id="{{ hive.id }}"
            data-family="{{ 'silent' if hm.family is none else hm.family }}">
         <a href="{{ url_for('beehives.detail', hive_id=hive.id) }}" class="stretched-link" aria-label="{{ hive.name }}"></a>
 
@@ -83,7 +84,7 @@
             <div class="hive-card__loc"><i class="bi bi-geo-alt"></i>{{ hive.city }}</div>
             {% endif %}
           </div>
-          <div class="d-flex flex-column align-items-end gap-1">
+          <div class="d-flex flex-column align-items-end gap-1" data-badge-hive="{{ hive.id }}">
             {% if hm.online %}
             {% set s = status_config.get(hive.status, status_config['no_data']) %}
             <span class="badge {{ s.badge }}">
@@ -101,7 +102,7 @@
         {# Metric bars #}
         <div class="hive-card__metrics">
           {% for m in hm.metrics %}
-          <div class="hive-metric">
+          <div class="hive-metric" data-metric-key="{{ m.key }}">
             <i class="bi {{ m.icon }} hive-metric__icon" style="color:{{ m.color }}"></i>
             <span class="hive-metric__label">{{ m.label }}</span>
             <div class="hive-metric__track">
@@ -157,5 +158,42 @@ function setFilter(family) {
 
 // Hide separators on initial load
 document.querySelectorAll('.section-separator').forEach(el => el.classList.add('d-none'));
+
+const DASHBOARD_API = "{{ url_for('api.dashboard_data') }}";
+
+async function dashboardLiveRefresh() {
+  try {
+    const res = await fetch(DASHBOARD_API, { cache: 'no-store' });
+    if (!res.ok) { console.warn('[Beetter] dashboard refresh failed:', res.status); return; }
+    const data = await res.json();
+    const hives = data.hives;
+    const summary = data.summary;
+
+    document.querySelectorAll('.hive-card[data-hive-id]').forEach(card => {
+      const hiveId = card.dataset.hiveId;
+      const hm = hives[hiveId];
+      if (!hm) return;
+
+      card.className = card.className.replace(/hive-card--\S+/, `hive-card--${hm.overall}`);
+
+      card.querySelectorAll('.hive-metric[data-metric-key]').forEach(row => {
+        const key = row.dataset.metricKey;
+        const m = hm.metrics.find(x => x.key === key);
+        if (!m) return;
+        const fill = row.querySelector('.hive-metric__fill');
+        if (fill) { fill.style.width = m.percent + '%'; fill.className = `hive-metric__fill hive-metric__fill--${m.status}`; }
+        const val = row.querySelector('.hive-metric__val');
+        if (val) { val.textContent = m.value !== null ? `${Math.round(m.value * 10) / 10}${m.unit}` : '—'; val.className = `hive-metric__val hive-metric__val--${m.status}`; }
+      });
+    });
+
+    const upd = (id, v) => { const el = document.querySelector(`[data-summary-value="${id}"]`); if (el) el.textContent = v; };
+    upd('total', summary.total); upd('alerts', summary.alerts); upd('agitated', summary.agitated); upd('calm', summary.calm); upd('silent', summary.silent);
+
+  } catch (err) { console.warn('[Beetter] dashboard refresh error:', err); }
+}
+
+dashboardLiveRefresh();
+setInterval(dashboardLiveRefresh, 30_000);
 </script>
 {% endblock %}

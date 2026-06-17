@@ -80,6 +80,7 @@ def _client():
         url=current_app.config['INFLUXDB_URL'],
         token=current_app.config['INFLUXDB_TOKEN'],
         org=current_app.config['INFLUXDB_ORG'],
+        timeout=5_000,  # 5 seconds max
     )
 
 
@@ -185,7 +186,7 @@ def query_latest_values(beehive_id):
     org    = current_app.config['INFLUXDB_ORG']
     query = f'''
 from(bucket: "{bucket}")
-  |> range(start: -1h)
+  |> range(start: -24h)
   |> filter(fn: (r) => r["beehive_id"] == "{beehive_id}")
   |> filter(fn: (r) => {_chart_measurement_filter()})
   |> last()

@@ -113,7 +113,7 @@ def create_app():
             user_hive_ids = db.session.query(_Beehive.id).filter_by(user_id=current_user.id).subquery()
             alerts_count = Alert.query.filter(
                 Alert.created_at >= today,
-                Alert.hive_id.in_(user_hive_ids),
+                Alert.hive_id.in_(user_hive_ids.select()),
                 ~Alert.id.in_(read_ids),
                 ~Alert.new_status.in_(CALM_STATUSES)
             ).count()

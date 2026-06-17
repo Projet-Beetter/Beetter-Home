@@ -360,8 +360,7 @@
     };
 
     const chartDecimals = {
-      tempIntChart: 1,
-      tempExtChart: 1,
+      temperatureChart: 1,
     };
 
     document.querySelectorAll('canvas').forEach(canvas => {
@@ -380,6 +379,9 @@
     initializeRangeSelectors();
     initializeSeriesToggles();
     initializeThresholdToggles();
+
+    // Run once immediately so the page shows fresh sensor data without waiting 30 s
+    if (typeof liveRefresh === 'function') liveRefresh();
 
     document.querySelectorAll('.accordion-collapse').forEach(c => {
       c.addEventListener('shown.bs.collapse', (e) => {

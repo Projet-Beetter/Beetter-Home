@@ -13,18 +13,17 @@
   <div class="detail-left">
     <div class="card border-0 shadow-sm mb-3">
       <div class="card-body">
-        <p class="mb-2 text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">{{ _t('detail_current_readings') }}</p>
+        <p class="mb-2 text-muted d-flex align-items-center gap-2" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">
+          {{ _t('detail_current_readings') }}
+          <span id="liveIndicator" title="Live" style="width:7px;height:7px;border-radius:50%;background:#639922;display:inline-block;opacity:0;transition:opacity .4s"></span>
+        </p>
         <div class="row g-2">
           {% for m in metrics %}
           <div class="col-6">
-            <div class="metric-status-card {{ m.status }}">
+            <div class="metric-status-card {{ m.status }}" data-metric-key="{{ m.key }}" data-metric-unit="{{ m.unit }}">
               <i class="bi {{ m.icon }}" style="color:{{ m.color }};font-size:14px"></i>
               <div class="fw-semibold" style="font-size:15px;line-height:1;margin-top:3px">
-                {% if m.value is not none %}
-                  {{ m.value }}{{ m.unit }}<span class="metric-dot {{ m.status }}"></span>
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
+                <span data-metric-value>{% if m.value is not none %}{{ m.value }}{{ m.unit }}{% else %}<span class="text-muted">—</span>{% endif %}</span><span class="metric-dot {{ m.status }}" data-metric-dot></span>
               </div>
               <div class="text-muted" style="font-size:10px;margin-top:2px">{{ m.label }}</div>
             </div>
@@ -48,6 +47,92 @@
 {% include 'beehives/_charts_js.html' %}
 {% include 'beehives/_location_js.html' %}
 <script>
+// ── Live data polling ────────────────────────────────────────────────
+const liveLatestUrl = "{{ url_for('api.latest_values', hive_id=hive.id) }}";
+const STATUS_CLASSES = ['ok', 'warn', 'crit', 'no_data'];
+let liveRange = currentRange;
+
+// Track active range from range selector clicks
+document.querySelectorAll('.range-selector').forEach(btn => {
+  btn.addEventListener('click', () => { liveRange = btn.dataset.range; });
+});
+
+async function liveRefresh() {
+  // 1 — latest sensor values
+  try {
+    const res = await fetch(liveLatestUrl, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+
+      document.querySelectorAll('[data-metric-key]').forEach(card => {
+        const key   = card.dataset.metricKey;
+        const unit  = card.dataset.metricUnit;
+        const entry = data[key];
+        const valEl = card.querySelector('[data-metric-value]');
+        const dotEl = card.querySelector('[data-metric-dot]');
+        if (!valEl) return;
+        if (entry) {
+          valEl.innerHTML = `${entry.value}${unit}`;
+          const st = entry.status || 'no_data';
+          STATUS_CLASSES.forEach(c => { card.classList.remove(c); if (dotEl) dotEl.classList.remove(c); });
+          card.classList.add(st);
+          if (dotEl) dotEl.classList.add(st);
+        } else {
+          valEl.innerHTML = '<span class="text-muted">—</span>';
+        }
+      });
+
+      document.querySelectorAll('[data-sensor-value]').forEach(el => {
+        const entry = data[el.dataset.sensorValue];
+        el.innerHTML = entry ? `${entry.value}${el.dataset.sensorUnit}` : '<span class="text-muted">—</span>';
+      });
+      document.querySelectorAll('[data-sensor-time]').forEach(el => {
+        const entry = data[el.dataset.sensorTime];
+        el.textContent = entry ? entry.time : '';
+      });
+
+      const dot = document.getElementById('liveIndicator');
+      if (dot) { dot.style.opacity = '1'; setTimeout(() => dot.style.opacity = '0', 1500); }
+
+      // Update hive status badge
+      if (data._hive) {
+        const badge = document.getElementById('hiveStatusBadge');
+        if (badge) {
+          ['bg-success','bg-orange','bg-danger','bg-secondary','bg-dark'].forEach(c => badge.classList.remove(c));
+          badge.classList.add(data._hive.badge);
+          badge.textContent = data._hive.label;
+        }
+        // Update sidebar alerts count
+        const alertsBadge = document.getElementById('alertsBadge');
+        if (alertsBadge) {
+          const count = data._hive.alerts_count;
+          alertsBadge.textContent = count || '';
+          alertsBadge.classList.toggle('d-none', count === 0);
+        }
+      }
+    } else {
+      console.warn('liveRefresh /latest returned', res.status);
+    }
+  } catch(e) { console.warn('liveRefresh /latest error:', e); }
+
+  // 2 — chart data
+  try {
+    const res = await fetch(`${chartApiUrl}?range=${encodeURIComponent(liveRange)}`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      Object.keys(charts).forEach(chartId => {
+        updateMultiChart(chartId, data);
+        const cb = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
+        if (cb && cb.checked) applyThresholdView(charts[chartId]);
+      });
+    } else {
+      console.warn('liveRefresh /chart-data returned', res.status);
+    }
+  } catch(e) { console.warn('liveRefresh /chart-data error:', e); }
+}
+
+setInterval(liveRefresh, 30_000);
+
 // ── Keyboard arrow navigation between hives ──────────────────────────
 document.addEventListener('keydown', function(e) {
   const tag = document.activeElement.tagName.toLowerCase();

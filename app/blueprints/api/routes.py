@@ -8,12 +8,14 @@ that auto-escalate or auto-recover the hive status and log an Alert.
 """
 
 import logging
-from flask import request, jsonify
-from flask_login import login_required
+from flask import request, jsonify, session
+from flask_login import login_required, current_user
 from datetime import datetime, timezone
-from ...models import db, Beehive, Alert
-from ..utils.influxdb import write_sensor_data, query_chart_data, RANGE_OPTIONS
-from ..utils.thresholds import check_any_crit, check_any_warn, all_ok, THRESHOLDS
+from ...models import db, Beehive, Alert, user_alert_reads
+from ..utils.influxdb import write_sensor_data, query_chart_data, query_latest_values, RANGE_OPTIONS
+from ..utils.thresholds import check_any_crit, check_any_warn, all_ok, THRESHOLDS, get_threshold_status
+from ..utils.status import STATUS_CONFIG, CALM_STATUSES
+from ...i18n import get_text
 from . import api_bp
 
 logger = logging.getLogger(__name__)
@@ -137,6 +139,128 @@ def ingest():
     return jsonify({'status': 'ok'}), 201
 
 
+@api_bp.route('/beehives/<string:hive_id>/latest')
+@login_required
+def latest_values(hive_id):
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
+    try:
+        data = query_latest_values(str(hive.id))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    for key, entry in data.items():
+        entry['status'] = get_threshold_status(key, entry['value'])
+
+    # Hive meta — used by live UI updates
+    lang = session.get('lang', 'en')
+    s = STATUS_CONFIG.get(hive.status, STATUS_CONFIG['no_data'])
+    try:
+        today = datetime.utcnow().date()
+        read_ids = db.session.query(user_alert_reads.c.alert_id).filter(
+            user_alert_reads.c.user_id == current_user.id
+        ).subquery()
+        user_hive_ids = db.session.query(Beehive.id).filter_by(user_id=current_user.id).subquery()
+        alerts_count = Alert.query.filter(
+            Alert.created_at >= today,
+            Alert.hive_id.in_(user_hive_ids.select()),
+            ~Alert.id.in_(read_ids),
+            ~Alert.new_status.in_(CALM_STATUSES),
+        ).count()
+    except Exception:
+        alerts_count = 0
+    data['_hive'] = {
+        'status': hive.status,
+        'badge': s['badge'],
+        'label': get_text('status_' + hive.status, lang),
+        'alerts_count': alerts_count,
+    }
+
+    resp = jsonify(data)
+    resp.headers['Cache-Control'] = 'no-store'
+    return resp
+
+
+@api_bp.route('/alerts-count')
+@login_required
+def alerts_count_endpoint():
+    try:
+        today = datetime.utcnow().date()
+        read_ids = db.session.query(user_alert_reads.c.alert_id).filter(
+            user_alert_reads.c.user_id == current_user.id
+        ).subquery()
+        user_hive_ids = db.session.query(Beehive.id).filter_by(user_id=current_user.id).subquery()
+        count = Alert.query.filter(
+            Alert.created_at >= today,
+            Alert.hive_id.in_(user_hive_ids.select()),
+            ~Alert.id.in_(read_ids),
+            ~Alert.new_status.in_(CALM_STATUSES),
+        ).count()
+    except Exception:
+        count = 0
+    resp = jsonify({'count': count})
+    resp.headers['Cache-Control'] = 'no-store'
+    return resp
+
+
+@api_bp.route('/dashboard')
+@login_required
+def dashboard_data():
+    from ..dashboard.routes import (
+        CARD_METRICS, bar_percent, card_overall_status,
+    )
+    beehives = Beehive.query.order_by(Beehive.created_at).all()
+    result = {}
+    for hive in beehives:
+        latest = {}
+        if hive.enabled:
+            try:
+                latest = query_latest_values(str(hive.id))
+            except Exception:
+                pass
+
+        def _v(key, _l=latest):
+            obj = _l.get(key)
+            return obj['value'] if obj is not None else None
+
+        metrics = []
+        for m in CARD_METRICS:
+            val = _v(m['key'])
+            status = get_threshold_status(m['key'], val)
+            metrics.append({
+                'key':     m['key'],
+                'value':   val,
+                'unit':    m['unit'],
+                'status':  status,
+                'percent': bar_percent(m['key'], val),
+            })
+
+        has_data = bool(latest)
+        online   = hive.enabled and has_data
+        result[str(hive.id)] = {
+            'overall': card_overall_status(metrics, hive.status) if online else 'no_data',
+            'online':  online,
+            'status':  hive.status,
+            'metrics': metrics,
+        }
+
+    alerts_count   = sum(1 for h in beehives if result[str(h.id)]['online'] and STATUS_CONFIG.get(h.status, {}).get('family') == 'critical')
+    agitated_count = sum(1 for h in beehives if result[str(h.id)]['online'] and STATUS_CONFIG.get(h.status, {}).get('family') == 'agitated')
+    calm_count     = sum(1 for h in beehives if result[str(h.id)]['online'] and STATUS_CONFIG.get(h.status, {}).get('family') == 'calm')
+    silent_count   = sum(1 for h in beehives if not result[str(h.id)]['online'] or STATUS_CONFIG.get(h.status, {}).get('family') is None)
+
+    resp = jsonify({
+        'hives': result,
+        'summary': {
+            'total':    len(beehives),
+            'alerts':   alerts_count,
+            'agitated': agitated_count,
+            'calm':     calm_count,
+            'silent':   silent_count,
+        }
+    })
+    resp.headers['Cache-Control'] = 'no-store'
+    return resp
+
+
 @api_bp.route('/beehives/<string:hive_id>/chart-data')
 @login_required
 def chart_data(hive_id):
@@ -149,4 +273,6 @@ def chart_data(hive_id):
         data = query_chart_data(str(hive.id), range_str)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    return jsonify(data)
+    resp = jsonify(data)
+    resp.headers['Cache-Control'] = 'no-store'
+    return resp

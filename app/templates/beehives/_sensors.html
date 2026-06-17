@@ -21,25 +21,21 @@
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-danger fs-4"><i class="bi bi-thermometer-half"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="temperature_int" data-sensor-unit="°C">
               {% if latest.temperature_int %}{{ latest.temperature_int.value }}°C{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_int_temp') }}</small>
-            {% if latest.temperature_int %}
-              <small class="text-muted d-block" style="font-size:.7rem">{{ latest.temperature_int.time }}</small>
-            {% endif %}
+            <small class="text-muted d-block" style="font-size:.7rem" data-sensor-time="temperature_int">{% if latest.temperature_int %}{{ latest.temperature_int.time }}{% endif %}</small>
           </div>
         </div>
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-danger fs-4"><i class="bi bi-thermometer-half"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="temperature_ext" data-sensor-unit="°C">
               {% if latest.temperature_ext %}{{ latest.temperature_ext.value }}°C{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_ext_temp') }}</small>
-            {% if latest.temperature_ext %}
-              <small class="text-muted d-block" style="font-size:.7rem">{{ latest.temperature_ext.time }}</small>
-            {% endif %}
+            <small class="text-muted d-block" style="font-size:.7rem" data-sensor-time="temperature_ext">{% if latest.temperature_ext %}{{ latest.temperature_ext.time }}{% endif %}</small>
           </div>
         </div>
       </div>
@@ -60,25 +56,21 @@
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-primary fs-4"><i class="bi bi-droplet-half"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="humidity_int" data-sensor-unit="%">
               {% if latest.humidity_int %}{{ latest.humidity_int.value }}%{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_int_hum') }}</small>
-            {% if latest.humidity_int %}
-              <small class="text-muted d-block" style="font-size:.7rem">{{ latest.humidity_int.time }}</small>
-            {% endif %}
+            <small class="text-muted d-block" style="font-size:.7rem" data-sensor-time="humidity_int">{% if latest.humidity_int %}{{ latest.humidity_int.time }}{% endif %}</small>
           </div>
         </div>
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-primary fs-4"><i class="bi bi-droplet-half"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="humidity_ext" data-sensor-unit="%">
               {% if latest.humidity_ext %}{{ latest.humidity_ext.value }}%{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_ext_hum') }}</small>
-            {% if latest.humidity_ext %}
-              <small class="text-muted d-block" style="font-size:.7rem">{{ latest.humidity_ext.time }}</small>
-            {% endif %}
+            <small class="text-muted d-block" style="font-size:.7rem" data-sensor-time="humidity_ext">{% if latest.humidity_ext %}{{ latest.humidity_ext.time }}{% endif %}</small>
           </div>
         </div>
       </div>
@@ -99,7 +91,7 @@
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-secondary fs-4"><i class="bi bi-music-note-beamed"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="sound_freq_int" data-sensor-unit=" Hz">
               {% if latest.sound_freq_int %}{{ latest.sound_freq_int.value }} Hz{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_int_freq') }}</small>
@@ -108,7 +100,7 @@
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-secondary fs-4"><i class="bi bi-volume-up"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="sound_amp_int" data-sensor-unit="">
               {% if latest.sound_amp_int %}{{ latest.sound_amp_int.value }}{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_int_amp') }}</small>
@@ -117,7 +109,7 @@
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-secondary fs-4"><i class="bi bi-music-note-beamed"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="sound_freq_ext" data-sensor-unit=" Hz">
               {% if latest.sound_freq_ext %}{{ latest.sound_freq_ext.value }} Hz{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_ext_freq') }}</small>
@@ -126,7 +118,7 @@
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-secondary fs-4"><i class="bi bi-volume-up"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="sound_amp_ext" data-sensor-unit="">
               {% if latest.sound_amp_ext %}{{ latest.sound_amp_ext.value }}{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_ext_amp') }}</small>
@@ -150,13 +142,11 @@
         <div class="col-sm-6 col-md-3">
           <div class="card border-0 shadow-sm text-center py-3">
             <div class="text-warning fs-4"><i class="bi bi-brightness-high"></i></div>
-            <div class="fs-2 fw-bold">
+            <div class="fs-2 fw-bold" data-sensor-value="light_ext" data-sensor-unit="%">
               {% if latest.light_ext %}{{ latest.light_ext.value }}%{% else %}<span class="text-muted">—</span>{% endif %}
             </div>
             <small class="text-muted">{{ _t('sensor_ext_light') }}</small>
-            {% if latest.light_ext %}
-              <small class="text-muted d-block" style="font-size:.7rem">{{ latest.light_ext.time }}</small>
-            {% endif %}
+            <small class="text-muted d-block" style="font-size:.7rem" data-sensor-time="light_ext">{% if latest.light_ext %}{{ latest.light_ext.time }}{% endif %}</small>
           </div>
         </div>
       </div>

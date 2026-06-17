@@ -87,6 +87,21 @@
 
 {% block scripts %}
 <script>
+// Auto-reload when alert count changes
+let _lastAlertCount = null;
+setInterval(async function() {
+  try {
+    const res = await fetch('/api/alerts-count', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (_lastAlertCount === null) {
+      _lastAlertCount = data.count;
+    } else if (data.count !== _lastAlertCount) {
+      window.location.reload();
+    }
+  } catch(e) {}
+}, 30_000);
+
 const familyToDot = { critical: 'dot-red', agitated: 'dot-yellow', calm: 'dot-green' };
 
 function filterAlerts() {

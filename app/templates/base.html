@@ -80,9 +80,7 @@
              class="nav-link d-flex align-items-center {% if request.endpoint and request.endpoint.startswith('alerts') %}active{% endif %}" data-bs-toggle="tooltip" title="{{ _t('nav_alerts') }}">
             <i class="bi bi-bell"></i>
             <span class="nav-label ms-2">{{ _t('nav_alerts') }}</span>
-            {% if alerts_count > 0 %}
-              <span class="badge bg-danger ms-auto">{{ alerts_count }}</span>
-            {% endif %}
+            <span id="alertsBadge" class="badge bg-danger ms-auto{% if alerts_count == 0 %} d-none{% endif %}">{{ alerts_count or '' }}</span>
           </a>
         </li>
       </ul>
@@ -238,6 +236,18 @@
   });
 </script>
 {% if current_user.is_authenticated %}
+<script>
+  // Global alert badge live polling — runs on every page
+  setInterval(async function() {
+    try {
+      const res = await fetch('/api/alerts-count', { cache: 'no-store' });
+      if (!res.ok) return;
+      const { count } = await res.json();
+      const badge = document.getElementById('alertsBadge');
+      if (badge) { badge.textContent = count || ''; badge.classList.toggle('d-none', count === 0); }
+    } catch(e) {}
+  }, 30_000);
+</script>
 <script>
   const toggle = document.getElementById('darkModeToggle');
   const icon = document.getElementById('darkModeIcon');
