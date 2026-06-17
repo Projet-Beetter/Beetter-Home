@@ -63,15 +63,6 @@
       <span class="fw-semibold" style="font-size:13px">{{ section.title }}</span>
     </div>
     <div class="mb-1 d-flex flex-wrap align-items-center">
-      {% for s in section.sensors %}
-        <div class="form-check form-check-inline mb-0">
-          <input class="form-check-input series-toggle" type="checkbox"
-                 id="{{ section.id }}-{{ s.key }}"
-                 data-chart-id="{{ section.id }}"
-                 data-sensor-key="{{ s.key }}" checked>
-          <label class="form-check-label small text-muted" for="{{ section.id }}-{{ s.key }}">{{ s.label }}</label>
-        </div>
-      {% endfor %}
       {% if section.show_thresholds %}
       <div class="form-check form-check-inline mb-0 ms-2">
         <input class="form-check-input threshold-toggle-btn" type="checkbox"
@@ -84,7 +75,7 @@
       </div>
       {% endif %}
     </div>
-    <canvas id="{{ section.id }}" height="90"></canvas>
+    <canvas id="{{ section.id }}" height="90" data-series='{{ section.sensors | tojson }}'></canvas>
   </div>
 </div>
 {% endfor %}

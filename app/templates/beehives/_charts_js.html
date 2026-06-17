@@ -229,9 +229,6 @@
                 chart.options.plugins.annotation.annotations = getActiveAnnotations(chart);
               }
               chart.update();
-              // Sync checkbox
-              const cb = document.querySelector(`.series-toggle[data-chart-id="${chart.canvas.id}"][data-sensor-key="${ds.sensorKey}"]`);
-              if (cb) cb.checked = !ds.hidden;
             }
           },
           annotation: { annotations: {} },
@@ -321,34 +318,6 @@
     });
   }
 
-  function initializeSeriesToggles() {
-    document.querySelectorAll('.series-toggle').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const chartId = cb.dataset.chartId;
-        const chart = charts[chartId];
-        if (!chart) return;
-        const dsIndex = chart.data.datasets.findIndex(d => d.sensorKey === cb.dataset.sensorKey);
-        if (dsIndex === -1) return;
-
-        // Prevent hiding the last visible series
-        if (!cb.checked) {
-          const otherVisible = chart.data.datasets.some((ds, i) => i !== dsIndex && !ds.hidden);
-          if (!otherVisible) {
-            cb.checked = true;
-            return;
-          }
-        }
-
-        chart.data.datasets[dsIndex].hidden = !cb.checked;
-        const threshBtn = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
-        if (threshBtn && threshBtn.checked) {
-          chart.options.plugins.annotation.annotations = getActiveAnnotations(chart);
-        }
-        chart.update();
-      });
-    });
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     // Restore before chart init so opened sections have correct canvas dimensions
     restoreAccordionState();
@@ -360,11 +329,11 @@
     };
 
     const defaultColorSets = {
-      temperatureChart: ['#dc3545','#e46060'],
-      humidityChart: ['#0d6efd','#4b8dff'],
-      soundFreqChart: ['#6a1b9a','#ab47bc'],
-      soundAmpChart: ['#00897b','#26a69a'],
-      lightExtChart: ['#f9a825']
+      temperatureChart: ['#E24B4A', '#F4A261'],
+      humidityChart:    ['#2196F3', '#4CAF50'],
+      soundFreqChart:   ['#9C27B0', '#00BCD4'],
+      soundAmpChart:    ['#FF5722', '#009688'],
+      lightExtChart:    ['#F9A825'],
     };
 
     const chartScales = {
@@ -378,19 +347,19 @@
 
     document.querySelectorAll('canvas').forEach(canvas => {
       const id = canvas.id;
-      const seriesInputs = Array.from(document.querySelectorAll(`.series-toggle[data-chart-id="${id}"]`));
-      if (!seriesInputs.length) return;
-      const seriesConfigs = seriesInputs.map((cb, idx) => ({
-        sensorKey: cb.dataset.sensorKey,
-        label: document.querySelector(`label[for="${cb.id}"]`).innerText,
-        visible: cb.checked,
+      let series;
+      try { series = JSON.parse(canvas.dataset.series || '[]'); } catch(e) { return; }
+      if (!series.length) return;
+      const seriesConfigs = series.map((s, idx) => ({
+        sensorKey: s.key,
+        label: s.label,
+        visible: true,
         color: (defaultColorSets[id] || ['#0d6efd'])[idx % 5]
       }));
       makeMultiSeriesChart(id, '', seriesConfigs, chartScales[id] || {}, currentRange, chartDecimals[id] ?? null);
     });
 
     initializeRangeSelectors();
-    initializeSeriesToggles();
     initializeThresholdToggles();
 
     // Run once immediately so the page shows fresh sensor data without waiting 30 s
