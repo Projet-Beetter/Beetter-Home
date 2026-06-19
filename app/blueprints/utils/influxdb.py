@@ -19,7 +19,7 @@ RANGE_OPTIONS = ['1h', '6h', '24h', '7d', '30d']
 
 _WINDOW_MAP = {
     '1h':  '1m',
-    '6h':  '5m',
+    '6h':  '2m',   # was 5m — reduced to capture 5-min predator events
     '24h': '15m',
     '7d':  '2h',
     '30d': '12h',
@@ -65,18 +65,6 @@ CHART_MEASUREMENTS = (
     'sound_freq_ext',  'sound_amp_ext',
     'light_ext',
 )
-
-CHART_AGG_FUNCTIONS = {
-    'temperature_int': 'max',
-    'temperature_ext': 'mean',
-    'humidity_int':    'mean',
-    'humidity_ext':    'mean',
-    'sound_freq_int':  'max',
-    'sound_amp_int':   'max',
-    'sound_freq_ext':  'mean',
-    'sound_amp_ext':   'mean',
-    'light_ext':       'max',
-}
 
 
 def _measurement_filter():
@@ -168,43 +156,61 @@ def query_chart_data(beehive_id, range_str='24h'):
     bucket = current_app.config['INFLUXDB_BUCKET']
     org    = current_app.config['INFLUXDB_ORG']
 
-    max_sensors  = [m for m in CHART_MEASUREMENTS if CHART_AGG_FUNCTIONS.get(m) == 'max']
-    mean_sensors = [m for m in CHART_MEASUREMENTS if CHART_AGG_FUNCTIONS.get(m) == 'mean']
-
-    result = {m: {'labels': [], 'data': []} for m in CHART_MEASUREMENTS}
-
-    def _run_query(sensors, fn):
-        if not sensors:
-            return
-        mfilter = ' or '.join(f'r._measurement == "{m}"' for m in sensors)
-        query = f'''
+    query = f'''
 from(bucket: "{bucket}")
   |> range(start: -{range_str})
   |> filter(fn: (r) => r["beehive_id"] == "{beehive_id}")
-  |> filter(fn: (r) => {mfilter})
-  |> aggregateWindow(every: {window}, fn: {fn}, createEmpty: false)
-  |> yield(name: "{fn}")
+  |> filter(fn: (r) => {_chart_measurement_filter()})
+  |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+  |> yield(name: "mean")
 '''
-        with _client() as c:
-            for table in c.query_api().query(query, org=org):
-                if not table.records:
-                    continue
-                measurement = table.records[0].get_measurement()
-                if measurement not in result:
-                    continue
-                for r in table.records:
-                    result[measurement]['labels'].append(
-                        r.get_time().strftime('%Y-%m-%dT%H:%M:%SZ')
-                    )
-                    val = r.get_value()
-                    result[measurement]['data'].append(
-                        round(val, 2) if val is not None else None
-                    )
-
-    _run_query(max_sensors, 'max')
-    _run_query(mean_sensors, 'mean')
-
+    result = {m: {'labels': [], 'data': []} for m in CHART_MEASUREMENTS}
+    with _client() as c:
+        for table in c.query_api().query(query, org=org):
+            if not table.records:
+                continue
+            measurement = table.records[0].get_measurement()
+            if measurement not in result:
+                continue
+            for r in table.records:
+                result[measurement]['labels'].append(
+                    r.get_time().strftime('%Y-%m-%dT%H:%M:%SZ')
+                )
+                val = r.get_value()
+                result[measurement]['data'].append(
+                    round(val, 2) if val is not None else None
+                )
     return result
+
+
+def query_recent_points(beehive_id, sensor_key, n=5):
+    """
+    Return the last N raw values for a single sensor.
+    Used for consecutive threshold breach detection.
+    Shannon: n should cover at least 2x the minimum event duration.
+    With interval=10s:
+      n=3  → 30s minimum  (predator detection)
+      n=5  → 50s minimum  (warning events)
+      n=12 → 2min minimum (sustained events)
+    """
+    bucket = current_app.config['INFLUXDB_BUCKET']
+    org    = current_app.config['INFLUXDB_ORG']
+    query = f'''
+from(bucket: "{bucket}")
+  |> range(start: -10m)
+  |> filter(fn: (r) => r["beehive_id"] == "{beehive_id}")
+  |> filter(fn: (r) => r["_measurement"] == "{sensor_key}")
+  |> sort(columns: ["_time"], desc: true)
+  |> limit(n: {n})
+'''
+    values = []
+    with _client() as c:
+        for table in c.query_api().query(query, org=org):
+            for r in table.records:
+                val = r.get_value()
+                if val is not None:
+                    values.append(round(float(val), 2))
+    return values
 
 
 def query_latest_values(beehive_id):

@@ -12,13 +12,45 @@ from flask import request, jsonify, session
 from flask_login import login_required, current_user
 from datetime import datetime, timezone
 from ...models import db, Beehive, Alert, user_alert_reads
-from ..utils.influxdb import write_sensor_data, query_chart_data, query_latest_values, RANGE_OPTIONS
+from ..utils.influxdb import write_sensor_data, query_chart_data, query_latest_values, query_recent_points, RANGE_OPTIONS
 from ..utils.thresholds import check_any_crit, check_any_warn, all_ok, THRESHOLDS, get_threshold_status
 from ..utils.status import STATUS_CONFIG, CALM_STATUSES
 from ...i18n import get_text
 from . import api_bp
 
 logger = logging.getLogger(__name__)
+
+# Minimum consecutive breaching points before status change
+# Based on Shannon: must cover at least 2x minimum event duration
+# With default interval of 10s:
+#   CONSECUTIVE_CRIT = 3  → 30s minimum (predator attack)
+#   CONSECUTIVE_WARN = 5  → 50s minimum (stress/agitation)
+CONSECUTIVE_CRIT = 3
+CONSECUTIVE_WARN = 5
+CONSECUTIVE_OK   = 3  # consecutive ok points required before auto-recovery
+
+STATUS_PRIORITY = {'crit': 3, 'warn': 2, 'ok': 1, 'no_data': 0}
+
+# Statuses set by human observation — threshold system cannot override these
+# They represent facts an admin witnessed directly (no queen, predator spotted, etc.)
+HUMAN_OBSERVED_STATUSES = frozenset({
+    'queenless',
+    'predator',
+    'virgin_queen',
+    'swarming',
+})
+
+# Generic statuses that the threshold system CAN override even if set manually
+THRESHOLD_OVERRIDABLE_STATUSES = frozenset({
+    'calm',
+    'foraging',
+    'ventilating',
+    'agitated',
+    'stressed',
+    'critical',
+    'silent',
+    'no_data',
+})
 
 
 @api_bp.route('/data', methods=['POST'])
@@ -73,56 +105,93 @@ def ingest():
     except Exception as e:
         return jsonify({'error': f'InfluxDB write failed: {e}'}), 500
 
-    # ── Threshold check → auto status update ─────────────────────────────
-    try:
-        sensor_values = {
-            "temperature_int": data.get('temperature_int'),
-            "temperature_ext": data.get('temperature_ext'),
-            "humidity_int":    data.get('humidity_int'),
-            "humidity_ext":    data.get('humidity_ext'),
-            "sound_freq_int":  data.get('sound_freq_int'),
-            "sound_amp_int":   data.get('sound_amp_int'),
-            "light_ext":       data.get('light_ext'),
-        }
-        clean = {k: v for k, v in sensor_values.items() if v is not None}
+    # ── Consecutive threshold check ───────────────────────────────────────
+    sensor_values = {
+        "temperature_int": data.get('temperature_int'),
+        "temperature_ext": data.get('temperature_ext'),
+        "humidity_int":    data.get('humidity_int'),
+        "humidity_ext":    data.get('humidity_ext'),
+        "sound_freq_int":  data.get('sound_freq_int'),
+        "sound_amp_int":   data.get('sound_amp_int'),
+        "light_ext":       data.get('light_ext'),
+    }
+    clean = {k: v for k, v in sensor_values.items() if v is not None}
 
+    try:
         crit_keys = check_any_crit(clean)
         warn_keys = check_any_warn(clean) if not crit_keys else []
 
+        target_status  = None
+        triggered_keys = []
+
         if crit_keys:
-            target_status   = 'critical'
-            triggered_keys  = crit_keys
-        elif warn_keys and hive.status not in ('critical', 'swarming', 'queenless', 'predator'):
-            target_status   = 'agitated'
-            triggered_keys  = warn_keys
-        else:
-            target_status   = None
-            triggered_keys  = []
+            key    = crit_keys[0]
+            recent = query_recent_points(str(hive.id), key, CONSECUTIVE_CRIT)
+            if (len(recent) >= CONSECUTIVE_CRIT and
+                    all(get_threshold_status(key, v) == 'crit' for v in recent)):
+                target_status  = 'critical'
+                triggered_keys = crit_keys
+
+        elif warn_keys and hive.status not in ('critical', 'swarming',
+                                               'queenless', 'predator'):
+            key    = warn_keys[0]
+            recent = query_recent_points(str(hive.id), key, CONSECUTIVE_WARN)
+            if (len(recent) >= CONSECUTIVE_WARN and
+                    all(get_threshold_status(key, v) in ('warn', 'crit')
+                        for v in recent)):
+                target_status  = 'agitated'
+                triggered_keys = warn_keys
 
         if target_status and hive.status != target_status:
-            old_status = hive.status
-            hive.status = target_status
-            note_parts = []
-            for key in triggered_keys:
-                val = sensor_values[key]
-                ok_min, ok_max, warn_min, warn_max = THRESHOLDS[key]
-                note_parts.append(f"{key}={val} (ok: {ok_min}–{ok_max})")
-            db.session.add(Alert(
-                hive_id=hive.id,
-                old_status=old_status,
-                new_status=target_status,
-                source='threshold',
-                note="Auto threshold breach: " + ", ".join(note_parts),
-            ))
-            db.session.commit()
+            # Never override a human-observed status with threshold automation
+            if hive.status in HUMAN_OBSERVED_STATUSES:
+                pass  # Sensor data noted but status preserved
+            else:
+                old_status = hive.status
+                hive.status = target_status
+                note_parts = []
+                for k in triggered_keys:
+                    val = sensor_values[k]
+                    ok_min, ok_max, warn_min, warn_max = THRESHOLDS[k]
+                    note_parts.append(f"{k}={val} (ok: {ok_min}–{ok_max})")
+                note = (f"Auto threshold breach "
+                        f"({CONSECUTIVE_CRIT if target_status == 'critical' else CONSECUTIVE_WARN} "
+                        f"consecutive points): " + ", ".join(note_parts))
+                db.session.add(Alert(
+                    hive_id=hive.id,
+                    old_status=old_status,
+                    new_status=target_status,
+                    source='threshold',
+                    note=note,
+                ))
+                db.session.commit()
 
-        elif all_ok(clean) and hive.status in ('critical', 'agitated',
-                                                'stressed', 'virgin_queen'):
-            last_alert = (Alert.query
-                          .filter_by(hive_id=hive.id)
-                          .order_by(Alert.created_at.desc())
-                          .first())
-            if last_alert and last_alert.source == 'threshold':
+        # ── Auto-recovery ─────────────────────────────────────────────────
+        elif all_ok(clean) and hive.status in (
+            THRESHOLD_OVERRIDABLE_STATUSES | {'no_data', 'silent'}
+        ):
+            should_recover = False
+            if hive.status in ('no_data', 'silent'):
+                should_recover = True
+            else:
+                last_alert = (Alert.query
+                              .filter_by(hive_id=hive.id)
+                              .order_by(Alert.created_at.desc())
+                              .first())
+                if last_alert and last_alert.source == 'threshold':
+                    worst_sensor = max(
+                        clean.keys(),
+                        key=lambda k: STATUS_PRIORITY.get(
+                            get_threshold_status(k, clean[k]), 0
+                        )
+                    )
+                    recent = query_recent_points(str(hive.id), worst_sensor, CONSECUTIVE_OK)
+                    if (len(recent) >= CONSECUTIVE_OK and
+                            all(get_threshold_status(worst_sensor, v) == 'ok'
+                                for v in recent)):
+                        should_recover = True
+
+            if should_recover:
                 old_status = hive.status
                 hive.status = 'calm'
                 db.session.add(Alert(
@@ -130,9 +199,10 @@ def ingest():
                     old_status=old_status,
                     new_status='calm',
                     source='threshold',
-                    note='Auto recovery: all sensor values returned to normal range.',
+                    note=f'Auto recovery ({CONSECUTIVE_OK} consecutive ok points): all sensor values returned to normal range.',
                 ))
                 db.session.commit()
+
     except Exception as e:
         logger.warning("Threshold check failed for hive %s: %s", beehive_id, e)
 
@@ -235,11 +305,15 @@ def dashboard_data():
 
         has_data = bool(latest)
         online   = hive.enabled and has_data
+        s = STATUS_CONFIG.get(hive.status, STATUS_CONFIG['no_data'])
         result[str(hive.id)] = {
-            'overall': card_overall_status(metrics, hive.status) if online else 'no_data',
-            'online':  online,
-            'status':  hive.status,
-            'metrics': metrics,
+            'overall':          card_overall_status(metrics, hive.status) if online else 'no_data',
+            'online':           online,
+            'status':           hive.status,
+            'metrics':          metrics,
+            'status_badge':     s['badge'],
+            'status_label_en':  get_text('status_' + hive.status, 'en'),
+            'status_label_fr':  get_text('status_' + hive.status, 'fr'),
         }
 
     alerts_count   = sum(1 for h in beehives if result[str(h.id)]['online'] and STATUS_CONFIG.get(h.status, {}).get('family') == 'critical')

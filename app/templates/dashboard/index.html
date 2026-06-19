@@ -185,6 +185,18 @@ async function dashboardLiveRefresh() {
         const val = row.querySelector('.hive-metric__val');
         if (val) { val.textContent = m.value !== null ? `${Math.round(m.value * 10) / 10}${m.unit}` : '—'; val.className = `hive-metric__val hive-metric__val--${m.status}`; }
       });
+
+      const lang = document.documentElement.lang || 'en';
+      const badgeWrapper = card.querySelector('[data-badge-hive]');
+      if (badgeWrapper) {
+        if (hm.online) {
+          const label = lang === 'fr' ? hm.status_label_fr : hm.status_label_en;
+          badgeWrapper.innerHTML = `<span class="badge ${hm.status_badge}">${label}</span>`;
+        } else {
+          const offlineLabel = lang === 'fr' ? 'Hors ligne' : 'Offline';
+          badgeWrapper.innerHTML = `<span class="badge bg-secondary text-white"><i class="bi bi-wifi-off me-1"></i>${offlineLabel}</span>`;
+        }
+      }
     });
 
     const upd = (id, v) => { const el = document.querySelector(`[data-summary-value="${id}"]`); if (el) el.textContent = v; };
