@@ -31,27 +31,6 @@ CONSECUTIVE_OK   = 3  # consecutive ok points required before auto-recovery
 
 STATUS_PRIORITY = {'crit': 3, 'warn': 2, 'ok': 1, 'no_data': 0}
 
-# Statuses set by human observation — threshold system cannot override these
-# They represent facts an admin witnessed directly (no queen, predator spotted, etc.)
-HUMAN_OBSERVED_STATUSES = frozenset({
-    'queenless',
-    'predator',
-    'virgin_queen',
-    'swarming',
-})
-
-# Generic statuses that the threshold system CAN override even if set manually
-THRESHOLD_OVERRIDABLE_STATUSES = frozenset({
-    'calm',
-    'foraging',
-    'ventilating',
-    'agitated',
-    'stressed',
-    'critical',
-    'silent',
-    'no_data',
-})
-
 
 @api_bp.route('/data', methods=['POST'])
 def ingest():
@@ -143,9 +122,12 @@ def ingest():
                 triggered_keys = warn_keys
 
         if target_status and hive.status != target_status:
-            # Never override a human-observed status with threshold automation
-            if hive.status in HUMAN_OBSERVED_STATUSES:
-                pass  # Sensor data noted but status preserved
+            last_alert = (Alert.query
+                          .filter_by(hive_id=hive.id)
+                          .order_by(Alert.created_at.desc())
+                          .first())
+            if last_alert and last_alert.source == 'manual':
+                pass  # Manual status — threshold cannot override
             else:
                 old_status = hive.status
                 hive.status = target_status
@@ -167,29 +149,30 @@ def ingest():
                 db.session.commit()
 
         # ── Auto-recovery ─────────────────────────────────────────────────
-        elif all_ok(clean) and hive.status in (
-            THRESHOLD_OVERRIDABLE_STATUSES | {'no_data', 'silent'}
-        ):
+        elif all_ok(clean) and hive.status not in ('calm', 'foraging',
+                                                   'ventilating'):
+            last_alert = (Alert.query
+                          .filter_by(hive_id=hive.id)
+                          .order_by(Alert.created_at.desc())
+                          .first())
+
             should_recover = False
             if hive.status in ('no_data', 'silent'):
                 should_recover = True
+            elif last_alert and last_alert.source == 'manual':
+                pass  # Manual status — never auto-recover
             else:
-                last_alert = (Alert.query
-                              .filter_by(hive_id=hive.id)
-                              .order_by(Alert.created_at.desc())
-                              .first())
-                if last_alert and last_alert.source == 'threshold':
-                    worst_sensor = max(
-                        clean.keys(),
-                        key=lambda k: STATUS_PRIORITY.get(
-                            get_threshold_status(k, clean[k]), 0
-                        )
+                worst_sensor = max(
+                    clean.keys(),
+                    key=lambda k: STATUS_PRIORITY.get(
+                        get_threshold_status(k, clean[k]), 0
                     )
-                    recent = query_recent_points(str(hive.id), worst_sensor, CONSECUTIVE_OK)
-                    if (len(recent) >= CONSECUTIVE_OK and
-                            all(get_threshold_status(worst_sensor, v) == 'ok'
-                                for v in recent)):
-                        should_recover = True
+                )
+                recent = query_recent_points(str(hive.id), worst_sensor, CONSECUTIVE_OK)
+                if (len(recent) >= CONSECUTIVE_OK and
+                        all(get_threshold_status(worst_sensor, v) == 'ok'
+                            for v in recent)):
+                    should_recover = True
 
             if should_recover:
                 old_status = hive.status
