@@ -27,6 +27,11 @@ Lancement :
 
 Avec envoi vers l'API Flask :
   API_ENABLE=1 python3 receiver.py
+
+Horodatage InfluxDB :
+  Par défaut : heure de réception du Raspberry Pi (datetime.now UTC).
+  Pour utiliser l'heure embarquée dans la trame LoRa :
+    USE_LORA_TIMESTAMP=1 python3 receiver.py
 """
 
 import struct
@@ -66,6 +71,11 @@ FMT_AUD = "<BI4sIHHHH13h13hH"
 API_ENABLE  = os.getenv("API_ENABLE", "0") == "1"
 API_URL     = os.getenv("BEETTER_API_URL", "http://localhost:5000")
 API_TIMEOUT = float(os.getenv("BEETTER_API_TIMEOUT", "5"))
+
+# ─── Horodatage ───────────────────────────────────────────────
+# USE_LORA_TIMESTAMP=1 → timestamp de la trame LoRa (horloge du boîtier)
+# USE_LORA_TIMESTAMP=0 → heure de réception du Raspberry Pi (défaut)
+USE_LORA_TIMESTAMP = os.getenv("USE_LORA_TIMESTAMP", "0") == "1"
 
 # ─── Logging ─────────────────────────────────────────────────
 logging.basicConfig(
@@ -260,11 +270,12 @@ def construire_payload(blocs: list) -> dict | None:
     """
     payload: dict = {}
     beehive_id = None
-    ts_iso = None
+    ts_lora = None
 
     for d in blocs:
         beehive_id = d["beehive_id"]
-        ts_iso = d["ts_iso"]
+        if ts_lora is None:
+            ts_lora = d["ts_iso"]
 
         if d["type"] == "ENV":
             payload["temperature_int"] = d["temperature_int"]
@@ -283,6 +294,11 @@ def construire_payload(blocs: list) -> dict | None:
 
     if not payload or beehive_id is None:
         return None
+
+    if USE_LORA_TIMESTAMP:
+        ts_iso = ts_lora
+    else:
+        ts_iso = datetime.now(timezone.utc).isoformat()
 
     payload["beehive_id"] = beehive_id
     payload["timestamp"]  = ts_iso
@@ -318,6 +334,7 @@ def main():
     log.info(f"Port       : {PORT} @ 57600 bauds")
     log.info(f"Fréquence  : {FREQUENCE} MHz")
     log.info(f"API Flask  : {'activé (' + API_URL + ')' if API_ENABLE else 'désactivé'}")
+    log.info(f"Horodatage : {'trame LoRa (USE_LORA_TIMESTAMP=1)' if USE_LORA_TIMESTAMP else 'réception Raspberry Pi (défaut)'}")
     log.info(f"Blocs      : ENV={SIZE_ENV}B (0xE0)  AUD={SIZE_AUD}B (0xA0)")
 
     lora = GroveLoRa(port=PORT, baudrate=57600)
