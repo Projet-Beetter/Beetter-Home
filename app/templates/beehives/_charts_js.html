@@ -197,7 +197,7 @@
       if (orig) {
         ds.borderColor = orig.borderColor;
         ds.backgroundColor = orig.backgroundColor;
-        ds.pointRadius = orig.pointRadius ?? (ds.data.length > 200 ? 0 : 2);
+        ds.pointRadius = orig.pointRadius ?? (ds.data.length > 50 ? 0 : 2);
       } else {
         ds.pointRadius = ds.data.length > 200 ? 0 : 2;
       }
@@ -223,9 +223,9 @@
         data: pts,
         borderColor: color,
         backgroundColor: color + '22',
-        fill: false,
+        fill: 'origin',
         tension: 0.3,
-        pointRadius: pts.length > 200 ? 0 : 2,
+        pointRadius: pts.length > 50 ? 0 : 2,
         borderWidth: 2,
         hidden: sc.visible === false,
         sensorKey: sc.sensorKey,
@@ -268,8 +268,7 @@
         scales: {
           x: (() => {
             const { ticks: xTicks, ...timeOpts } = getTimeOptions(range);
-            const bounds = getXAxisBounds(range);
-            return { type: 'time', time: timeOpts, ticks: xTicks, min: bounds.min, max: bounds.max, afterBuildTicks: boundaryTickHook };
+            return { type: 'time', time: timeOpts, ticks: xTicks, afterBuildTicks: boundaryTickHook };
           })(),
           y: {
             beginAtZero: false, ...yOptions, grace: '5%',
@@ -314,7 +313,7 @@
       if (!response.ok) { console.error('Unable to load chart data:', response.statusText); return; }
       const data = await response.json();
       const chart = charts[chartId];
-      if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); const bounds = getXAxisBounds(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = bounds.min; chart.options.scales.x.max = bounds.max; }
+      if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = undefined; chart.options.scales.x.max = undefined; }
       updateMultiChart(chartId, data, range);
     } catch (error) { console.error('Chart loading error:', error); }
   }
@@ -340,7 +339,7 @@
           const data = await response.json();
           Object.keys(charts).forEach(chartId => {
             const chart = charts[chartId];
-            if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); const bounds = getXAxisBounds(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = bounds.min; chart.options.scales.x.max = bounds.max; }
+            if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = undefined; chart.options.scales.x.max = undefined; }
             updateMultiChart(chartId, data, range);
             const cb = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
             if (cb && cb.checked) applyThresholdView(chart);
