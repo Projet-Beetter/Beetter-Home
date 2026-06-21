@@ -51,6 +51,13 @@
               {% for e in form.postal_code.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
             </div>
           </div>
+          <div class="mb-4">
+            <label class="form-label small text-muted" for="{{ form.no_data_threshold_minutes.id }}">
+              {{ _t('field_no_data_threshold') if _t('field_no_data_threshold') else 'No data threshold (minutes)' }}
+            </label>
+            {{ form.no_data_threshold_minutes(class='form-control form-control-sm', style='width:120px') }}
+            <div class="form-text">{{ _t('field_no_data_threshold_hint') if _t('field_no_data_threshold_hint') else 'Minutes without data before the hive is marked offline. Set to 0 to disable.' }}</div>
+          </div>
           <h6 class="fw-semibold mb-3 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em">
             {{ _t('form_lora') }}
           </h6>

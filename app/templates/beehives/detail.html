@@ -121,7 +121,7 @@ async function liveRefresh() {
     if (res.ok) {
       const data = await res.json();
       Object.keys(charts).forEach(chartId => {
-        updateMultiChart(chartId, data);
+        updateMultiChart(chartId, data, liveRange);
         const cb = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
         if (cb && cb.checked) applyThresholdView(charts[chartId]);
       });

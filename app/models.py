@@ -81,6 +81,9 @@ class Beehive(db.Model):
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    no_data_threshold_minutes = db.Column(db.Integer, default=10, nullable=False)
+    # How many minutes without data before the hive is marked no_data.
+    # Set to 0 to disable automatic no_data detection for this hive.
 
 class Alert(db.Model):
     __tablename__ = 'alerts'

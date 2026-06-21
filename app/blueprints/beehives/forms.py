@@ -29,4 +29,9 @@ class BeehiveForm(FlaskForm):
         validators=[Optional(), NumberRange(125, 500)],
         default=125,
     )
+    no_data_threshold_minutes = IntegerField(
+        'No data threshold (minutes)',
+        validators=[Optional(), NumberRange(min=0, max=1440)],
+        default=10,
+    )
     submit = SubmitField('Save')

@@ -88,9 +88,36 @@
     return { min: now - (rangeMs[range] || rangeMs['24h']), max: now };
   }
 
-  function convertToPoints(dataset) {
+  // Maximum gap between two consecutive points before the line is broken.
+  // Set to 2× the aggregation window for each range.
+  const GAP_THRESHOLDS_MS = {
+    '1h':  2  * 60 * 1000,        // 2 min  (window = 1 min)
+    '6h':  4  * 60 * 1000,        // 4 min  (window = 2 min)
+    '24h': 30 * 60 * 1000,        // 30 min (window = 15 min)
+    '7d':  4  * 60 * 60 * 1000,   // 4h     (window = 2h)
+    '30d': 24 * 60 * 60 * 1000,   // 24h    (window = 12h)
+  };
+
+  function convertToPoints(dataset, range) {
     if (!dataset || !dataset.labels) return [];
-    return dataset.labels.map((t, i) => ({ x: t, y: dataset.data[i] }));
+    const pts = dataset.labels.map((t, i) => ({ x: t, y: dataset.data[i] }));
+    if (pts.length < 2) return pts;
+
+    const gapMs = GAP_THRESHOLDS_MS[range] || GAP_THRESHOLDS_MS['24h'];
+    const result = [];
+
+    for (let i = 0; i < pts.length; i++) {
+      result.push(pts[i]);
+      if (i < pts.length - 1) {
+        const t1 = new Date(pts[i].x).valueOf();
+        const t2 = new Date(pts[i + 1].x).valueOf();
+        if (t2 - t1 > gapMs) {
+          // Insert a null point in the middle of the gap to break the line
+          result.push({ x: new Date((t1 + t2) / 2).toISOString(), y: null });
+        }
+      }
+    }
+    return result;
   }
 
   function buildAnnotations(seriesConfigs) {
@@ -185,7 +212,10 @@
     const ctx = document.getElementById(id);
     if (!ctx) return;
     const datasets = seriesConfigs.map((sc, idx) => {
-      const pts = convertToPoints(chartData[sc.sensorKey] || { labels: [], data: [] });
+      const pts = convertToPoints(
+        chartData[sc.sensorKey] || { labels: [], data: [] },
+        range
+      );
       const color = sc.color || ['#dc3545','#e46060','#0d6efd','#4b8dff','#6a1b9a'][idx % 5];
       return {
         label: sc.label || sc.sensorKey,
@@ -198,6 +228,7 @@
         borderWidth: 2,
         hidden: sc.visible === false,
         sensorKey: sc.sensorKey,
+        spanGaps: false,
       };
     });
 
@@ -253,11 +284,15 @@
     charts[id] = chart;
   }
 
-  function updateMultiChart(chartId, dataObj) {
+  function updateMultiChart(chartId, dataObj, range) {
     const chart = charts[chartId];
     if (!chart) return;
+    const activeRange = range || currentRange;
     chart.data.datasets.forEach(ds => {
-      ds.data = convertToPoints(dataObj[ds.sensorKey] || { labels: [], data: [] });
+      ds.data = convertToPoints(
+        dataObj[ds.sensorKey] || { labels: [], data: [] },
+        activeRange
+      );
     });
     chart.update();
   }
@@ -269,7 +304,7 @@
       const data = await response.json();
       const chart = charts[chartId];
       if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); const bounds = getXAxisBounds(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = bounds.min; chart.options.scales.x.max = bounds.max; }
-      updateMultiChart(chartId, data);
+      updateMultiChart(chartId, data, range);
     } catch (error) { console.error('Chart loading error:', error); }
   }
 
@@ -295,7 +330,7 @@
           Object.keys(charts).forEach(chartId => {
             const chart = charts[chartId];
             if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); const bounds = getXAxisBounds(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = bounds.min; chart.options.scales.x.max = bounds.max; }
-            updateMultiChart(chartId, data);
+            updateMultiChart(chartId, data, range);
             const cb = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
             if (cb && cb.checked) applyThresholdView(chart);
           });
