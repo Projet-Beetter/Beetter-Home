@@ -1,6 +1,6 @@
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Flask, session, redirect, request, url_for
 from flask_login import LoginManager, current_user
 
@@ -124,7 +124,7 @@ def create_app():
         lang = session.get('lang', 'en')
         alerts_count = 0
         if current_user.is_authenticated:
-            today = datetime.utcnow().date()
+            today = datetime.now(timezone.utc).date()
             read_ids = db.session.query(user_alert_reads.c.alert_id).filter(
                 user_alert_reads.c.user_id == current_user.id
             ).subquery()

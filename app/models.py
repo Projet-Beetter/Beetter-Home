@@ -2,7 +2,9 @@ import logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
+
+_now = lambda: datetime.now(timezone.utc)
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +25,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='viewer')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=_now)
 
     beehives = db.relationship('Beehive', backref='owner', lazy=True, cascade='all, delete-orphan')
     remote_configs = db.relationship('RemoteServerConfig', backref='owner', lazy=True, cascade='all, delete-orphan')
@@ -77,7 +79,7 @@ class Beehive(db.Model):
     bandwidth = db.Column(db.Integer, default=125)
     enabled = db.Column(db.Boolean, default=True, nullable=False)
     status = db.Column(db.String(20), nullable=False, default='no_data')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=_now)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -94,7 +96,7 @@ class Alert(db.Model):
     new_status = db.Column(db.String(20), nullable=False)
     source = db.Column(db.String(50), nullable=False, default='manual')
     note = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=_now, nullable=False)
 
     hive = db.relationship('Beehive', backref=db.backref('alerts', cascade='all, delete-orphan'))
     read_by = db.relationship('User', secondary=user_alert_reads, lazy='subquery')
@@ -111,7 +113,7 @@ class RemoteServerConfig(db.Model):
     last_push_at = db.Column(db.DateTime)
     last_push_status = db.Column(db.String(20))
     last_push_message = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=_now)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
 
@@ -127,8 +129,8 @@ class HiveEvent(db.Model):
     notes      = db.Column(db.Text, nullable=True)
     hive_id    = db.Column(db.String(4), db.ForeignKey("beehives.id"), nullable=True)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=_now)
+    updated_at = db.Column(db.DateTime, default=_now, onupdate=_now)
 
     hive    = db.relationship("Beehive", backref=db.backref("events", cascade="all, delete-orphan", lazy=True))
     creator = db.relationship("User", backref=db.backref("events", lazy=True))
@@ -169,7 +171,7 @@ class UserPreferences(db.Model):
     large_text    = db.Column(db.Boolean, default=False)
     reduce_motion = db.Column(db.Boolean, default=False)
 
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=_now, onupdate=_now)
 
     user = db.relationship('User', backref=db.backref('preferences', uselist=False, lazy=True))
 
@@ -182,12 +184,12 @@ class SystemConfig(db.Model):
 
     @staticmethod
     def get(key, default=None):
-        row = SystemConfig.query.get(key)
+        row = db.session.get(SystemConfig, key)
         return row.value if row else default
 
     @staticmethod
     def set(key, value):
-        row = SystemConfig.query.get(key)
+        row = db.session.get(SystemConfig, key)
         if row:
             row.value = str(value)
         else:
@@ -213,7 +215,7 @@ class DailySummary(db.Model):
     status_at_end = db.Column(db.String(20), nullable=True)
     data_points   = db.Column(db.Integer, default=0)
 
-    generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    generated_at = db.Column(db.DateTime, default=_now)
 
     hive = db.relationship('Beehive',
                            backref=db.backref('daily_summaries', lazy=True,

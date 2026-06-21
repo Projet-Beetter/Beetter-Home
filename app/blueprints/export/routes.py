@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import render_template, request, Response, flash, redirect, url_for, session
 from flask_login import login_required
 from ...models import db, Beehive
@@ -111,7 +111,7 @@ def index():
                 )
 
         output.seek(0)
-        filename = f'beetter_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
+        filename = f'beetter_export_{datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")}.csv'
         return Response(
             output.getvalue(),
             mimetype='text/csv',

@@ -207,7 +207,7 @@ def latest_values(hive_id):
     lang = session.get('lang', 'en')
     s = STATUS_CONFIG.get(hive.status, STATUS_CONFIG['no_data'])
     try:
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         read_ids = db.session.query(user_alert_reads.c.alert_id).filter(
             user_alert_reads.c.user_id == current_user.id
         ).subquery()
@@ -236,7 +236,7 @@ def latest_values(hive_id):
 @login_required
 def alerts_count_endpoint():
     try:
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         read_ids = db.session.query(user_alert_reads.c.alert_id).filter(
             user_alert_reads.c.user_id == current_user.id
         ).subquery()
@@ -344,6 +344,11 @@ def chart_data_custom(hive_id):
     to_str   = request.args.get('to')
     if not from_str or not to_str:
         return jsonify({'error': 'from and to required'}), 400
+    try:
+        datetime.fromisoformat(from_str.replace('Z', '+00:00'))
+        datetime.fromisoformat(to_str.replace('Z', '+00:00'))
+    except ValueError:
+        return jsonify({'error': 'Invalid date format'}), 400
     try:
         from ..utils.influxdb import query_export_data, CHART_MEASUREMENTS
         rows = query_export_data(str(hive.id), list(CHART_MEASUREMENTS), from_str, to_str)

@@ -21,9 +21,11 @@ def _parse_dt(value):
     if not value:
         return None
     value = value.strip()
+    # Strip timezone suffix so strptime patterns match ISO strings from FullCalendar
+    naive = value[:19] if len(value) > 19 and (value[19] in ('+', '-', 'Z')) else value
     for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%d'):
         try:
-            return datetime.strptime(value, fmt)
+            return datetime.strptime(naive, fmt)
         except ValueError:
             continue
     raise ValueError(f"Unrecognised date format: {value!r}")

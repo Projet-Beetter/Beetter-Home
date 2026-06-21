@@ -1,6 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(timezone='UTC')
 
 NO_DATA_DEFAULT_MINUTES = 10
 

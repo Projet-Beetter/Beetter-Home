@@ -8,15 +8,15 @@ from . import setup_bp
 
 @setup_bp.route('/', methods=['GET'])
 def index():
-    # if User.query.count() > 0:
-    #     return redirect(url_for('auth.login'))
+    if User.query.count() > 0:
+        return redirect(url_for('auth.login'))
     return render_template('setup/index.html')
 
 
 @setup_bp.route('/create', methods=['POST'])
 def create():
-    # if User.query.count() > 0:
-    #     return redirect(url_for('auth.login'))
+    if User.query.count() > 0:
+        return redirect(url_for('auth.login'))
 
     username = request.form.get('username', '').strip()
     email    = request.form.get('email', '').strip()

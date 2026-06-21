@@ -48,6 +48,7 @@ def _client() -> InfluxDBClient:
         url=current_app.config['INFLUXDB_URL'],
         token=current_app.config['INFLUXDB_TOKEN'],
         org=current_app.config['INFLUXDB_ORG'],
+        timeout=5_000,
     )
 
 

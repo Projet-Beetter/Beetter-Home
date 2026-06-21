@@ -126,7 +126,7 @@ def write_sensor_data(beehive_id,
     # ── MFCC measurements (written only when ESP32 provides them) ─────────
     for coeff_list, prefix in ((mfcc_int, 'mfcc_int'), (mfcc_ext, 'mfcc_ext')):
         if coeff_list is not None and len(coeff_list) == 13:
-            for i, val in enumerate(coeff_list, start=0):
+            for i, val in enumerate(coeff_list):
                 points.append(
                     Point(f'{prefix}_{i}')
                     .tag("beehive_id", str(beehive_id))
@@ -247,6 +247,8 @@ def delete_beehive_data(beehive_id):
             bucket=bucket,
             org=org,
         )
+
+
 def delete_all_influx_data():
     """Purge every measurement in the bucket (all beehives, all time)."""
     bucket = current_app.config['INFLUXDB_BUCKET']

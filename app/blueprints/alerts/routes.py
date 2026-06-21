@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import render_template, redirect, url_for, request, abort
 from flask_login import login_required, current_user
 from ...models import db, Alert, Beehive
@@ -10,7 +10,7 @@ from . import alerts_bp
 @alerts_bp.route('/')
 @login_required
 def index():
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     all_alerts_today = Alert.query.filter(
         Alert.created_at >= today
     ).order_by(Alert.created_at.desc()).all()
@@ -49,7 +49,7 @@ def index():
 @alerts_bp.route('/history')
 @login_required
 def history():
-    hive_id = request.args.get('hive_id', type=int)
+    hive_id = request.args.get('hive_id')
     status_filter = request.args.get('status')
     family_filter = request.args.get('family')
     source_filter = request.args.get('source')
@@ -67,13 +67,13 @@ def history():
         query = query.filter(Alert.source == source_filter)
 
     if period == '1h':
-        query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(hours=1))
+        query = query.filter(Alert.created_at >= datetime.now(timezone.utc) - timedelta(hours=1))
     elif period == '24h':
-        query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(hours=24))
+        query = query.filter(Alert.created_at >= datetime.now(timezone.utc) - timedelta(hours=24))
     elif period == '7d':
-        query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(days=7))
+        query = query.filter(Alert.created_at >= datetime.now(timezone.utc) - timedelta(days=7))
     elif period == '30d':
-        query = query.filter(Alert.created_at >= datetime.utcnow() - timedelta(days=30))
+        query = query.filter(Alert.created_at >= datetime.now(timezone.utc) - timedelta(days=30))
 
     alerts = query.order_by(Alert.created_at.desc()).all()
     all_hives = Beehive.query.order_by(Beehive.name).all()

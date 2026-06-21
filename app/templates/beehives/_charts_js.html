@@ -72,20 +72,13 @@
     if (!allTimes.length || !scale.ticks.length) return;
     const minVal = allTimes.reduce((m, v) => v < m ? v : m, Infinity);
     const maxVal = allTimes.reduce((m, v) => v > m ? v : m, -Infinity);
-    if (scale.ticks[0].value > minVal) scale.ticks.unshift({ value: minVal });
-    if (scale.ticks[scale.ticks.length - 1].value < maxVal) scale.ticks.push({ value: maxVal });
-  }
-
-  function getXAxisBounds(range) {
-    const now = Date.now();
-    const rangeMs = {
-      '1h':  1 * 60 * 60 * 1000,
-      '6h':  6 * 60 * 60 * 1000,
-      '24h': 24 * 60 * 60 * 1000,
-      '7d':  7  * 24 * 60 * 60 * 1000,
-      '30d': 30 * 24 * 60 * 60 * 1000,
-    };
-    return { min: now - (rangeMs[range] || rangeMs['24h']), max: now };
+    const ticks = scale.ticks;
+    const avgSpacing = ticks.length > 1
+      ? (ticks[ticks.length - 1].value - ticks[0].value) / (ticks.length - 1)
+      : Infinity;
+    const minGap = avgSpacing * 0.6;
+    if (ticks[0].value - minVal > minGap) scale.ticks.unshift({ value: minVal });
+    if (maxVal - ticks[ticks.length - 1].value > minGap) scale.ticks.push({ value: maxVal });
   }
 
   // Maximum gap between two consecutive points before the line is broken.
@@ -176,12 +169,14 @@
           return zoneColor(mid, okMin, okMax, warnMin, warnMax);
         }
       };
-      ds.pointBackgroundColor = ds.data.map(pt =>
-        zonePointColor(pt.y ?? pt, okMin, okMax, warnMin, warnMax)
-      );
+      ds.pointBackgroundColor = ds.data.map(pt => {
+        const v = typeof pt === 'object' ? pt.y : pt;
+        return v == null ? 'transparent' : zonePointColor(v, okMin, okMax, warnMin, warnMax);
+      });
       ds.pointBorderColor = 'transparent';
       ds.pointRadius = ds.data.map(pt => {
-        const v = pt.y ?? pt;
+        const v = typeof pt === 'object' ? pt.y : pt;
+        if (v == null) return 0;
         return (v < okMin || v > okMax) ? 4 : 2;
       });
       ds.backgroundColor = 'transparent';
@@ -199,13 +194,12 @@
         ds.backgroundColor = orig.backgroundColor;
         ds.pointRadius = orig.pointRadius ?? (ds.data.length > 50 ? 0 : 2);
       } else {
-        ds.pointRadius = ds.data.length > 200 ? 0 : 2;
+        ds.pointRadius = ds.data.length > 50 ? 0 : 2;
       }
       delete ds.pointBackgroundColor;
       delete ds.pointBorderColor;
     });
     chart.options.plugins.annotation.annotations = {};
-    chart.update('none');
     chart.update();
   }
 
@@ -303,11 +297,12 @@
         dataObj[ds.sensorKey] || { labels: [], data: [] },
         activeRange
       );
+      ds.pointRadius = ds.data.length > 50 ? 0 : 2;
     });
     chart.update();
   }
 
-  async function loadChartRange(chartId, sensorKeys, range) {
+  async function loadChartRange(chartId, range) {
     try {
       const response = await fetch(`${chartApiUrl}?range=${encodeURIComponent(range)}`);
       if (!response.ok) { console.error('Unable to load chart data:', response.statusText); return; }
@@ -316,13 +311,6 @@
       if (chart) { const { ticks: xTicks, ...timeOpts } = getTimeOptions(range); chart.options.scales.x.time = timeOpts; chart.options.scales.x.ticks = xTicks; chart.options.scales.x.min = undefined; chart.options.scales.x.max = undefined; }
       updateMultiChart(chartId, data, range);
     } catch (error) { console.error('Chart loading error:', error); }
-  }
-
-  function setRangeButtonState(chartId, activeRange) {
-    document.querySelectorAll(`.range-selector[data-chart-id="${chartId}"]`).forEach(button => {
-      button.classList.toggle('btn-warning', button.dataset.range === activeRange);
-      button.classList.toggle('btn-outline-secondary', button.dataset.range !== activeRange);
-    });
   }
 
   function initializeRangeSelectors() {
@@ -374,8 +362,9 @@
     // Default: last 24h in local time
     const now = new Date();
     const yesterday = new Date(now - 24 * 60 * 60 * 1000);
-    toEl.value   = now.toISOString().slice(0, 16);
-    fromEl.value = yesterday.toISOString().slice(0, 16);
+    const toLocal = t => new Date(t - t.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    toEl.value   = toLocal(now);
+    fromEl.value = toLocal(yesterday);
 
     const applyLabel = `<i class="bi bi-check-lg me-1"></i>{{ _t('range_btn_apply') }}`;
 
