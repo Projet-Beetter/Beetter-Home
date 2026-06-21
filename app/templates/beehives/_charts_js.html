@@ -209,7 +209,7 @@
     chart.update();
   }
 
-  function makeMultiSeriesChart(id, title, seriesConfigs, yOptions = {}, range = '24h', decimals = null) {
+  function makeMultiSeriesChart(id, title, seriesConfigs, yOptions = {}, range = '24h', decimals = null, yTitle = '') {
     const ctx = document.getElementById(id);
     if (!ctx) return;
     const datasets = seriesConfigs.map((sc, idx) => {
@@ -271,8 +271,18 @@
             const bounds = getXAxisBounds(range);
             return { type: 'time', time: timeOpts, ticks: xTicks, min: bounds.min, max: bounds.max, afterBuildTicks: boundaryTickHook };
           })(),
-          y: { beginAtZero: false, ...yOptions, grace: '5%',
-               ...(decimals !== null ? { ticks: { callback: v => Number(v).toFixed(decimals) } } : {}) }
+          y: {
+            beginAtZero: false, ...yOptions, grace: '5%',
+            ...(decimals !== null ? { ticks: { callback: v => Number(v).toFixed(decimals) } } : {}),
+            title: {
+              display: !!yTitle,
+              text: yTitle,
+              align: 'end',
+              font: { size: 11 },
+              color: '#6c757d',
+              padding: { bottom: 4 },
+            },
+          }
         }
       }
     });
@@ -465,6 +475,15 @@
       temperatureChart: 1,
     };
 
+    const tempUnit = '{{ "°F" if session.get("temp_unit", "C") == "F" else "°C" }}';
+    const chartYTitles = {
+      temperatureChart: tempUnit,
+      humidityChart:    '%',
+      soundFreqChart:   'Hz',
+      soundAmpChart:    'Amp',
+      lightExtChart:    '/10',
+    };
+
     document.querySelectorAll('canvas').forEach(canvas => {
       const id = canvas.id;
       let series;
@@ -476,12 +495,24 @@
         visible: true,
         color: (defaultColorSets[id] || ['#0d6efd'])[idx % 5]
       }));
-      makeMultiSeriesChart(id, '', seriesConfigs, chartScales[id] || {}, currentRange, chartDecimals[id] ?? null);
+      makeMultiSeriesChart(id, '', seriesConfigs, chartScales[id] || {}, currentRange, chartDecimals[id] ?? null, chartYTitles[id] ?? '');
     });
 
     initializeRangeSelectors();
     initializeThresholdToggles();
     initializeCustomRange();
+
+    // Chart info popovers ("…" indicator)
+    document.querySelectorAll('.chart-info-trigger').forEach(el => {
+      new bootstrap.Popover(el, { html: false, sanitize: true });
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.chart-info-trigger') && !e.target.closest('.popover')) {
+        document.querySelectorAll('.chart-info-trigger').forEach(el => {
+          bootstrap.Popover.getInstance(el)?.hide();
+        });
+      }
+    });
 
     // Run once immediately so the page shows fresh sensor data without waiting 30 s
     if (typeof liveRefresh === 'function') liveRefresh();

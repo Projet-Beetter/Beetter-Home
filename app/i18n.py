@@ -409,6 +409,12 @@ TRANSLATIONS = {
         # No data threshold form
         'field_no_data_threshold':      'No data threshold (minutes)',
         'field_no_data_threshold_hint': 'Minutes without data before the hive is marked offline. Set to 0 to disable.',
+        # Chart info popovers
+        'chart_info_temperature': 'Averaged temperature (°C) over the selected period. Interior target: 34–36 °C (brood zone). Warning triggers outside 32–38 °C.',
+        'chart_info_humidity':    'Averaged relative humidity (%) over the selected period. Interior healthy range: 45–80 %. Extremes may affect brood or trigger mould.',
+        'chart_info_sound_freq':  'Dominant sound frequency (Hz). Normal colony activity sits around 200–600 Hz. Peaks above 700 Hz may indicate swarming or queen loss.',
+        'chart_info_sound_amp':   'Relative sound amplitude (0–1). No threshold is applied. Use trends to detect unusual agitation or sudden silence.',
+        'chart_info_light':       'Exterior light level (0–10 scale). Used to detect nocturnal activity, entrance orientation, or direct sunlight exposure.',
     },
     "fr": {
         # Sidebar nav
@@ -820,6 +826,12 @@ TRANSLATIONS = {
         # No data threshold form
         'field_no_data_threshold':      'Seuil sans données (minutes)',
         'field_no_data_threshold_hint': 'Minutes sans données avant de marquer la ruche hors ligne. Mettre à 0 pour désactiver.',
+        # Chart info popovers
+        'chart_info_temperature': "Température moyennée (°C) sur la période sélectionnée. Cible intérieure : 34–36 °C (zone de couvain). Alerte déclenchée en dehors de 32–38 °C.",
+        'chart_info_humidity':    "Humidité relative moyennée (%) sur la période sélectionnée. Plage saine intérieure : 45–80 %. Les extrêmes peuvent affecter le couvain ou favoriser les moisissures.",
+        'chart_info_sound_freq':  "Fréquence sonore dominante (Hz). Activité normale de la colonie : 200–600 Hz. Des pics au-dessus de 700 Hz peuvent indiquer un essaimage ou une perte de reine.",
+        'chart_info_sound_amp':   "Amplitude sonore relative (0–1). Aucun seuil appliqué. Utilisez les tendances pour détecter une agitation inhabituelle ou un silence soudain.",
+        'chart_info_light':       "Niveau de lumière extérieure (échelle 0–10). Permet de détecter une activité nocturne, l'orientation de l'entrée ou une exposition directe au soleil.",
     },
 }
 

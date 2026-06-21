@@ -1,3 +1,17 @@
+{#
+  ── Chart info tooltips ────────────────────────────────────────────────────────
+  To change the text shown when the user clicks "…", edit the translation keys
+  chart_info_temperature / chart_info_humidity / chart_info_sound_freq /
+  chart_info_sound_amp / chart_info_light  in  app/i18n.py  (both "en" and "fr").
+#}
+{% set chart_info = {
+  'temperatureChart': _t('chart_info_temperature'),
+  'humidityChart':    _t('chart_info_humidity'),
+  'soundFreqChart':   _t('chart_info_sound_freq'),
+  'soundAmpChart':    _t('chart_info_sound_amp'),
+  'lightExtChart':    _t('chart_info_light'),
+} %}
+
 {% set chart_sections = [
   {
     'id': 'temperatureChart',
@@ -61,6 +75,13 @@
     <div class="d-flex align-items-center gap-2 mb-2">
       <i class="bi {{ section.icon }}" style="color:{{ section.icon_color }}"></i>
       <span class="fw-semibold" style="font-size:13px">{{ section.title }}</span>
+      <span class="ms-auto chart-info-trigger text-muted"
+            style="cursor:pointer;font-size:15px;letter-spacing:.1em;line-height:1;user-select:none"
+            data-bs-toggle="popover"
+            data-bs-placement="bottom"
+            data-bs-trigger="click"
+            data-bs-content="{{ chart_info.get(section.id, '') }}"
+            title="{{ section.title }}">&#8230;</span>
     </div>
     <div class="mb-1 d-flex flex-wrap align-items-center">
       {% if section.show_thresholds %}
