@@ -331,7 +331,7 @@ TRANSLATIONS = {
         "btn_delete_account": "Delete my account",
         # Calendar
         "nav_calendar": "Calendar",
-        "cal_back_global": "← Global calendar",
+        "cal_back_global": "Global calendar",
         "cal_new_event": "New event",
         "cal_form_title_create": "New event",
         "cal_form_title_edit": "Edit event",
@@ -415,6 +415,21 @@ TRANSLATIONS = {
         'chart_info_sound_freq':  'Dominant sound frequency (Hz). Normal colony activity sits around 200–600 Hz. Peaks above 700 Hz may indicate swarming or queen loss.',
         'chart_info_sound_amp':   'Relative sound amplitude (0–1). No threshold is applied. Use trends to detect unusual agitation or sudden silence.',
         'chart_info_light':       'Exterior light level (0–10 scale). Used to detect nocturnal activity, entrance orientation, or direct sunlight exposure.',
+        # Daily summaries
+        'dash_daily_summaries':    'Daily summaries',
+        'cal_click_day':           'Click a day to see summaries',
+        'cal_no_day_selected':     'Select a day to view hive summaries',
+        'cal_summary_loading':     'Loading…',
+        'cal_summary_empty':       'No summaries for this day.',
+        'cal_summary_no_data':     'No data this day',
+        'cal_summary_alert':       'alert',
+        'cal_summary_alerts':      'alerts',
+        'cal_summary_no_available': 'No summaries available.',
+        'cal_err_load':            'Loading error.',
+        # Settings — summary hour
+        'setting_summary_section': 'Scheduler',
+        'setting_summary_hour':    'Daily summary generation time',
+        'setting_summary_hour_hint': 'Hour at which daily summaries are generated (server time). Takes effect after server restart.',
     },
     "fr": {
         # Sidebar nav
@@ -748,7 +763,7 @@ TRANSLATIONS = {
         "btn_delete_account": "Supprimer mon compte",
         # Calendar
         "nav_calendar": "Calendrier",
-        "cal_back_global": "← Calendrier global",
+        "cal_back_global": "Calendrier global",
         "cal_new_event": "Nouvel événement",
         "cal_form_title_create": "Nouvel événement",
         "cal_form_title_edit": "Modifier l'événement",
@@ -832,6 +847,21 @@ TRANSLATIONS = {
         'chart_info_sound_freq':  "Fréquence sonore dominante (Hz). Activité normale de la colonie : 200–600 Hz. Des pics au-dessus de 700 Hz peuvent indiquer un essaimage ou une perte de reine.",
         'chart_info_sound_amp':   "Amplitude sonore relative (0–1). Aucun seuil appliqué. Utilisez les tendances pour détecter une agitation inhabituelle ou un silence soudain.",
         'chart_info_light':       "Niveau de lumière extérieure (échelle 0–10). Permet de détecter une activité nocturne, l'orientation de l'entrée ou une exposition directe au soleil.",
+        # Daily summaries
+        'dash_daily_summaries':    'Résumés journaliers',
+        'cal_click_day':           'Cliquez sur un jour pour voir les résumés',
+        'cal_no_day_selected':     'Sélectionnez un jour pour voir les résumés des ruches',
+        'cal_summary_loading':     'Chargement…',
+        'cal_summary_empty':       'Aucun résumé pour ce jour.',
+        'cal_summary_no_data':     'Aucune donnée ce jour',
+        'cal_summary_alert':       'alerte',
+        'cal_summary_alerts':      'alertes',
+        'cal_summary_no_available': 'Aucun résumé disponible.',
+        'cal_err_load':            'Erreur de chargement.',
+        # Settings — summary hour
+        'setting_summary_section': 'Planificateur',
+        'setting_summary_hour':    'Heure de génération des résumés',
+        'setting_summary_hour_hint': "Heure à laquelle les résumés journaliers sont générés automatiquement (heure serveur). Prend effet au prochain redémarrage.",
     },
 }
 

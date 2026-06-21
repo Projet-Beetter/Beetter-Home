@@ -359,3 +359,106 @@ def chart_data_custom(hive_id):
         return resp
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/summaries/range')
+@login_required
+def summaries_range():
+    """Returns daily summaries for a date range, optionally filtered by hive."""
+    from_str = request.args.get('from')
+    to_str   = request.args.get('to')
+    hive_id  = request.args.get('hive_id')
+    if not from_str or not to_str:
+        return jsonify({'error': 'from and to required'}), 400
+    try:
+        from datetime import date
+        d_from = date.fromisoformat(from_str)
+        d_to   = date.fromisoformat(to_str)
+    except ValueError:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    from ...models import DailySummary
+    q = DailySummary.query.filter(
+        DailySummary.date >= d_from,
+        DailySummary.date <= d_to,
+    )
+    if hive_id:
+        q = q.filter_by(hive_id=hive_id.upper())
+    summaries = q.order_by(DailySummary.date.asc()).all()
+
+    return jsonify([{
+        'hive_id':       s.hive_id,
+        'hive_name':     s.hive.name,
+        'date':          s.date.isoformat(),
+        'avg_temp_int':  s.avg_temp_int,
+        'avg_hum_int':   s.avg_hum_int,
+        'avg_freq_int':  s.avg_freq_int,
+        'avg_light':     s.avg_light,
+        'alert_count':   s.alert_count,
+        'status_at_end': s.status_at_end,
+        'data_points':   s.data_points,
+    } for s in summaries])
+
+
+@api_bp.route('/summaries/<string:date_str>')
+@login_required
+def summaries_for_date(date_str):
+    """Returns all hive summaries for a given date (YYYY-MM-DD)."""
+    try:
+        from datetime import date
+        d = date.fromisoformat(date_str)
+    except ValueError:
+        return jsonify({'error': 'Invalid date format, use YYYY-MM-DD'}), 400
+
+    from ...models import DailySummary
+    summaries = DailySummary.query.filter_by(date=d).all()
+
+    return jsonify([{
+        'hive_id':       s.hive_id,
+        'hive_name':     s.hive.name,
+        'date':          s.date.isoformat(),
+        'avg_temp_int':  s.avg_temp_int,
+        'avg_temp_ext':  s.avg_temp_ext,
+        'avg_hum_int':   s.avg_hum_int,
+        'avg_freq_int':  s.avg_freq_int,
+        'avg_light':     s.avg_light,
+        'alert_count':   s.alert_count,
+        'status_at_end': s.status_at_end,
+        'data_points':   s.data_points,
+    } for s in summaries])
+
+
+@api_bp.route('/summaries/hive/<string:hive_id>')
+@login_required
+def summaries_for_hive(hive_id):
+    """Returns the last 30 daily summaries for a hive."""
+    from ...models import DailySummary
+    summaries = (DailySummary.query
+                 .filter_by(hive_id=hive_id.upper())
+                 .order_by(DailySummary.date.desc())
+                 .limit(30).all())
+
+    return jsonify([{
+        'date':          s.date.isoformat(),
+        'avg_temp_int':  s.avg_temp_int,
+        'avg_temp_ext':  s.avg_temp_ext,
+        'avg_hum_int':   s.avg_hum_int,
+        'avg_freq_int':  s.avg_freq_int,
+        'avg_light':     s.avg_light,
+        'alert_count':   s.alert_count,
+        'status_at_end': s.status_at_end,
+        'data_points':   s.data_points,
+    } for s in summaries])
+
+
+@api_bp.route('/summaries/generate', methods=['POST'])
+@login_required
+def trigger_summary():
+    """Admin-only: manually trigger summary generation for yesterday."""
+    if not current_user.is_admin:
+        from flask import abort
+        abort(403)
+    from ...scheduler import _generate_daily_summaries
+    from flask import current_app
+    _generate_daily_summaries(current_app._get_current_object())
+    return jsonify({'status': 'ok'})

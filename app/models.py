@@ -172,3 +172,53 @@ class UserPreferences(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('preferences', uselist=False, lazy=True))
+
+
+class SystemConfig(db.Model):
+    """Key-value store for app-wide settings."""
+    __tablename__ = 'system_config'
+    key   = db.Column(db.String(64), primary_key=True)
+    value = db.Column(db.String(255), nullable=False)
+
+    @staticmethod
+    def get(key, default=None):
+        row = SystemConfig.query.get(key)
+        return row.value if row else default
+
+    @staticmethod
+    def set(key, value):
+        row = SystemConfig.query.get(key)
+        if row:
+            row.value = str(value)
+        else:
+            db.session.add(SystemConfig(key=key, value=str(value)))
+        db.session.commit()
+
+
+class DailySummary(db.Model):
+    __tablename__ = 'daily_summaries'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    hive_id      = db.Column(db.String(4), db.ForeignKey('beehives.id'), nullable=False)
+    date         = db.Column(db.Date, nullable=False)
+
+    avg_temp_int = db.Column(db.Float, nullable=True)
+    avg_temp_ext = db.Column(db.Float, nullable=True)
+    avg_hum_int  = db.Column(db.Float, nullable=True)
+    avg_freq_int = db.Column(db.Float, nullable=True)
+    avg_amp_int  = db.Column(db.Float, nullable=True)
+    avg_light    = db.Column(db.Float, nullable=True)
+
+    alert_count   = db.Column(db.Integer, default=0)
+    status_at_end = db.Column(db.String(20), nullable=True)
+    data_points   = db.Column(db.Integer, default=0)
+
+    generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    hive = db.relationship('Beehive',
+                           backref=db.backref('daily_summaries', lazy=True,
+                                              cascade='all, delete-orphan'))
+
+    __table_args__ = (
+        db.UniqueConstraint('hive_id', 'date', name='uq_summary_hive_date'),
+    )

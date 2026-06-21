@@ -97,6 +97,67 @@ def _check_no_data(app):
                 db.session.commit()
 
 
+def _generate_daily_summaries(app):
+    """Generates a DailySummary for each enabled hive for yesterday."""
+    with app.app_context():
+        from .models import db, Beehive, DailySummary, Alert
+        from .blueprints.utils.influxdb import query_export_data
+        from datetime import date, timedelta, datetime as dt
+
+        yesterday = date.today() - timedelta(days=1)
+        start_str = yesterday.strftime('%Y-%m-%dT00:00:00Z')
+        stop_str  = yesterday.strftime('%Y-%m-%dT23:59:59Z')
+        day_start = dt.combine(yesterday, dt.min.time())
+        day_end   = dt.combine(yesterday, dt.max.time())
+
+        SENSORS = ['temperature_int', 'temperature_ext', 'humidity_int',
+                   'sound_freq_int', 'sound_amp_int', 'light_ext']
+
+        for hive in Beehive.query.filter_by(enabled=True).all():
+            if DailySummary.query.filter_by(hive_id=hive.id, date=yesterday).first():
+                continue
+
+            try:
+                rows = query_export_data(str(hive.id), SENSORS, start_str, stop_str)
+            except Exception:
+                rows = []
+
+            if not rows:
+                db.session.add(DailySummary(
+                    hive_id=hive.id,
+                    date=yesterday,
+                    data_points=0,
+                    status_at_end=hive.status,
+                ))
+                continue
+
+            def avg(key):
+                vals = [r[key] for r in rows if key in r and r[key] is not None]
+                return round(sum(vals) / len(vals), 2) if vals else None
+
+            alert_count = Alert.query.filter(
+                Alert.hive_id == hive.id,
+                Alert.created_at >= day_start,
+                Alert.created_at <= day_end,
+            ).count()
+
+            db.session.add(DailySummary(
+                hive_id=hive.id,
+                date=yesterday,
+                avg_temp_int=avg('temperature_int'),
+                avg_temp_ext=avg('temperature_ext'),
+                avg_hum_int=avg('humidity_int'),
+                avg_freq_int=avg('sound_freq_int'),
+                avg_amp_int=avg('sound_amp_int'),
+                avg_light=avg('light_ext'),
+                alert_count=alert_count,
+                status_at_end=hive.status,
+                data_points=len(rows),
+            ))
+
+        db.session.commit()
+
+
 def init_scheduler(app):
     scheduler.add_job(
         func=_check_and_push,
@@ -114,5 +175,23 @@ def init_scheduler(app):
         id='check_no_data',
         replace_existing=True,
     )
+
+    with app.app_context():
+        try:
+            from .models import SystemConfig
+            hour = int(SystemConfig.get('summary_hour', '1'))
+        except Exception:
+            hour = 1
+
+    scheduler.add_job(
+        func=_generate_daily_summaries,
+        args=[app],
+        trigger='cron',
+        hour=hour,
+        minute=0,
+        id='generate_daily_summaries',
+        replace_existing=True,
+    )
+
     if not scheduler.running:
         scheduler.start()

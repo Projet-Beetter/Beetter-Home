@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, session, abort
 from flask_login import login_required, current_user
-from ...models import db, RemoteServerConfig, UserPreferences
+from ...models import db, RemoteServerConfig, UserPreferences, SystemConfig
 from ...i18n import get_text
 from .forms import RemoteServerForm
 from . import settings_bp
@@ -38,10 +38,16 @@ def index():
         session['lang']      = prefs.language
         session['temp_unit'] = prefs.temp_unit
 
+        if current_user.is_admin:
+            summary_hour = request.form.get('summary_hour', '1')
+            if summary_hour.isdigit() and 0 <= int(summary_hour) <= 23:
+                SystemConfig.set('summary_hour', summary_hour)
+
         flash(_t('flash_prefs_saved'), 'success')
         return redirect(url_for('settings.index'))
 
-    return render_template('settings/index.html', prefs=prefs)
+    summary_hour = SystemConfig.get('summary_hour', '1')
+    return render_template('settings/index.html', prefs=prefs, summary_hour=summary_hour)
 
 
 @settings_bp.route('/remote/new', methods=['GET', 'POST'])

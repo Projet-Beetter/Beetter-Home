@@ -3,7 +3,29 @@
 {% block page_title %}{{ _t('nav_calendar') }}{% if hive %} — {{ hive.name }}{% endif %}{% endblock %}
 
 {% block head %}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/fullcalendar.min.css') }}" rel="stylesheet">
+<style>
+  /* Today: circle around the number instead of background fill */
+  .fc .fc-day-today { background: transparent !important; }
+  .fc .fc-day-today .fc-daygrid-day-number {
+    background: var(--bs-warning, #ffc107);
+    color: #000;
+    border-radius: 50%;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .8rem;
+    text-decoration: none;
+    line-height: 1;
+  }
+  /* Selected day: soft primary background */
+  .fc .fc-day-selected {
+    background: rgba(var(--bs-primary-rgb, 13, 110, 253), .13) !important;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -33,11 +55,39 @@
   {% endif %}
 </div>
 
-{# ── Calendar ─────────────────────────────────────────────────────────────── #}
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-3">
-    <div id="calendar"></div>
+{# ── Calendar + side panel ────────────────────────────────────────────────── #}
+<div class="d-flex gap-3">
+
+  <div class="card border-0 shadow-sm flex-grow-1">
+    <div class="card-body p-3">
+      <div id="calendar"></div>
+    </div>
   </div>
+
+  <div id="summaryPanel" style="width:260px;flex-shrink:0;align-self:flex-start"
+       data-i18n-loading="{{ _t('cal_summary_loading') }}"
+       data-i18n-empty="{{ _t('cal_summary_empty') }}"
+       data-i18n-no-data="{{ _t('cal_summary_no_data') }}"
+       data-i18n-err="{{ _t('cal_err_load') }}"
+       data-i18n-alerts="{{ _t('cal_summary_alerts') }}"
+       data-i18n-alert="{{ _t('cal_summary_alert') }}">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-3">
+        <div id="summaryPanelDate" class="small fw-semibold text-muted mb-2">
+          {% if not hive %}{{ _t('cal_click_day') }}{% endif %}
+        </div>
+        <div id="summaryPanelContent">
+          {% if not hive %}
+          <p class="text-muted small text-center mt-4">
+            <i class="bi bi-calendar3 fs-3 d-block mb-2 opacity-25"></i>
+            {{ _t('cal_no_day_selected') }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 {# ── Event detail modal ───────────────────────────────────────────────────── #}
@@ -143,13 +193,13 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.global.min.js"></script>
+<script src="{{ url_for('static', filename='js/fullcalendar.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/fullcalendar-locales.min.js') }}"></script>
 <script>
   const csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content;
   const canWrite   = {{ can_write | tojson }};
   const eventsUrl  = {{ events_url | tojson }};
-  const defaultHiveId = {{ (hive.id | string) if hive else 'null' }};
+  const defaultHiveId = {{ (hive.id | tojson) if hive else 'null' }};
 
   const detailModal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
   const formModal   = new bootstrap.Modal(document.getElementById('eventFormModal'));
@@ -170,7 +220,7 @@
       week:  {{ _t("cal_btn_week") | tojson }},
       list:  {{ _t("cal_btn_list") | tojson }},
     },
-    height: 'auto',
+    height: 650,
     events: eventsUrl,
 
     eventClick(info) {
@@ -233,12 +283,23 @@
     },
 
     dateClick(info) {
-      if (!canWrite) return;
-      resetForm();
-      document.getElementById('event-start').value = info.dateStr;
-      if (defaultHiveId) document.getElementById('event-hive').value = defaultHiveId;
-      document.getElementById('modal-form-title').textContent = '{{ _t("cal_form_title_create") }}';
-      formModal.show();
+      document.querySelector('.fc-day-selected')?.classList.remove('fc-day-selected');
+      info.dayEl.classList.add('fc-day-selected');
+      if (!defaultHiveId) loadDaySummaries(info.dateStr);
+    },
+
+    datesSet(info) {
+      if (!defaultHiveId) return;
+      const viewType = info.view.type;
+      if (viewType === 'listWeek') {
+        document.getElementById('summaryPanelDate').textContent = '';
+        document.getElementById('summaryPanelContent').innerHTML = '';
+        return;
+      }
+      const fromStr = info.startStr.slice(0, 10);
+      const toStr   = new Date(info.end.getTime() - 1).toISOString().slice(0, 10);
+      document.getElementById('summaryPanelDate').textContent = info.view.title;
+      loadRangeSummaries(fromStr, toStr);
     },
   });
   calendar.render();
@@ -373,5 +434,104 @@
     document.getElementById('modal-form-title').textContent = '{{ _t("cal_form_title_create") }}';
     formModal.show();
   });
+
+  // ── Daily summaries side panel ────────────────────────────────────────────
+  const _sp = document.getElementById('summaryPanel').dataset;
+  const summaryI18n = {
+    loading: _sp.i18nLoading,
+    empty:   _sp.i18nEmpty,
+    noData:  _sp.i18nNoData,
+    errLoad: _sp.i18nErr,
+    alerts:  _sp.i18nAlerts,
+    alert:   _sp.i18nAlert,
+  };
+
+  const STATUS_BADGES = {
+    critical: 'bg-danger',   swarming: 'bg-danger',    predator: 'bg-danger',
+    queenless: 'bg-danger',  agitated: 'bg-warning text-dark',
+    stressed:  'bg-warning text-dark', virgin_queen: 'bg-warning text-dark',
+    calm: 'bg-success', foraging: 'bg-success', ventilating: 'bg-success',
+    no_data: 'bg-secondary', silent: 'bg-secondary',
+  };
+
+  async function loadRangeSummaries(fromStr, toStr) {
+    const panel = document.getElementById('summaryPanelContent');
+    panel.innerHTML = `<p class="text-muted small text-center mt-3">${summaryI18n.loading}</p>`;
+    try {
+      const res  = await fetch(`/api/summaries/range?from=${fromStr}&to=${toStr}&hive_id=${defaultHiveId}`);
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) {
+        panel.innerHTML = `<p class="text-muted small text-center mt-3">${summaryI18n.empty}</p>`;
+        return;
+      }
+      panel.innerHTML = data.map(s => {
+        const d = new Date(s.date + 'T00:00:00');
+        const label = d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+        const alertLabel = s.alert_count === 1 ? summaryI18n.alert : summaryI18n.alerts;
+        const alertClass = s.alert_count > 0 ? 'text-danger fw-semibold' : '';
+        const badge = STATUS_BADGES[s.status_at_end] || 'bg-secondary';
+        const body = s.data_points === 0
+          ? `<span class="text-muted">${summaryI18n.noData}</span>`
+          : `<div class="row g-1 text-muted">
+               <div class="col-6">&#x1F321; ${s.avg_temp_int != null ? s.avg_temp_int + '°C' : '—'}</div>
+               <div class="col-6">&#x1F4A7; ${s.avg_hum_int  != null ? s.avg_hum_int  + '%'  : '—'}</div>
+               <div class="col-6">&#x1F3B5; ${s.avg_freq_int != null ? s.avg_freq_int + ' Hz' : '—'}</div>
+               <div class="col-6 ${alertClass}">&#x26A0; ${s.alert_count} ${alertLabel}</div>
+             </div>`;
+        return `<div class="border rounded mb-2 p-2" style="font-size:12px">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong>${label}</strong>
+            <span class="badge ${badge}" style="font-size:9px">${s.status_at_end || '—'}</span>
+          </div>
+          ${body}
+        </div>`;
+      }).join('');
+    } catch(e) {
+      panel.innerHTML = `<p class="text-danger small">${summaryI18n.errLoad}</p>`;
+    }
+  }
+
+  async function loadDaySummaries(dateStr) {
+    const panel  = document.getElementById('summaryPanelContent');
+    const dateEl = document.getElementById('summaryPanelDate');
+    const d = new Date(dateStr + 'T00:00:00');
+    let label = d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    dateEl.textContent = label;
+    panel.innerHTML = `<p class="text-muted small text-center mt-3">${summaryI18n.loading}</p>`;
+
+    try {
+      const res  = await fetch(`/api/summaries/${dateStr}`);
+      const data = await res.json();
+
+      if (!data.length) {
+        panel.innerHTML = `<p class="text-muted small text-center mt-3">${summaryI18n.empty}</p>`;
+        return;
+      }
+
+      panel.innerHTML = data.map(s => {
+        const alertLabel = s.alert_count === 1 ? summaryI18n.alert : summaryI18n.alerts;
+        const alertClass = s.alert_count > 0 ? 'text-danger fw-semibold' : '';
+        const badge = STATUS_BADGES[s.status_at_end] || 'bg-secondary';
+        const body = s.data_points === 0
+          ? `<span class="text-muted">${summaryI18n.noData}</span>`
+          : `<div class="row g-1 text-muted">
+               <div class="col-6">&#x1F321; ${s.avg_temp_int != null ? s.avg_temp_int + '°C' : '—'}</div>
+               <div class="col-6">&#x1F4A7; ${s.avg_hum_int  != null ? s.avg_hum_int  + '%'  : '—'}</div>
+               <div class="col-6">&#x1F3B5; ${s.avg_freq_int != null ? s.avg_freq_int + ' Hz' : '—'}</div>
+               <div class="col-6 ${alertClass}">&#x26A0; ${s.alert_count} ${alertLabel}</div>
+             </div>`;
+        return `<div class="border rounded mb-2 p-2" style="font-size:12px">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong>${s.hive_name}</strong>
+            <span class="badge ${badge}" style="font-size:9px">${s.status_at_end || '—'}</span>
+          </div>
+          ${body}
+        </div>`;
+      }).join('');
+    } catch(e) {
+      panel.innerHTML = `<p class="text-danger small">${summaryI18n.errLoad}</p>`;
+    }
+  }
 </script>
 {% endblock %}
