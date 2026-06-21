@@ -93,6 +93,8 @@ def edit(hive_id):
         hive.lora_frequency = form.lora_frequency.data or 868.0
         hive.spreading_factor = form.spreading_factor.data or 7
         hive.bandwidth = form.bandwidth.data or 125
+        if form.no_data_threshold_minutes.data is not None:
+            hive.no_data_threshold_minutes = form.no_data_threshold_minutes.data
         try:
             hive.latitude, hive.longitude = geocode(hive.street, hive.city, hive.postal_code)
         except Exception:

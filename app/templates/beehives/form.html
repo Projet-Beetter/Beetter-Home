@@ -17,6 +17,7 @@
             <label class="form-label" for="{{ form.hive_id.id }}">{{ _t('field_hive_id') }}</label>
             {% if hive %}
               <input type="text" class="form-control font-monospace text-uppercase" value="{{ hive.id }}" disabled>
+              <input type="hidden" name="hive_id" value="{{ hive.id }}">
               <div class="form-text">{{ _t('field_hive_id_readonly') }}</div>
             {% else %}
               {{ form.hive_id(class="form-control font-monospace text-uppercase" + (" is-invalid" if form.hive_id.errors else ""),

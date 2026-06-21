@@ -12,6 +12,24 @@ from .scheduler import init_scheduler
 from .i18n import get_text
 
 
+def _apply_schema_patches(engine):
+    """Idempotent: add columns to existing tables that were created before new columns were declared."""
+    from sqlalchemy import text, inspect
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
+
+    if 'beehives' in tables:
+        existing = {c['name'] for c in inspector.get_columns('beehives')}
+        if 'no_data_threshold_minutes' not in existing:
+            with engine.connect() as conn:
+                conn.execute(text(
+                    "ALTER TABLE beehives "
+                    "ADD COLUMN no_data_threshold_minutes INTEGER NOT NULL DEFAULT 10"
+                ))
+                conn.commit()
+            logger.info("Schema patch applied: beehives.no_data_threshold_minutes added")
+
+
 def create_app():
     app = Flask(__name__)
 
@@ -126,6 +144,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _apply_schema_patches(db.engine)
         init_scheduler(app)
 
     return app
