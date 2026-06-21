@@ -333,3 +333,29 @@ def chart_data(hive_id):
     resp = jsonify(data)
     resp.headers['Cache-Control'] = 'no-store'
     return resp
+
+
+@api_bp.route('/beehives/<string:hive_id>/chart-data/custom')
+@login_required
+def chart_data_custom(hive_id):
+    """Returns Chart.js-ready data for a custom ISO date range."""
+    hive = Beehive.query.filter_by(id=hive_id).first_or_404()
+    from_str = request.args.get('from')
+    to_str   = request.args.get('to')
+    if not from_str or not to_str:
+        return jsonify({'error': 'from and to required'}), 400
+    try:
+        from ..utils.influxdb import query_export_data, CHART_MEASUREMENTS
+        rows = query_export_data(str(hive.id), list(CHART_MEASUREMENTS), from_str, to_str)
+        result = {m: {'labels': [], 'data': []} for m in CHART_MEASUREMENTS}
+        for row in rows:
+            ts = row['timestamp']
+            for m in CHART_MEASUREMENTS:
+                if m in row:
+                    result[m]['labels'].append(ts)
+                    result[m]['data'].append(row[m])
+        resp = jsonify(result)
+        resp.headers['Cache-Control'] = 'no-store'
+        return resp
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

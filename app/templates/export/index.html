@@ -92,14 +92,30 @@
             <h6 class="fw-bold mb-0">
               <i class="bi bi-bar-chart-line me-2" style="color:#F5CB5C"></i>{{ _t('export_fields') }}
             </h6>
-            <button type="button" class="btn btn-sm btn-outline-secondary"
-                    id="toggleAllFields">{{ _t('export_select_all') }}</button>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                      id="toggleAllFields">{{ _t('export_select_all') }}</button>
+              <button type="button" class="btn btn-sm btn-outline-warning" id="dumpAllBtn">
+                <i class="bi bi-download me-1"></i>Dump all
+              </button>
+            </div>
           </div>
 
           {% for cat in field_categories %}
-          <p class="small fw-semibold text-muted text-uppercase mb-2 {% if not loop.first %}mt-3{% endif %}"
-             style="font-size:.72rem;letter-spacing:.06em">{{ _t('export_' ~ cat.label.lower()) }}</p>
-          <div class="d-flex flex-column gap-2">
+          {% set cat_id = 'cat-' ~ (cat.label | lower | replace(' ', '-')) %}
+          <div class="d-flex align-items-center justify-content-between {% if not loop.first %}mt-3{% endif %} mb-2">
+            <p class="small fw-semibold text-muted text-uppercase mb-0"
+               style="font-size:.72rem;letter-spacing:.06em">
+              {{ _t('export_' ~ (cat.label | lower | replace(' ', '_'))) }}
+            </p>
+            {% if cat.collapsible %}
+            <button type="button" class="btn btn-link btn-sm text-muted p-0 mfcc-toggle"
+                    data-target="{{ cat_id }}" style="font-size:.72rem;text-decoration:none">
+              <i class="bi bi-chevron-down me-1"></i>Show
+            </button>
+            {% endif %}
+          </div>
+          <div id="{{ cat_id }}" class="d-flex flex-column gap-2{% if cat.collapsible %} d-none{% endif %}">
             {% for key, label, unit in cat.fields %}
             <div class="form-check">
               <input class="form-check-input field-check" type="checkbox"
@@ -156,6 +172,37 @@
     allFieldsOn = !allFieldsOn;
     fieldChecks.forEach(c => c.checked = allFieldsOn);
     toggleFieldsBtn.textContent = allFieldsOn ? deselectAllText : selectAllText;
+  });
+
+  // MFCC collapsible sections
+  document.querySelectorAll('.mfcc-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      const isHidden = target.classList.contains('d-none');
+      target.classList.toggle('d-none', !isHidden);
+      btn.innerHTML = isHidden
+        ? '<i class="bi bi-chevron-up me-1"></i>Hide'
+        : '<i class="bi bi-chevron-down me-1"></i>Show';
+    });
+  });
+
+  // Dump all — select every hive + every field (expanding MFCC sections)
+  document.getElementById('dumpAllBtn')?.addEventListener('click', () => {
+    hiveChecks.forEach(c => c.checked = true);
+    allHivesOn = true;
+    if (toggleHivesBtn) toggleHivesBtn.textContent = deselectAllText;
+
+    document.querySelectorAll('.mfcc-toggle').forEach(btn => {
+      const target = document.getElementById(btn.dataset.target);
+      if (target && target.classList.contains('d-none')) {
+        target.classList.remove('d-none');
+        btn.innerHTML = '<i class="bi bi-chevron-up me-1"></i>Hide';
+      }
+    });
+    fieldChecks.forEach(c => c.checked = true);
+    allFieldsOn = true;
+    if (toggleFieldsBtn) toggleFieldsBtn.textContent = deselectAllText;
   });
 </script>
 {% endblock %}

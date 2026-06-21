@@ -14,22 +14,34 @@ from . import export_bp
 FIELD_CATEGORIES = [
     {
         'label': 'Interior',
+        'collapsible': False,
         'fields': [
-            ('temperature_int', 'Temperature', '°C'),
-            ('humidity_int', 'Humidity', '%'),
-            ('sound_freq_int', 'Sound Frequency', 'Hz'),
-            ('sound_amp_int', 'Sound Amplitude', ''),
+            ('temperature_int', 'Temperature',    '°C'),
+            ('humidity_int',    'Humidity',        '%'),
+            ('sound_freq_int',  'Sound Frequency', 'Hz'),
+            ('sound_amp_int',   'Sound Amplitude', ''),
         ],
     },
     {
         'label': 'Exterior',
+        'collapsible': False,
         'fields': [
-            ('temperature_ext', 'Temperature', '°C'),
-            ('humidity_ext', 'Humidity', '%'),
-            ('sound_freq_ext', 'Sound Frequency', 'Hz'),
-            ('sound_amp_ext', 'Sound Amplitude', ''),
-            ('light_ext', 'Light Level', '/10'),
+            ('temperature_ext', 'Temperature',    '°C'),
+            ('humidity_ext',    'Humidity',        '%'),
+            ('sound_freq_ext',  'Sound Frequency', 'Hz'),
+            ('sound_amp_ext',   'Sound Amplitude', ''),
+            ('light_ext',       'Light Level',     '/10'),
         ],
+    },
+    {
+        'label': 'MFCC Interior',
+        'collapsible': True,
+        'fields': [(f'mfcc_int_{i}', f'MFCC Int C{i}', '') for i in range(13)],
+    },
+    {
+        'label': 'MFCC Exterior',
+        'collapsible': True,
+        'fields': [(f'mfcc_ext_{i}', f'MFCC Ext C{i}', '') for i in range(13)],
     },
 ]
 

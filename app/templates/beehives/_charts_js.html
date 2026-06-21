@@ -91,11 +91,12 @@
   // Maximum gap between two consecutive points before the line is broken.
   // Set to 2× the aggregation window for each range.
   const GAP_THRESHOLDS_MS = {
-    '1h':  2  * 60 * 1000,        // 2 min  (window = 1 min)
-    '6h':  4  * 60 * 1000,        // 4 min  (window = 2 min)
-    '24h': 30 * 60 * 1000,        // 30 min (window = 15 min)
-    '7d':  4  * 60 * 60 * 1000,   // 4h     (window = 2h)
-    '30d': 24 * 60 * 60 * 1000,   // 24h    (window = 12h)
+    '1h':     2  * 60 * 1000,        // 2 min  (window = 1 min)
+    '6h':     4  * 60 * 1000,        // 4 min  (window = 2 min)
+    '24h':    30 * 60 * 1000,        // 30 min (window = 15 min)
+    '7d':     4  * 60 * 60 * 1000,   // 4h     (window = 2h)
+    '30d':    24 * 60 * 60 * 1000,   // 24h    (window = 12h)
+    'custom': 30 * 60 * 1000,        // 30 min default for custom ranges
   };
 
   function convertToPoints(dataset, range) {
@@ -222,7 +223,7 @@
         data: pts,
         borderColor: color,
         backgroundColor: color + '22',
-        fill: true,
+        fill: false,
         tension: 0.3,
         pointRadius: pts.length > 200 ? 0 : 2,
         borderWidth: 2,
@@ -353,6 +354,90 @@
     });
   }
 
+  function initializeCustomRange() {
+    const toggle  = document.getElementById('customRangeToggle');
+    const panel   = document.getElementById('customRangePanel');
+    const applyBtn = document.getElementById('customRangeApply');
+    const fromEl  = document.getElementById('customRangeFrom');
+    const toEl    = document.getElementById('customRangeTo');
+    if (!toggle || !panel || !applyBtn || !fromEl || !toEl) return;
+
+    // Default: last 24h in local time
+    const now = new Date();
+    const yesterday = new Date(now - 24 * 60 * 60 * 1000);
+    toEl.value   = now.toISOString().slice(0, 16);
+    fromEl.value = yesterday.toISOString().slice(0, 16);
+
+    const applyLabel = `<i class="bi bi-check-lg me-1"></i>{{ _t('range_btn_apply') }}`;
+
+    toggle.addEventListener('click', () => {
+      const isOpen = !panel.classList.contains('d-none');
+      panel.classList.toggle('d-none', isOpen);
+      toggle.classList.toggle('btn-warning', !isOpen);
+      toggle.classList.toggle('btn-outline-secondary', isOpen);
+      if (!isOpen) {
+        // Deactivate preset range buttons
+        document.querySelectorAll('.range-selector').forEach(b => {
+          b.classList.remove('btn-warning');
+          b.classList.add('btn-outline-secondary');
+        });
+      }
+    });
+
+    applyBtn.addEventListener('click', async () => {
+      const fromISO = fromEl.value ? new Date(fromEl.value).toISOString() : null;
+      const toISO   = toEl.value   ? new Date(toEl.value).toISOString()   : null;
+      if (!fromISO || !toISO || new Date(fromISO) >= new Date(toISO)) {
+        console.warn('[Beetter] Invalid custom range');
+        return;
+      }
+
+      applyBtn.disabled = true;
+      applyBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Loading…';
+
+      try {
+        const url = chartApiUrl + '/custom'
+                  + `?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await res.json();
+
+        const minMs = new Date(fromISO).valueOf();
+        const maxMs = new Date(toISO).valueOf();
+        const durationMs = maxMs - minMs;
+        const timeOpts = durationMs > 2 * 24 * 60 * 60 * 1000
+          ? { unit: 'day',  displayFormats: { day: 'dd MMM' },  tooltipFormat: 'dd MMM yyyy' }
+          : { unit: 'hour', displayFormats: { hour: 'HH:mm' },  tooltipFormat: 'dd MMM HH:mm' };
+        const xTicks = {
+          maxTicksLimit: 8,
+          callback: function(value) {
+            const label = this.getLabelForValue(value);
+            if (typeof label === 'string' && label.length > 0)
+              return label.charAt(0).toUpperCase() + label.slice(1);
+            return label;
+          }
+        };
+
+        Object.keys(charts).forEach(chartId => {
+          const chart = charts[chartId];
+          if (!chart) return;
+          chart.options.scales.x.min   = minMs;
+          chart.options.scales.x.max   = maxMs;
+          chart.options.scales.x.time  = timeOpts;
+          chart.options.scales.x.ticks = xTicks;
+          updateMultiChart(chartId, data, 'custom');
+          const cb = document.querySelector(`.threshold-toggle-btn[data-chart-id="${chartId}"]`);
+          if (cb && cb.checked) applyThresholdView(chart);
+        });
+      } catch (err) {
+        console.warn('[Beetter] Custom range error:', err);
+      } finally {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = applyLabel;
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     // Restore before chart init so opened sections have correct canvas dimensions
     restoreAccordionState();
@@ -396,6 +481,7 @@
 
     initializeRangeSelectors();
     initializeThresholdToggles();
+    initializeCustomRange();
 
     // Run once immediately so the page shows fresh sensor data without waiting 30 s
     if (typeof liveRefresh === 'function') liveRefresh();

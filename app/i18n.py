@@ -398,6 +398,17 @@ TRANSLATIONS = {
         "sensor_label_amp_ext": "Sound Amp Ext",
         "sensor_label_light_ext": "Light Ext",
         "sensor_thresholds": "Thresholds",
+        # MFCC export field labels
+        **{f'export_field_MFCC Int C{i}': f'MFCC Int C{i}' for i in range(13)},
+        **{f'export_field_MFCC Ext C{i}': f'MFCC Ext C{i}' for i in range(13)},
+        'export_mfcc_interior': 'MFCC Interior',
+        'export_mfcc_exterior': 'MFCC Exterior',
+        # Chart custom range
+        'range_btn_custom': 'Custom',
+        'range_btn_apply':  'Apply',
+        # No data threshold form
+        'field_no_data_threshold':      'No data threshold (minutes)',
+        'field_no_data_threshold_hint': 'Minutes without data before the hive is marked offline. Set to 0 to disable.',
     },
     "fr": {
         # Sidebar nav
@@ -798,6 +809,17 @@ TRANSLATIONS = {
         "sensor_label_amp_ext": "Ampl. Son Ext.",
         "sensor_label_light_ext": "Lumière Ext.",
         "sensor_thresholds": "Seuils",
+        # MFCC export field labels (same labels in French)
+        **{f'export_field_MFCC Int C{i}': f'MFCC Int C{i}' for i in range(13)},
+        **{f'export_field_MFCC Ext C{i}': f'MFCC Ext C{i}' for i in range(13)},
+        'export_mfcc_interior': 'MFCC Intérieur',
+        'export_mfcc_exterior': 'MFCC Extérieur',
+        # Chart custom range
+        'range_btn_custom': 'Personnalisé',
+        'range_btn_apply':  'Appliquer',
+        # No data threshold form
+        'field_no_data_threshold':      'Seuil sans données (minutes)',
+        'field_no_data_threshold_hint': 'Minutes sans données avant de marquer la ruche hors ligne. Mettre à 0 pour désactiver.',
     },
 }
 

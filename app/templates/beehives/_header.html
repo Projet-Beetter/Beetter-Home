@@ -57,12 +57,29 @@
   {% endif %}
 
   <div class="ms-auto d-flex align-items-center gap-2">
-    <div class="btn-group btn-group-sm" role="group">
-      {% for r in range_options %}
-        <button type="button"
-                class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}"
-                data-range="{{ r }}">{{ _t('range_btn_' ~ r) }}</button>
-      {% endfor %}
+    <div class="d-flex flex-column align-items-end gap-1">
+      <div class="btn-group btn-group-sm" role="group">
+        {% for r in range_options %}
+          <button type="button"
+                  class="btn btn-sm range-selector {{ 'btn-warning' if range_str == r else 'btn-outline-secondary' }}"
+                  data-range="{{ r }}">{{ _t('range_btn_' ~ r) }}</button>
+        {% endfor %}
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="customRangeToggle">
+          <i class="bi bi-calendar-range me-1"></i>{{ _t('range_btn_custom') }}
+        </button>
+      </div>
+      <div id="customRangePanel" class="d-none">
+        <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+          <input type="datetime-local" id="customRangeFrom"
+                 class="form-control form-control-sm" style="width:185px">
+          <span class="text-muted small">→</span>
+          <input type="datetime-local" id="customRangeTo"
+                 class="form-control form-control-sm" style="width:185px">
+          <button type="button" class="btn btn-sm btn-warning" id="customRangeApply">
+            <i class="bi bi-check-lg me-1"></i>{{ _t('range_btn_apply') }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="hive-nav-arrows d-flex align-items-center gap-1">
