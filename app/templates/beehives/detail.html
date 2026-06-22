@@ -154,6 +154,11 @@ setInterval(liveRefresh, 30_000);
 (async function loadHiveSummaries() {
   const el = document.getElementById('hiveSummaryTimeline');
   if (!el) return;
+  const USE_FAHRENHEIT_DETAIL = {{ 'true' if current_user.prefs and current_user.prefs.temp_unit == 'F' else 'false' }};
+  function fmtTempDetail(c) {
+    if (c == null) return '—';
+    return USE_FAHRENHEIT_DETAIL ? (c * 9 / 5 + 32).toFixed(1) + '°F' : c + '°C';
+  }
   try {
     const res  = await fetch('/api/summaries/hive/{{ hive.id }}');
     const data = await res.json();
@@ -167,7 +172,7 @@ setInterval(liveRefresh, 30_000);
       const alertClass = s.alert_count > 0 ? 'text-danger' : 'text-muted';
       return `<div class="d-flex align-items-center gap-2 py-1 border-bottom" style="font-size:11px">
         <span class="text-muted" style="min-width:72px">${label}</span>
-        <span>${s.avg_temp_int != null ? s.avg_temp_int + '°C' : '—'}</span>
+        <span>${fmtTempDetail(s.avg_temp_int)}</span>
         <span class="text-muted">${s.avg_hum_int != null ? s.avg_hum_int + '%' : ''}</span>
         <span class="ms-auto ${alertClass}">${s.alert_count > 0 ? '&#x26A0; ' + s.alert_count : '&#x2713;'}</span>
       </div>`;
