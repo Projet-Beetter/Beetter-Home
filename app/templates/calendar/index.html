@@ -209,6 +209,7 @@
   const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
     initialView: 'dayGridMonth',
     locale: '{{ current_lang }}',
+    firstDay: {{ first_day }},
     headerToolbar: {
       left:   'prev,next today',
       center: 'title',

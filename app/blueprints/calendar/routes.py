@@ -56,6 +56,7 @@ def _event_to_fc(event):
 @login_required
 def index():
     hives = Beehive.query.order_by(Beehive.name).all()
+    week_start = current_user.prefs.week_start if current_user.prefs else 'monday'
     return render_template(
         'calendar/index.html',
         events_url=url_for('calendar.events_feed'),
@@ -63,6 +64,7 @@ def index():
         event_types=EVENT_TYPES,
         can_write=can_write(current_user),
         hive=None,
+        first_day=1 if week_start == 'monday' else 0,
     )
 
 
@@ -71,6 +73,7 @@ def index():
 def hive_calendar(hive_id):
     hive = db.get_or_404(Beehive, hive_id)
     hives = Beehive.query.order_by(Beehive.name).all()
+    week_start = current_user.prefs.week_start if current_user.prefs else 'monday'
     return render_template(
         'calendar/index.html',
         events_url=url_for('calendar.hive_events_feed', hive_id=hive_id),
@@ -78,6 +81,7 @@ def hive_calendar(hive_id):
         event_types=EVENT_TYPES,
         can_write=can_write(current_user),
         hive=hive,
+        first_day=1 if week_start == 'monday' else 0,
     )
 
 

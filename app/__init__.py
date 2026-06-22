@@ -111,6 +111,13 @@ def create_app():
     def set_lang(lang):
         if lang in ('en', 'fr'):
             session['lang'] = lang
+            if current_user.is_authenticated:
+                try:
+                    prefs = current_user.prefs
+                    prefs.language = lang
+                    db.session.commit()
+                except Exception:
+                    pass
         referrer = request.referrer
         if referrer:
             from urllib.parse import urlparse
