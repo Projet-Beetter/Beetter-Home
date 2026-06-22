@@ -36,13 +36,25 @@ def push_to_remote(config_id):
             f"{config.url.rstrip('/')}/api/push",
             json=payload,
             headers={'Authorization': f'Bearer {config.api_key}'},
-            timeout=30,
+            timeout=(5, 30),  # (connect_timeout, read_timeout)
         )
-        config.last_push_at = datetime.now(timezone.utc)
-        config.last_push_status = 'success' if resp.ok else 'error'
-        config.last_push_message = f'HTTP {resp.status_code}'
+        if resp.ok:
+            # Only advance the cursor on success so offline data is retried later.
+            config.last_push_at = datetime.now(timezone.utc)
+            config.last_push_status = 'success'
+            config.last_push_message = f'HTTP {resp.status_code}'
+        else:
+            config.last_push_status = 'error'
+            config.last_push_message = f'HTTP {resp.status_code}: {resp.text[:200]}'
+    except requests.ConnectionError:
+        # Server unreachable (no internet, wrong URL, etc.).
+        # Do NOT update last_push_at — data will be included in the next push.
+        config.last_push_status = 'offline'
+        config.last_push_message = 'Server unreachable — data will be included in next push'
+    except requests.Timeout:
+        config.last_push_status = 'timeout'
+        config.last_push_message = 'Request timed out — data will be included in next push'
     except requests.RequestException as e:
-        config.last_push_at = datetime.now(timezone.utc)
         config.last_push_status = 'error'
         config.last_push_message = str(e)[:500]
 
