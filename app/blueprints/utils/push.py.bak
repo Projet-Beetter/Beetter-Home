@@ -1,7 +1,7 @@
 import requests
 from datetime import datetime, timezone, timedelta
 from flask import current_app
-from ...models import db, RemoteServerConfig, Beehive, Alert
+from ...models import db, RemoteServerConfig, Beehive
 from .influxdb import query_recent_data
 
 
@@ -16,15 +16,11 @@ def push_to_remote(config_id):
     elif since.tzinfo is None:
         since = since.replace(tzinfo=timezone.utc)
 
-    # Naive UTC for DB comparisons (SQLAlchemy DateTime columns are tz-unaware)
-    since_naive = since.astimezone(timezone.utc).replace(tzinfo=None)
-
     beehives = Beehive.query.filter_by(enabled=True).all()
     payload = {
         'source': 'beetter',
         'pushed_at': datetime.now(timezone.utc).isoformat(),
         'beehives': [],
-        'alerts': [],
     }
     for hive in beehives:
         data = query_recent_data(str(hive.id), since)
@@ -33,16 +29,6 @@ def push_to_remote(config_id):
             'name': hive.name,
             'location': ', '.join(filter(None, [hive.street, hive.city, hive.postal_code])),
             'data': data,
-        })
-
-    for alert in Alert.query.filter(Alert.created_at >= since_naive).all():
-        payload['alerts'].append({
-            'hive_id': alert.hive_id,
-            'old_status': alert.old_status,
-            'new_status': alert.new_status,
-            'source': alert.source,
-            'note': alert.note,
-            'created_at': alert.created_at.isoformat() + 'Z',
         })
 
     try:
