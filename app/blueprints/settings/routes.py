@@ -43,11 +43,21 @@ def index():
             if summary_hour.isdigit() and 0 <= int(summary_hour) <= 23:
                 SystemConfig.set('summary_hour', summary_hour)
 
+            linked_url = request.form.get('linked_server_url', '').strip()
+            linked_secret = request.form.get('linked_server_jwt_secret', '').strip()
+            SystemConfig.set('linked_server_url', linked_url)
+            if linked_secret:
+                SystemConfig.set('linked_server_jwt_secret', linked_secret)
+
         flash(_t('flash_prefs_saved'), 'success')
         return redirect(url_for('settings.index'))
 
     summary_hour = SystemConfig.get('summary_hour', '1')
-    return render_template('settings/index.html', prefs=prefs, summary_hour=summary_hour)
+    linked_server_url = SystemConfig.get('linked_server_url', '')
+    linked_server_configured = bool(SystemConfig.get('linked_server_jwt_secret', ''))
+    return render_template('settings/index.html', prefs=prefs, summary_hour=summary_hour,
+                           linked_server_url=linked_server_url,
+                           linked_server_configured=linked_server_configured)
 
 
 @settings_bp.route('/remote/new', methods=['GET', 'POST'])
