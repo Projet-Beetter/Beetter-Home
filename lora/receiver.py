@@ -46,23 +46,6 @@ from dotenv import load_dotenv
 import requests
 from grove_lora import GroveLoRa
 
-# ─── Inference (IA) ──────────────────────────────────────────
-_IA_DIR = Path(__file__).parent.parent / "IA"
-sys.path.insert(0, str(_IA_DIR))
-
-try:
-    import torch
-    from beehive.model import ContrastiveBeehiveModel, BeehiveFineTuner
-    from beehive.data import FeatureNormalizer
-    from beehive.config import MODEL_CFG
-    from beehive.inference import BeehiveInference
-    from influxdb_client import InfluxDBClient, Point, WritePrecision
-    from influxdb_client.client.write_api import SYNCHRONOUS
-    _INFERENCE_AVAILABLE = True
-except ImportError as _e:
-    logging.warning(f"Inference non disponible : {_e}")
-    _INFERENCE_AVAILABLE = False
-
 # ─── Load .env from parent directory ─────────────────────────
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
@@ -101,53 +84,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 log = logging.getLogger("beetter")
-
-# ─── Inference engine ─────────────────────────────────────────
-def _charger_inference() -> BeehiveInference | None:
-    if not _INFERENCE_AVAILABLE:
-        return None
-    try:
-        backbone  = ContrastiveBeehiveModel(MODEL_CFG)
-        finetuner = BeehiveFineTuner(backbone)
-        state = torch.load(_IA_DIR / "checkpoints/finetune_best.pt", map_location="cpu", weights_only=True)
-        finetuner.load_state_dict(state)
-        norm_in  = FeatureNormalizer.load(_IA_DIR / "calibration/norm_in.json")
-        norm_out = FeatureNormalizer.load(_IA_DIR / "calibration/norm_out.json")
-        engine = BeehiveInference(finetuner, norm_in, norm_out)
-        log.info("Moteur d'inférence chargé.")
-        return engine
-    except Exception as e:
-        log.warning(f"Impossible de charger le modèle : {e}")
-        return None
-
-
-def _ecrire_influx_anomalie(result, beehive_id: str, ts_iso: str) -> None:
-    """Écrit le résultat d'inférence dans le bucket 'anomaly' d'InfluxDB."""
-    if not _INFERENCE_AVAILABLE:
-        return
-    try:
-        url   = os.getenv("INFLUXDB_URL",   "http://localhost:8086")
-        token = os.getenv("INFLUXDB_TOKEN",  "")
-        org   = os.getenv("INFLUXDB_ORG",    "")
-        with InfluxDBClient(url=url, token=token, org=org) as client:
-            write_api = client.write_api(write_options=SYNCHRONOUS)
-            point = (
-                Point("anomaly_score")
-                .tag("hive_id", beehive_id)
-                .field("p_normal",  float(result.probabilities[0]))
-                .field("p_anomaly", float(result.probabilities[1]))
-                .field("label",     result.label)
-                .field("alert",     result.alert)
-                .time(ts_iso, "s")
-            )
-            write_api.write(bucket="anomaly", org=org, record=point)
-            log.info(f"Inférence → {result.label} "
-                     f"(normal={result.probabilities[0]:.0%} "
-                     f"anomaly={result.probabilities[1]:.0%})"
-                     f"{' ⚠ ALERTE' if result.alert else ''}")
-    except Exception as e:
-        log.warning(f"Erreur écriture InfluxDB anomaly : {e}")
-
 # ═══════════════════════════════════════════════════════════
 #  CRC-16/CCITT
 # ═══════════════════════════════════════════════════════════
@@ -401,7 +337,6 @@ def main():
 
     lora = GroveLoRa(port=PORT, baudrate=57600)
     log.info("Initialisation du module Grove LoRa...")
-    inference_engine = _charger_inference()
 
     if not lora.init():
         log.error("Echec init LoRa. Vérifier câblage et port série.")
@@ -459,27 +394,6 @@ def main():
             # Envoi vers l'API Flask (regroupe ENV + AUD du même cycle)
             if API_ENABLE:
                 envoyer_api(blocs)
-            # ─── Inférence IA ────────────────────────────────
-            if inference_engine is not None:
-                env_bloc = next((b for b in blocs if b["type"] == "ENV"), None)
-                aud_bloc = next((b for b in blocs if b["type"] == "AUD"), None)
-                if env_bloc and aud_bloc:
-                    features = {
-                        "t_in_C":          env_bloc["temperature_int"],
-                        "h_in_pct":        env_bloc["humidity_int"],
-                        "t_out_C":         env_bloc["temperature_ext"],
-                        "h_out_pct":       env_bloc["humidity_ext"],
-                        "dom_freq_in_hz":  aud_bloc["sound_freq_int"],
-                        "rms_in":          aud_bloc["sound_amp_int"],
-                        "dom_freq_out_hz": aud_bloc["sound_freq_ext"],
-                        "rms_out":         aud_bloc["sound_amp_ext"],
-                        **{f"mfcc_in_{i}":  aud_bloc["mfcc_int"][i] for i in range(13)},
-                        **{f"mfcc_out_{i}": aud_bloc["mfcc_ext"][i] for i in range(13)},
-                        "timestamp_min":   0,
-                        "anomaly_flag":    0,
-                    }
-                    result = inference_engine.infer_from_features(features)
-                    _ecrire_influx_anomalie(result, env_bloc["beehive_id"], env_bloc["ts_iso"])
             log.info(f"Stats : {nb_recus} reçues | {nb_env} ENV | "
                      f"{nb_aud} AUD | {nb_erreurs} erreurs")
 
