@@ -138,7 +138,7 @@ def _ecrire_influx_anomalie(result, beehive_id: str, ts_iso: str) -> None:
                 .field("p_anomaly", float(result.probabilities[1]))
                 .field("label",     result.label)
                 .field("alert",     result.alert)
-                .time(ts_iso, WritePrecision.SECONDS)
+                .time(ts_iso, "s")
             )
             write_api.write(bucket="anomaly", org=org, record=point)
             log.info(f"Inférence → {result.label} "
