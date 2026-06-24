@@ -1,5 +1,9 @@
+import logging
+import os
+import fcntl
 from apscheduler.schedulers.background import BackgroundScheduler
 
+logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler(timezone='UTC')
 
 NO_DATA_DEFAULT_MINUTES = 10
@@ -97,68 +101,123 @@ def _check_no_data(app):
                 db.session.commit()
 
 
-def _generate_daily_summaries(app):
-    """Generates a DailySummary for each enabled hive for yesterday."""
+def _generate_for_date(app, target_date):
+    """
+    Generates a DailySummary for each enabled hive for the given date.
+    Skips hives that already have a summary for that date.
+    Returns the number of summaries created.
+    """
     with app.app_context():
         from .models import db, Beehive, DailySummary, Alert
         from .blueprints.utils.influxdb import query_export_data
-        from datetime import date, timedelta, datetime as dt
+        from datetime import datetime as dt
 
-        yesterday = date.today() - timedelta(days=1)
-        start_str = yesterday.strftime('%Y-%m-%dT00:00:00Z')
-        stop_str  = yesterday.strftime('%Y-%m-%dT23:59:59Z')
-        day_start = dt.combine(yesterday, dt.min.time())
-        day_end   = dt.combine(yesterday, dt.max.time())
+        start_str = target_date.strftime('%Y-%m-%dT00:00:00Z')
+        stop_str  = target_date.strftime('%Y-%m-%dT23:59:59Z')
+        day_start = dt.combine(target_date, dt.min.time())
+        day_end   = dt.combine(target_date, dt.max.time())
 
         SENSORS = ['temperature_int', 'temperature_ext', 'humidity_int',
                    'sound_freq_int', 'sound_amp_int', 'light_ext']
 
+        created = 0
         for hive in Beehive.query.filter_by(enabled=True).all():
-            if DailySummary.query.filter_by(hive_id=hive.id, date=yesterday).first():
-                continue
-
             try:
-                rows = query_export_data(str(hive.id), SENSORS, start_str, stop_str)
-            except Exception:
-                rows = []
+                with db.session.no_autoflush:
+                    exists = DailySummary.query.filter_by(
+                        hive_id=hive.id, date=target_date
+                    ).first()
+                    if exists:
+                        continue
 
-            if not rows:
+                try:
+                    rows = query_export_data(str(hive.id), SENSORS, start_str, stop_str)
+                except Exception as exc:
+                    logger.error('query_export_data failed for hive %s on %s: %s',
+                                 hive.id, target_date, exc)
+                    rows = []
+
+                if not rows:
+                    logger.debug('No InfluxDB rows for hive %s on %s — storing empty summary',
+                                 hive.id, target_date)
+                    db.session.add(DailySummary(
+                        hive_id=hive.id,
+                        date=target_date,
+                        data_points=0,
+                        status_at_end=hive.status,
+                    ))
+                    db.session.commit()
+                    created += 1
+                    continue
+
+                def avg(key):
+                    vals = [r[key] for r in rows if key in r and r[key] is not None]
+                    return round(sum(vals) / len(vals), 2) if vals else None
+
+                alert_count = Alert.query.filter(
+                    Alert.hive_id == hive.id,
+                    Alert.created_at >= day_start,
+                    Alert.created_at <= day_end,
+                ).count()
+
                 db.session.add(DailySummary(
                     hive_id=hive.id,
-                    date=yesterday,
-                    data_points=0,
+                    date=target_date,
+                    avg_temp_int=avg('temperature_int'),
+                    avg_temp_ext=avg('temperature_ext'),
+                    avg_hum_int=avg('humidity_int'),
+                    avg_freq_int=avg('sound_freq_int'),
+                    avg_amp_int=avg('sound_amp_int'),
+                    avg_light=avg('light_ext'),
+                    alert_count=alert_count,
                     status_at_end=hive.status,
+                    data_points=len(rows),
                 ))
+                db.session.commit()
+                created += 1
+            except Exception:
+                db.session.rollback()
+                # Silently skip — another worker already inserted this record
                 continue
 
-            def avg(key):
-                vals = [r[key] for r in rows if key in r and r[key] is not None]
-                return round(sum(vals) / len(vals), 2) if vals else None
+        return created
 
-            alert_count = Alert.query.filter(
-                Alert.hive_id == hive.id,
-                Alert.created_at >= day_start,
-                Alert.created_at <= day_end,
-            ).count()
 
-            db.session.add(DailySummary(
-                hive_id=hive.id,
-                date=yesterday,
-                avg_temp_int=avg('temperature_int'),
-                avg_temp_ext=avg('temperature_ext'),
-                avg_hum_int=avg('humidity_int'),
-                avg_freq_int=avg('sound_freq_int'),
-                avg_amp_int=avg('sound_amp_int'),
-                avg_light=avg('light_ext'),
-                alert_count=alert_count,
-                status_at_end=hive.status,
-                data_points=len(rows),
-            ))
+def _generate_daily_summaries(app):
+    """Scheduled job: generates summaries for yesterday."""
+    from datetime import date, timedelta
+    yesterday = date.today() - timedelta(days=1)
+    logger.info('Generating daily summaries for %s', yesterday)
+    try:
+        n = _generate_for_date(app, yesterday)
+        logger.info('Daily summaries done: %d hive(s) processed for %s', n, yesterday)
+    except Exception as exc:
+        logger.error('Daily summary job failed for %s: %s', yesterday, exc)
 
-        db.session.commit()
+
+def _backfill_missing_summaries(app):
+    """On startup, fill any gaps in the last 7 days so missed cron runs are recovered."""
+    from datetime import date, timedelta
+    today = date.today()
+    for offset in range(1, 8):
+        target = today - timedelta(days=offset)
+        try:
+            n = _generate_for_date(app, target)
+            if n:
+                logger.info('Backfill: created %d summary(s) for %s', n, target)
+        except Exception as exc:
+            logger.error('Backfill failed for %s: %s', target, exc)
 
 
 def init_scheduler(app):
+    lock_file = '/tmp/beetter_scheduler.lock'
+    try:
+        lock = open(lock_file, 'w')
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (IOError, OSError):
+        # Another worker already holds the lock — skip scheduler init
+        return
+
     scheduler.add_job(
         func=_check_and_push,
         args=[app],
@@ -195,3 +254,6 @@ def init_scheduler(app):
 
     if not scheduler.running:
         scheduler.start()
+
+    # Fill any days the cron missed while the server was down
+    _backfill_missing_summaries(app)

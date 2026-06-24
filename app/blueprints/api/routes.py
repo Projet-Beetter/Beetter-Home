@@ -122,45 +122,31 @@ def ingest():
                 triggered_keys = warn_keys
 
         if target_status and hive.status != target_status:
-            last_alert = (Alert.query
-                          .filter_by(hive_id=hive.id)
-                          .order_by(Alert.created_at.desc())
-                          .first())
-            if last_alert and last_alert.source == 'manual':
-                pass  # Manual status — threshold cannot override
-            else:
-                old_status = hive.status
-                hive.status = target_status
-                note_parts = []
-                for k in triggered_keys:
-                    val = sensor_values[k]
-                    ok_min, ok_max, warn_min, warn_max = THRESHOLDS[k]
-                    note_parts.append(f"{k}={val} (ok: {ok_min}–{ok_max})")
-                note = (f"Auto threshold breach "
-                        f"({CONSECUTIVE_CRIT if target_status == 'critical' else CONSECUTIVE_WARN} "
-                        f"consecutive points): " + ", ".join(note_parts))
-                db.session.add(Alert(
-                    hive_id=hive.id,
-                    old_status=old_status,
-                    new_status=target_status,
-                    source='threshold',
-                    note=note,
-                ))
-                db.session.commit()
+            old_status = hive.status
+            hive.status = target_status
+            note_parts = []
+            for k in triggered_keys:
+                val = sensor_values[k]
+                ok_min, ok_max, warn_min, warn_max = THRESHOLDS[k]
+                note_parts.append(f"{k}={val} (ok: {ok_min}–{ok_max})")
+            note = (f"Auto threshold breach "
+                    f"({CONSECUTIVE_CRIT if target_status == 'critical' else CONSECUTIVE_WARN} "
+                    f"consecutive points): " + ", ".join(note_parts))
+            db.session.add(Alert(
+                hive_id=hive.id,
+                old_status=old_status,
+                new_status=target_status,
+                source='threshold',
+                note=note,
+            ))
+            db.session.commit()
 
         # ── Auto-recovery ─────────────────────────────────────────────────
         elif all_ok(clean) and hive.status not in ('calm', 'foraging',
                                                    'ventilating'):
-            last_alert = (Alert.query
-                          .filter_by(hive_id=hive.id)
-                          .order_by(Alert.created_at.desc())
-                          .first())
-
             should_recover = False
             if hive.status in ('no_data', 'silent'):
                 should_recover = True
-            elif last_alert and last_alert.source == 'manual':
-                pass  # Manual status — never auto-recover
             else:
                 worst_sensor = max(
                     clean.keys(),
