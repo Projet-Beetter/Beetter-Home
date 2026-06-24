@@ -8,6 +8,9 @@ THRESHOLDS = {
     "humidity_int":     (50,  75,   40,   85  ),  # %
     "humidity_ext":     (30,  90,   20,   95  ),  # %
     "sound_freq_int":   (180, 320,  150,  400 ),  # Hz
+    # Exterior frequency: hornets (Vespa velutina) have wingbeat ~100–200 Hz,
+    # lower than bees. A sustained drop below 200 Hz at the entrance is suspect.
+    "sound_freq_ext":   (200, 400,  150,  500 ),  # Hz
     "light_ext":        (0,   5,   0,    10  ),  # 0–10 scale
 }
 

@@ -1,4 +1,6 @@
 import logging
+import os
+import fcntl
 from apscheduler.schedulers.background import BackgroundScheduler
 
 logger = logging.getLogger(__name__)
@@ -120,54 +122,64 @@ def _generate_for_date(app, target_date):
 
         created = 0
         for hive in Beehive.query.filter_by(enabled=True).all():
-            if DailySummary.query.filter_by(hive_id=hive.id, date=target_date).first():
-                continue
-
             try:
-                rows = query_export_data(str(hive.id), SENSORS, start_str, stop_str)
-            except Exception as exc:
-                logger.error('query_export_data failed for hive %s on %s: %s',
-                             hive.id, target_date, exc)
-                rows = []
+                with db.session.no_autoflush:
+                    exists = DailySummary.query.filter_by(
+                        hive_id=hive.id, date=target_date
+                    ).first()
+                    if exists:
+                        continue
 
-            if not rows:
-                logger.debug('No InfluxDB rows for hive %s on %s — storing empty summary',
-                             hive.id, target_date)
+                try:
+                    rows = query_export_data(str(hive.id), SENSORS, start_str, stop_str)
+                except Exception as exc:
+                    logger.error('query_export_data failed for hive %s on %s: %s',
+                                 hive.id, target_date, exc)
+                    rows = []
+
+                if not rows:
+                    logger.debug('No InfluxDB rows for hive %s on %s — storing empty summary',
+                                 hive.id, target_date)
+                    db.session.add(DailySummary(
+                        hive_id=hive.id,
+                        date=target_date,
+                        data_points=0,
+                        status_at_end=hive.status,
+                    ))
+                    db.session.commit()
+                    created += 1
+                    continue
+
+                def avg(key):
+                    vals = [r[key] for r in rows if key in r and r[key] is not None]
+                    return round(sum(vals) / len(vals), 2) if vals else None
+
+                alert_count = Alert.query.filter(
+                    Alert.hive_id == hive.id,
+                    Alert.created_at >= day_start,
+                    Alert.created_at <= day_end,
+                ).count()
+
                 db.session.add(DailySummary(
                     hive_id=hive.id,
                     date=target_date,
-                    data_points=0,
+                    avg_temp_int=avg('temperature_int'),
+                    avg_temp_ext=avg('temperature_ext'),
+                    avg_hum_int=avg('humidity_int'),
+                    avg_freq_int=avg('sound_freq_int'),
+                    avg_amp_int=avg('sound_amp_int'),
+                    avg_light=avg('light_ext'),
+                    alert_count=alert_count,
                     status_at_end=hive.status,
+                    data_points=len(rows),
                 ))
+                db.session.commit()
                 created += 1
+            except Exception:
+                db.session.rollback()
+                # Silently skip — another worker already inserted this record
                 continue
 
-            def avg(key):
-                vals = [r[key] for r in rows if key in r and r[key] is not None]
-                return round(sum(vals) / len(vals), 2) if vals else None
-
-            alert_count = Alert.query.filter(
-                Alert.hive_id == hive.id,
-                Alert.created_at >= day_start,
-                Alert.created_at <= day_end,
-            ).count()
-
-            db.session.add(DailySummary(
-                hive_id=hive.id,
-                date=target_date,
-                avg_temp_int=avg('temperature_int'),
-                avg_temp_ext=avg('temperature_ext'),
-                avg_hum_int=avg('humidity_int'),
-                avg_freq_int=avg('sound_freq_int'),
-                avg_amp_int=avg('sound_amp_int'),
-                avg_light=avg('light_ext'),
-                alert_count=alert_count,
-                status_at_end=hive.status,
-                data_points=len(rows),
-            ))
-            created += 1
-
-        db.session.commit()
         return created
 
 
@@ -198,6 +210,14 @@ def _backfill_missing_summaries(app):
 
 
 def init_scheduler(app):
+    lock_file = '/tmp/beetter_scheduler.lock'
+    try:
+        lock = open(lock_file, 'w')
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (IOError, OSError):
+        # Another worker already holds the lock — skip scheduler init
+        return
+
     scheduler.add_job(
         func=_check_and_push,
         args=[app],
