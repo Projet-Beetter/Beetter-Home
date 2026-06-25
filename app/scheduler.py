@@ -52,13 +52,6 @@ def _check_no_data(app):
             if hive.status == 'no_data':
                 continue
 
-            last_alert = (Alert.query
-                          .filter_by(hive_id=hive.id)
-                          .order_by(Alert.created_at.desc())
-                          .first())
-            if last_alert and last_alert.source == 'manual':
-                continue
-
             try:
                 latest = query_latest_values(str(hive.id))
             except Exception:
