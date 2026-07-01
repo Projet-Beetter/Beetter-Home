@@ -26,7 +26,7 @@ Local web application for beehive monitoring, running on a Raspberry Pi. It coll
 
 ## LoRa Receiver
 
-The `lora/` directory contains the Raspberry Pi-side LoRa scripts:
+The `receiver/` directory contains the Raspberry Pi-side LoRa scripts:
 
 - `receiver.py` — listens on the LoRa module and forwards packets to the local Flask API (`POST /api/data`)
 - `grove_lora.py` — low-level driver for the Grove LoRa module
@@ -35,10 +35,10 @@ The `lora/` directory contains the Raspberry Pi-side LoRa scripts:
 
 ```bash
 # Copy and fill in your environment variables
-cp app/.env.example app/.env
+cp dashboard/.env.example dashboard/.env
 
 # Start all services with Docker Compose
-docker compose -f app/compose.yml up -d
+docker compose -f dashboard/compose.yml up -d
 ```
 
 See [Beetter-Technical-Documentation](https://github.com/Projet-Beetter/Beetter-Technical-Documentation) for the full deployment guide.
@@ -46,7 +46,7 @@ See [Beetter-Technical-Documentation](https://github.com/Projet-Beetter/Beetter-
 ## Project Structure
 
 ```
-app/
+dashboard/
   blueprints/       # Flask blueprints (account, admin, alerts, api, auth,
   │                 #   beehives, calendar, dashboard, export, settings, setup)
   models.py         # SQLAlchemy models
@@ -54,7 +54,7 @@ app/
   i18n.py           # Internationalisation helpers
   Dockerfile
   compose.yml
-lora/
+receiver/
   receiver.py       # LoRa → Flask API bridge
   grove_lora.py     # Grove LoRa module driver
 ```
